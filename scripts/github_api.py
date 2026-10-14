@@ -1,12 +1,15 @@
-﻿"""GitHub credentials stay in memory; never write or print a token."""
-import os,subprocess,json,urllib.request,urllib.error
+"""GitHub credentials stay in memory; never write or print a token."""
+import os,subprocess,json,urllib.request,urllib.error,shutil
 API='https://api.github.com'
 class NoRedirect(urllib.request.HTTPRedirectHandler):
  def redirect_request(self,*args,**kwargs):return None
 def credential(username=None):
+ if username is None and shutil.which('gh'):
+  result=subprocess.run(['gh','auth','token','--hostname','github.com'],capture_output=True,text=True,timeout=30)
+  if result.returncode==0 and result.stdout.strip():return result.stdout.strip()
  fields='protocol=https\nhost=github.com\n'+('username='+username+'\n' if username else '')+'\n'
  proc=subprocess.run(['git','credential','fill'],input=fields,capture_output=True,text=True,encoding='utf-8',timeout=120,env={**os.environ,'GIT_TRACE':'0','GIT_TRACE_CURL':'0','GCM_TRACE':'0'})
- if proc.returncode:raise RuntimeError('GitHub login unavailable. Run git credential-manager github login --browser first.')
+ if proc.returncode:raise RuntimeError('GitHub login unavailable. Use gh auth login or git credential-manager github login --browser first.')
  data=dict(line.split('=',1) for line in proc.stdout.splitlines() if '=' in line)
  if not data.get('password'):raise RuntimeError('GitHub credential missing.')
  return data['password']

@@ -14,7 +14,7 @@ For complete collage and exhibition operation, accept the GitHub invitation and 
 
     python3 scripts/download_assets.py
 
-The download is approximately 10 GB; allow about 21 GB of free disk space for downloads and installed assets. Download parts are SHA-256 checked, resumable by completed part, and imported directly without joining another large ZIP. The helper uses your existing GitHub login through Git Credential Manager. If needed first run git credential-manager github login --browser. On Windows use py -3 instead of python3. The importer validates each asset's SHA-256 and writes assets only to approved asset directories. It does not replace source code.
+The download is approximately 10 GB; allow about 21 GB of free disk space for downloads and installed assets. Download parts are SHA-256 checked, resumable by completed part, and imported directly without joining another large ZIP. The helper uses your existing GitHub CLI or Git Credential Manager login. For GitHub CLI, first run gh auth login; otherwise use git credential-manager github login --browser. Sign in with your own collaborator account. On Windows use py -3 instead of python3. The importer validates each asset's SHA-256 and writes assets only to approved asset directories. It does not replace source code.
 Optional local paths belong in settings.local.json, copied from settings.local.example.json. This file is ignored by Git. No owner's F: drive path is required on a teammate's machine.
 
 ## Work together
