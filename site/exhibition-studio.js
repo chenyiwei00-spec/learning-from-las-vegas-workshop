@@ -3,12 +3,12 @@
 'use strict';
 const $=id=>document.getElementById(id),canvas=$('exhibition-canvas'),paper=$('exhibition-paper'),ctx=canvas.getContext('2d'),assets=new Map(),images=new Map(),selection=new Set(),history=[],future=[];
 const W=1000,H=1400,FORMAT='borrowed-worlds-exhibition-collage',DB='learning-vegas-exhibition-draft-v1';
-let layers=[],tool='move',drag=null,clipboard=[],controller=null,preview=false,working=null,saveTimer=0,revision=0,loadTicket=0;
+let layers=[],tool='move',drag=null,clipboard=[],controller=null,preview=false,working=null,saveTimer=0,revision=0,loadTicket=0,agentPlan=null;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),copy=v=>structuredClone(v),text=v=>String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function message(s){$('exhibition-message').textContent=s;}
 function database(){return new Promise((resolve,reject)=>{const r=indexedDB.open(DB,1);r.onupgradeneeded=()=>r.result.createObjectStore('draft');r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});}
 async function storage(mode,value){const db=await database();try{return await new Promise((resolve,reject)=>{const tx=db.transaction('draft',mode),s=tx.objectStore('draft'),r=mode==='readonly'?s.get('current'):s.put(value,'current');r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});}finally{db.close();}}
-function documentValue(){const used=[...new Set(layers.map(l=>l.sourceId))];return {format:FORMAT,width:W,height:H,editingSurface:'sculpture',modelTarget:'city',background:'transparent',layers:copy(layers),assets:Object.fromEntries(used.map(id=>[id,assets.get(id)])),generatedModel:controller?.getRecord()||null};}
+function documentValue(){const used=[...new Set(layers.map(l=>l.sourceId))];return {format:FORMAT,width:W,height:H,editingSurface:'sculpture',modelTarget:'city',background:'transparent',layers:copy(layers),assets:Object.fromEntries(used.map(id=>[id,assets.get(id)])),generatedModel:controller?.getRecord()||null,...(agentPlan?{agentPlan:copy(agentPlan)}:{})};}
 function persist(){if(preview)return;clearTimeout(saveTimer);saveTimer=setTimeout(()=>storage('readwrite',documentValue()).catch(()=>message('Draft storage is full. Export your collage before closing.')),350);}
 function remember(){history.push(copy(layers));if(history.length>50)history.shift();future.length=0;}
 function validLayer(l){return l&&typeof l.sourceId==='string'&&[l.x,l.y,l.w,l.h].every(Number.isFinite)&&l.w>0&&l.h>0;}
@@ -35,7 +35,7 @@ function changed(){revision++;render();persist();controller?.changed(documentVal
 function localPoint(p,l){const r=-(l.rotation||0)*Math.PI/180,dx=p.x-l.x,dy=p.y-l.y;return{x:(dx*Math.cos(r)-dy*Math.sin(r))*(l.flipX?-1:1),y:(dx*Math.sin(r)+dy*Math.cos(r))*(l.flipY?-1:1)};}
 function point(e){const r=canvas.getBoundingClientRect(),scale=Math.min(r.width/W,r.height/H),ox=(r.width-W*scale)/2,oy=(r.height-H*scale)/2;return{x:(e.clientX-r.left-ox)/scale,y:(e.clientY-r.top-oy)/scale};}
 function hit(p){return [...layers].reverse().find(l=>{const q=localPoint(p,l);return Math.abs(q.x)<l.w/2&&Math.abs(q.y)<l.h/2;});}
-function leavePreview(){if(!preview)return;preview=false;layers=working.layers;selection.clear();working.selection.forEach(id=>selection.add(id));const captured=working.model;working=null;$('return-exhibition-work').hidden=true;render();controller.restoreCaptured(captured);controller.changed(documentValue());}
+async function leavePreview(){if(!preview)return;preview=false;layers=working.layers;selection.clear();working.selection.forEach(id=>selection.add(id));agentPlan=working.agentPlan||null;const captured=working.model;working=null;$('return-exhibition-work').hidden=true;render();await controller.restoreCaptured(captured);await controller.changed(documentValue());}
 function prepareEdit(){if(preview)leavePreview();}
 async function hash(s){return [...new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s)))].map(n=>n.toString(16).padStart(2,'0')).join('');}
 async function addImage(url,title='Photo',id=null){
@@ -84,23 +84,44 @@ $('exhibition-flip-x').onclick=()=>applyTransform((items,b)=>{for(const l of ite
 $('exhibition-flip-y').onclick=()=>applyTransform((items,b)=>{for(const l of items){l.y=2*b.cy-l.y;l.rotation=-(l.rotation||0);l.flipY=!l.flipY;}});
 function remove(){prepareEdit();if(!selection.size)return;remember();layers=layers.filter(l=>!selection.has(l.id));selection.clear();changed();}
 $('exhibition-delete').onclick=remove;
-$('exhibition-clear').onclick=()=>{prepareEdit();if(layers.length)remember();layers=[];selection.clear();controller?.clear();changed();message('The collage and current 3D preview are clear. Saved models are kept.');};
+$('exhibition-clear').onclick=()=>{prepareEdit();if(layers.length)remember();layers=[];agentPlan=null;selection.clear();controller?.clear();changed();message('The collage and current 3D preview are clear. Saved models are kept.');};
 $('exhibition-layer-list').onclick=e=>{const button=e.target.closest('[data-layer]');if(!button)return;selection.clear();selection.add(button.dataset.layer);render();canvas.focus({preventScroll:true});};
 function pasteLayers(){prepareEdit();if(!clipboard.length)return;if(layers.length+clipboard.length>40)return message('A collage can hold up to forty objects.');remember();const values=copy(clipboard).map(l=>({...l,id:crypto.randomUUID(),x:l.x+25,y:l.y+25}));layers.push(...values);selection.clear();values.forEach(l=>selection.add(l.id));changed();}
 function reorder(up){applyTransform(()=>{if(up){for(let i=layers.length-2;i>=0;i--)if(selection.has(layers[i].id)&&!selection.has(layers[i+1].id))[layers[i],layers[i+1]]=[layers[i+1],layers[i]];}else for(let i=1;i<layers.length;i++)if(selection.has(layers[i].id)&&!selection.has(layers[i-1].id))[layers[i],layers[i-1]]=[layers[i-1],layers[i]];});}
 document.addEventListener('keydown',e=>{if(e.target.closest('input,textarea,select')||$('exhibition-materials').open||!paper.contains(document.activeElement))return;const k=e.key.toLowerCase(),mod=e.ctrlKey||e.metaKey;if(mod&&k==='c'){e.preventDefault();clipboard=copy(layers.filter(l=>selection.has(l.id)));message('Selection copied. Ctrl V pastes another copy.');}else if(mod&&k==='v'&&clipboard.length){e.preventDefault();pasteLayers();}else if(mod&&k==='z'){e.preventDefault();e.shiftKey?redo():undo();}else if(mod&&(k===']'||k==='】')){e.preventDefault();reorder(true);}else if(mod&&(k==='['||k==='【')){e.preventDefault();reorder(false);}else if(k==='delete'||k==='backspace'){e.preventDefault();remove();}else if(mod&&k==='a'){e.preventDefault();layers.forEach(l=>selection.add(l.id));render();}else if(k==='v'&&!mod){tool='move';render();}else if(k==='e'&&!mod){tool='erase';render();}});
 
 $('exhibition-export').onclick=()=>{const c=document.createElement('canvas');c.width=W;c.height=H;drawModel(c.getContext('2d'),documentValue());c.toBlob(b=>SavedSculptures.download(b,'exhibition-collage.png'));};
-async function restoreDoc(doc){if(doc?.format!==FORMAT||!Array.isArray(doc.layers))return false;const ticket=++loadTicket;for(const [id,a]of Object.entries(doc.assets||{}))if(a?.url&&(a.url.startsWith('data:image/')||/^assets\//.test(a.url)||/^\/collage-objects\//.test(a.url)))assets.set(id,a);await Promise.all([...new Set(doc.layers.map(l=>l.sourceId))].map(imageFor));if(ticket!==loadTicket)return false;layers=copy(doc.layers.filter(validLayer));selection.clear();render();return true;}
+async function restoreDoc(doc){if(doc?.format!==FORMAT||!Array.isArray(doc.layers))return false;const ticket=++loadTicket;for(const [id,a]of Object.entries(doc.assets||{}))if(a?.url&&(a.url.startsWith('data:image/')||/^assets\//.test(a.url)||/^\/collage-objects\//.test(a.url)))assets.set(id,a);await Promise.all([...new Set(doc.layers.map(l=>l.sourceId))].map(imageFor));if(ticket!==loadTicket)return false;layers=copy(doc.layers.filter(validLayer));agentPlan=doc.agentPlan?copy(doc.agentPlan):null;selection.clear();render();return true;}
+function captureDraft(){return {document:documentValue(),model:controller.capture(),selection:[...selection]};}
+async function restoreDraft(snapshot){
+ if(!snapshot?.document)throw Error('The previous collage is unavailable.');await leavePreview();
+ remember();await restoreDoc(snapshot.document);await controller.changed(documentValue());await controller.restoreCaptured(snapshot.model);
+ selection.clear();snapshot.selection.forEach(id=>{if(layers.some(l=>l.id===id))selection.add(id);});await controller.changed(documentValue());persist();render();
+}
+async function applyAgentPlan(plan){
+ await leavePreview();if(controller.state().busy)throw Error('Wait for the current model to finish first.');
+ if(!Array.isArray(plan?.pieces)||plan.pieces.length<2||plan.pieces.length>6)throw Error('Choose between two and six isolated objects.');
+ const version=revision,prepared=await Promise.all(plan.pieces.map(async piece=>{
+  const known=ExhibitionPicker.object(piece.key);if(!known)throw Error('The planned object is not in the archive.');
+  const im=new Image();im.decoding='async';im.src=known.url;await im.decode();
+  if(im.naturalWidth<24||im.naturalHeight<24)throw Error('A selected cutout is too small.');
+  const scale=Math.min(piece.boxW/im.naturalWidth,piece.boxH/im.naturalHeight);
+  return {key:known.key,asset:{url:known.url,title:known.name},image:im,layer:{id:crypto.randomUUID(),sourceId:known.key,objectId:known.key,vaPartId:'',x:piece.x,y:piece.y,w:im.naturalWidth*scale,h:im.naturalHeight*scale,rotation:piece.rotation||0,flipX:!!piece.flipX,flipY:false,strokes:[]}};
+ }));
+ if(version!==revision)throw Error('The collage changed while selecting objects. Click Compose + generate again.');
+ const previous=captureDraft();remember();controller.clear();
+ for(const p of prepared){assets.set(p.key,p.asset);images.set(p.key,p.image);}layers=prepared.map(p=>p.layer);agentPlan=copy(plan);selection.clear();revision++;
+ render();persist();await controller.changed(documentValue());message(plan.title+' / '+layers.length+' editable objects.');return previous;
+}
 $('return-exhibition-work').onclick=leavePreview;
-window.addEventListener('saved-sculpture-open',async e=>{if(!controller)return;try{const entry=await (window.ExhibitionBrowse?ExhibitionBrowse.resolve(e.detail.id):SavedSculptures.get(e.detail.id));if(!entry)return;if(!preview)working={layers:copy(layers),selection:[...selection],model:controller.capture()};preview=true;$('return-exhibition-work').hidden=false;const direction=e.detail.direction||0;
+window.addEventListener('saved-sculpture-open',async e=>{if(!controller||window.ExhibitionAgent?.state().busy)return;try{const entry=await (window.ExhibitionBrowse?ExhibitionBrowse.resolve(e.detail.id):SavedSculptures.get(e.detail.id));if(!entry)return;if(!preview)working={layers:copy(layers),selection:[...selection],model:controller.capture(),agentPlan:copy(agentPlan)};preview=true;$('return-exhibition-work').hidden=false;const direction=e.detail.direction||0;
  if(direction){await controller.prepareSaved(entry,direction);await controller.transitionOut(direction);}
  const restored=await restoreDoc(entry.composition);if(!restored)message('This saved model comes from the original Collage Studio. Return to work to resume your photo collage.');
  await controller.openSaved(entry,direction);render();if(window.ExhibitionBrowse)ExhibitionBrowse.open();else window.ExhibitionWorkspace?.openPanel('model');}catch(err){message(err.message);}});
-window.addEventListener('saved-sculpture-next',async e=>{if(!preview)return;try{const entry=await (window.ExhibitionBrowse?ExhibitionBrowse.resolve(e.detail.id):SavedSculptures.get(e.detail.id));if(!entry)return;await controller.prepareSaved(entry,e.detail.direction);await controller.transitionOut(e.detail.direction);await restoreDoc(entry.composition);await controller.openSaved(entry,e.detail.direction);}catch(err){message(err.message);}});
+window.addEventListener('saved-sculpture-next',async e=>{if(!preview||window.ExhibitionAgent?.state().busy)return;try{const entry=await (window.ExhibitionBrowse?ExhibitionBrowse.resolve(e.detail.id):SavedSculptures.get(e.detail.id));if(!entry)return;await controller.prepareSaved(entry,e.detail.direction);await controller.transitionOut(e.detail.direction);await restoreDoc(entry.composition);await controller.openSaved(entry,e.detail.direction);}catch(err){message(err.message);}});
 async function start(){let stored=null;try{stored=await storage('readonly');await restoreDoc(stored);}catch(err){message('The previous draft could not load: '+err.message);}
  controller=await Sculpture3D.create({store:'learning-vegas-exhibition-model-v1',directCollage:true,archivePresentation:true,associateMedia:doc=>ExhibitionMedia.associate(doc),onModelState:state=>ExhibitionMedia.onState(state),getDocument:documentValue,getComposition:documentValue,drawModel,isPreview:()=>preview,message,browseEntries:()=>window.ExhibitionBrowse?.entries()||SavedSculptures.list()});if(stored?.generatedModel)await controller.restore(stored.generatedModel);render();
- window.ExhibitionStudio=Object.freeze({getDocument:documentValue,captureModel:()=>controller.capture(),renderPreview,addCutout,select:ids=>{selection.clear();ids.forEach(id=>selection.add(id));render();},restore:async doc=>{prepareEdit();remember();await restoreDoc(doc);changed();},state:()=>({layers:layers.length,selected:[...selection],preview,model:controller.state()}),generate:()=>controller.generate(),clear:()=>$('exhibition-clear').click(),returnToWork:leavePreview});
+ window.ExhibitionStudio=Object.freeze({getDocument:documentValue,captureDraft,restoreDraft,applyAgentPlan,prepareAgent:leavePreview,captureModel:()=>controller.capture(),renderPreview,addCutout,select:ids=>{selection.clear();ids.forEach(id=>selection.add(id));render();},restore:async doc=>{prepareEdit();remember();await restoreDoc(doc);changed();},state:()=>({layers:layers.length,selected:[...selection],preview,model:controller.state()}),generate:()=>controller.generate(),clear:()=>$('exhibition-clear').click(),returnToWork:leavePreview});
  window.dispatchEvent(new CustomEvent('exhibition-studio-ready'));
 }
 start().catch(err=>{message('The workspace could not start: '+err.message);console.error(err);});

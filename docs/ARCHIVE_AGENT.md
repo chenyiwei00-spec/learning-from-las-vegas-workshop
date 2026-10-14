@@ -1,0 +1,9 @@
+# Automatic archive composition
+
+The Exhibition Walk preview cards include an Archive Agent with one Compose + generate button. It selects four transparent Las Vegas cutouts, assembles editable layers and submits the composition through the existing local TripoSR client. The generated model uses the ordinary preview/drag-to-exhibit flow and inherits one video and audio association. Edit collage opens the regular tools; Previous collage restores the composition and model present before the agent replaced them.
+
+Planning uses existing image descriptions, tags, object names, mask resolution and shape proportions. It chooses among borrowed monuments, roadside symbols and invented skylines; broad forms form a base, tall shapes a crown, and signs/accent forms overlap them. Recent objects and themes are penalised for variety. This is a local metadata-and-shape planner, not a new conversational language-model API. The 3D stage is the existing AI service; it retains the same geometry/quality limitations.
+
+Image preparation is atomic: missing cutouts are retried up to three times and cannot replace the existing collage unless every selected cutout decodes. Concurrent generation/editing is guarded while the agent is active. No images, weights or paid API credentials are downloaded. Without an available generation runtime, the editable collage remains and the page states that 3D generation is unavailable. Previous collage is a session backup; normal drafts and saved models retain their existing browser storage.
+
+Validation: project syntax/catalog checks plus six isolated browser integration checks covering the one-click path, editable source layers, model placement, source media, previous-work restoration, missing-cutout recovery and a mobile/no-runtime case. Existing GLB fixtures intercepted generation requests; these tests do not run GPU inference or establish the quality of newly generated geometry. No public website deployment.

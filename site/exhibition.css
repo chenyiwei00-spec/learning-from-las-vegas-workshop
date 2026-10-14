@@ -238,3 +238,15 @@
 .exhibition-media-player p{font:8px/1.6 Arial,sans-serif;letter-spacing:.3px;margin:8px 0 0;color:#666}
 #exhibition-media-summary:empty{display:none}
 @media(max-width:760px){#exhibition-model-browser .exhibition-browser-title{font-size:28px}.exhibition-media-actions{right:12px;bottom:12px}.exhibition-media-player{left:12px;bottom:60px;width:calc(100% - 24px);max-height:65%;overflow:auto}}
+
+.exhibition-agent-card{background:#fff;border:1px solid #d9d9d4;padding:13px 12px;box-shadow:0 5px 22px #00000005}
+.exhibition-agent-card>.eyebrow{font:9px/1.5 Arial,sans-serif;letter-spacing:1px;margin:0 0 9px;color:#777}
+.exhibition-agent-card>button{width:100%;font:11px/1.5 Arial,sans-serif;min-height:36px;padding:8px 10px;cursor:pointer;text-align:left}
+.exhibition-agent-card>button:disabled{cursor:wait;opacity:.55}
+.exhibition-agent-card>p[role=status]{font:10px/1.65 Arial,sans-serif;color:#6b7075;margin:10px 0 0;overflow-wrap:anywhere}
+.exhibition-agent-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:7px}
+.exhibition-agent-actions button{font:9px/1.5 Arial,sans-serif;padding:4px 0;min-height:22px;cursor:pointer;border-bottom:1px solid #ccc}
+body[data-archive-agent-busy=true] #workspace-collage-pane{opacity:.65}
+@media(max-width:760px){.exhibition-agent-card{padding:10px 8px}.exhibition-agent-card>.eyebrow{font-size:8px}.exhibition-agent-card>button{font-size:9px;padding:8px 6px}.exhibition-agent-card>p[role=status]{font-size:9px}.exhibition-agent-actions{gap:5px}.exhibition-agent-actions button{font-size:8px}}
+
+.workspace-previews{max-height:calc(100% - 88px);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}

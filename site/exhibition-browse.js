@@ -22,6 +22,7 @@ async function resolve(id){
  return entry;
 }
 function open(){
+ if(window.ExhibitionAgent?.state().busy)return;
  if(active){browser.focus({preventScroll:true});return;}
  window.ExhibitionWorkspace.closePanel();window.ExhibitionWalk.suspendNavigation();
  active=true;body.append(panel);browser.hidden=false;surface.dataset.modelBrowse='true';
@@ -33,8 +34,8 @@ function dockPanel(resume=false){
  if(!active)return;
  window.ExhibitionMedia?.stop();active=false;browser.hidden=true;surface.dataset.modelBrowse='false';dock.append(panel);
  $('walk-canvas-host').hidden=false;
- if(resume)window.ExhibitionStudio?.returnToWork();
- window.dispatchEvent(new Event('resize'));
+ const restored=resume?window.ExhibitionStudio?.returnToWork():null;
+ window.dispatchEvent(new Event('resize'));return restored;
 }
 $('exhibition-browser-back').onclick=()=>dockPanel(true);
 window.addEventListener('saved-sculpture-open',open);

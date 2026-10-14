@@ -96,5 +96,5 @@ document.addEventListener('keydown',e=>{
  if(dialog.open&&mod&&e.key.toLowerCase()==='c'&&selection){e.preventDefault();copyObject();}
  else if(mod&&e.key.toLowerCase()==='v'&&copied&&(dialog.open||$('exhibition-paper').contains(document.activeElement))){e.preventDefault();e.stopImmediatePropagation();pasteObject(copied);}
 },true);
-window.ExhibitionPicker=Object.freeze({object:key=>objects.get(key)||null,openPhoto,select,hit,state:()=>({photoId,selection,ready:source.getAttribute('aria-busy')!=='true',photos:rows.length,cutouts:rasters.size})});
+window.ExhibitionPicker=Object.freeze({load:library,photo:id=>index?.[id]||null,objects:()=>[...objects.values()],object:key=>objects.get(key)||null,openPhoto,select,hit,state:()=>({photoId,selection,ready:source.getAttribute('aria-busy')!=='true',photos:rows.length,cutouts:rasters.size})});
 })();
