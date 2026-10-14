@@ -37,7 +37,7 @@ function syncModelPreview(){
 }
 function openPanel(kind){
  if(!['collage','sculpture','model','drafts'].includes(kind))return;
- window.ExhibitionBrowse?.dock();suspendScene();currentPanel=kind;panel.hidden=false;surface.dataset.workspaceOpen=kind;$('workspace-shade').hidden=false;
+ window.ExhibitionBrowse?.dock({preserve:kind==='model'});suspendScene();currentPanel=kind;panel.hidden=false;surface.dataset.workspaceOpen=kind;$('workspace-shade').hidden=false;
  $('workspace-drafts-pane').hidden=kind!=='drafts';$('workspace-collage-library').hidden=kind==='drafts';$('workspace-model-library').hidden=kind==='drafts';$('workspace-production-actions').hidden=kind==='drafts';$('agent-draft-footer').hidden=kind!=='drafts';panel.querySelector('.workspace-tabs').hidden=kind==='drafts';$('agent-draft-toggle').setAttribute('aria-expanded',String(kind==='drafts'));$('workspace-collage-pane').hidden=kind==='model'||kind==='drafts';if(kind==='collage'||kind==='sculpture')window.ExhibitionStudio?.setSurface(kind==='sculpture'?'sculpture':'city');$('workspace-model-pane').hidden=kind!=='model';
  $('workspace-expanded-title').textContent=kind==='collage'?'LAS VEGAS COLLAGE':kind==='sculpture'?'V&A SCULPTURE COLLAGE':kind==='drafts'?'COLLAGE LIBRARY':'GENERATED MODEL';
  $('exhibition-export').hidden=kind==='model'||kind==='drafts';
@@ -57,7 +57,7 @@ function openPanel(kind){
 function closePanel(){
  window.ExhibitionMedia?.stop();const previous=currentPanel;panel.hidden=true;$('workspace-shade').hidden=true;currentPanel=null;surface.dataset.workspaceOpen='none';
  $('open-sculpture-preview').setAttribute('aria-expanded','false');$('open-collage-preview').setAttribute('aria-expanded','false');$('open-model-preview').setAttribute('aria-expanded','false');$('agent-draft-toggle').setAttribute('aria-expanded','false');
- queueCollagePreview();syncModelPreview();
+ if(previous)window.ExhibitionBrowse?.presentInline();queueCollagePreview();syncModelPreview();
  if(previous)$(previous==='drafts'?'agent-draft-toggle':previous==='collage'?'open-collage-preview':previous==='sculpture'?'open-sculpture-preview':'open-model-preview').focus({preventScroll:true});
 }
 $('open-collage-preview').addEventListener('click',()=>openPanel('collage'));

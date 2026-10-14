@@ -29,3 +29,5 @@ Dragging uses a transparent live WebGL mesh at the source viewing angle outside 
 Native fullscreen, fixed-height agent menus, Ctrl/Shift collage selection, editable double-click reopening, sequential saves, failure continuation and queue stopping are verified with isolated browser storage and intercepted fixture jobs. No GPU inference is started by these checks.
 
 The browser fullscreen exit control is the only top close icon in native fullscreen. Placement uses bounding-frame move/rotation/resize handles, Delete removal and empty-click deselection. The shared workspace hosts the larger collage library with no pagination. Isolated fixture checks verify these controls and two selected sequential model saves without inference.
+
+The pale axis floor and brighter yellow footprints accompany the new Collage Studio-style page model stage between the room and saved library. Desktop cards are taller in five columns, with single-click opening and no Preview action. Video/audio association, playback, carousel media switching, view overwrite and host transitions are checked with real media and existing GLB fixtures. Original Collage Studio retains its Preview action.

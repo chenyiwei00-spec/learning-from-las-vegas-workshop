@@ -421,3 +421,29 @@ body[data-collage-queue-busy=true] .workspace-preview-card{pointer-events:none}
 .exhibition-move-handle{position:absolute;transform:translate(-50%,-50%);width:24px;height:24px;min-height:0;padding:0;border:1px solid #535f68;border-radius:50%;background:#fff;color:#535f68;font:16px/1 Arial,sans-serif;pointer-events:auto;cursor:move;touch-action:none}
 .exhibition-move-handle:active{background:#e4edf5}
 @media(max-width:480px){.workspace-drafts-pane .agent-draft-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}}
+
+/* Collage Studio model stage between the exhibition and saved-model cards. */
+.exhibition-inline-model{width:100%;margin:34px 0 0;position:relative}
+.exhibition-inline-model #model-panel{margin:0;padding:0;border:0}
+.exhibition-inline-model .workspace-model-placement,.exhibition-inline-model .workspace-model-meta{display:none}
+.exhibition-inline-model .model-layout{width:100%;margin:0;background:var(--exhibition-grey)}
+.exhibition-inline-model .model-layout .model-frame{height:clamp(740px,94vh,1350px);background:transparent}
+.exhibition-inline-model #generated-sculpture-viewer,.exhibition-inline-model .model-gallery-buffer{background:transparent}
+.exhibition-inline-model .model-info{max-height:calc(100% - 150px);overflow:auto;scrollbar-width:thin;pointer-events:none}
+.exhibition-inline-model .model-info button,.exhibition-inline-model .model-info input,.exhibition-inline-model .model-info details,.exhibition-inline-model .model-info video,.exhibition-inline-model .model-info audio{pointer-events:auto}
+.exhibition-inline-model .exhibition-browser-title{display:block;font:400 clamp(30px,3.4vw,54px)/1.05 var(--display-font);margin:0 0 14px}
+.exhibition-inline-model #model-empty{left:-50%;width:160%;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.exhibition-inline-model .model-stage-controls{position:absolute;top:18px;right:24px;left:auto;height:auto;width:auto;padding:0;z-index:25}
+.exhibition-inline-model .exhibition-model-media{max-width:320px;margin:14px 0}
+.exhibition-inline-model .model-layout:fullscreen .model-frame{height:100dvh}
+.exhibition-inline-model .model-layout:fullscreen #model-empty{left:0;width:100%}
+.exhibition-inline-placeholder{height:clamp(740px,94vh,1350px);background:var(--exhibition-grey);display:flex;align-items:center;justify-content:center;font:11px/1.6 Arial,sans-serif;color:#6b747d}
+.exhibition-model-library .saved-model-grid{grid-template-columns:repeat(5,minmax(0,1fr));gap:18px}
+.exhibition-model-library .saved-model-card{cursor:pointer}
+.exhibition-model-library .saved-model-image img{height:clamp(280px,25vw,360px)}
+.exhibition-model-library .saved-model-meta{padding:14px 12px}
+.exhibition-model-library .saved-model-meta h3{font-size:14px;line-height:1.5}
+.exhibition-model-library .saved-model-actions{gap:5px;flex-wrap:wrap}
+.exhibition-model-library .saved-model-actions button{font-size:9px;padding:5px 0;margin-right:6px}
+@media(max-width:1050px){.exhibition-model-library .saved-model-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:760px){.exhibition-model-library .saved-model-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.exhibition-model-library .saved-model-image img{height:280px}.exhibition-inline-model .model-layout .model-frame{height:900px;min-height:0}.exhibition-inline-model #generated-sculpture-viewer,.exhibition-inline-model .model-gallery-buffer{left:0;width:100%;height:55%}.exhibition-inline-model #model-empty{left:0;width:100%;height:55%}.exhibition-inline-model .model-layout .model-info{top:auto;bottom:35px;left:24px;right:24px;transform:none;width:auto;max-width:none;max-height:40%}.exhibition-inline-model .model-layout:fullscreen #generated-sculpture-viewer,.exhibition-inline-model .model-layout:fullscreen .model-gallery-buffer{height:100%}.exhibition-inline-model .model-layout:fullscreen .model-frame{height:100dvh}.exhibition-inline-model .exhibition-browser-title{font-size:30px}}
