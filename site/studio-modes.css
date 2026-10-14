@@ -1,0 +1,6 @@
+﻿/* A second workspace inside section 05; archive navigation remains unchanged. */
+.studio-mode-nav{display:flex;align-items:center;gap:24px;padding:21px 0 13px}
+.studio-mode-nav a{font:10px/1.6 Arial,sans-serif;letter-spacing:1px;text-decoration:none;color:#777;padding-bottom:7px;border-bottom:1px solid transparent}
+.studio-mode-nav a:hover{color:var(--ink);border-bottom-color:var(--line)}
+.studio-mode-nav a[aria-current=page]{color:var(--accent);border-bottom-color:var(--accent)}
+@media(max-width:480px){.studio-mode-nav{gap:19px;padding-top:18px}.studio-mode-nav a{font-size:9px}}

@@ -1,0 +1,1 @@
+(()=>{let current=null;setInterval(async()=>{if(document.visibilityState!=='visible')return;try{const r=await fetch('/__team/version',{cache:'no-store'});if(!r.ok)return;const v=(await r.json()).version;if(current&&current!==v)location.reload();current=v;}catch{}},3000);})();

@@ -1,0 +1,4421 @@
+{
+  "version": 2,
+  "title": "V&A sculpture fragments",
+  "representation": "2D photographic collage",
+  "parts": [
+    {
+      "id": "standing-head",
+      "kind": "head",
+      "name": "Turned head / standing figure",
+      "sourceId": "VA-IMG-IMG_9365",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9365.jpg",
+      "sourceTitle": "A full-length frontal view emphasizes a nude male statue's turned head, muscular torso, and relaxed",
+      "sourceFilename": "IMG_9365.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/standing-head.png",
+      "width": 202,
+      "height": 284,
+      "bbox": [
+        474,
+        203,
+        676,
+        487
+      ],
+      "sourceSize": [
+        1200,
+        1800
+      ],
+      "maskPixels": 41298,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 Small foreground/background prompts; visually authored anatomical boundary; actual photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "aspectRatio": 0.71127,
+      "shape": {
+        "aspectRatio": 0.71127,
+        "fillRatio": 0.71988,
+        "elongation": 1.7135
+      },
+      "anatomicalGroup": "head",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "standing-torso",
+      "kind": "torso",
+      "name": "Torso / standing figure",
+      "sourceId": "VA-IMG-IMG_9365",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9365.jpg",
+      "sourceTitle": "A full-length frontal view emphasizes a nude male statue's turned head, muscular torso, and relaxed",
+      "sourceFilename": "IMG_9365.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/standing-torso.png",
+      "width": 243,
+      "height": 478,
+      "bbox": [
+        476,
+        459,
+        719,
+        937
+      ],
+      "sourceSize": [
+        1200,
+        1800
+      ],
+      "maskPixels": 98771,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 Small foreground/background prompts; visually authored anatomical boundary; actual photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "aspectRatio": 0.50837,
+      "shape": {
+        "aspectRatio": 0.50837,
+        "fillRatio": 0.85035,
+        "elongation": 2.0224
+      },
+      "anatomicalGroup": "torso",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "hanging-arm",
+      "kind": "arm",
+      "name": "Lowered arm / standing figure",
+      "sourceId": "VA-IMG-IMG_9365",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9365.jpg",
+      "sourceTitle": "A full-length frontal view emphasizes a nude male statue's turned head, muscular torso, and relaxed",
+      "sourceFilename": "IMG_9365.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/hanging-arm.png",
+      "width": 105,
+      "height": 560,
+      "bbox": [
+        369,
+        494,
+        474,
+        1054
+      ],
+      "sourceSize": [
+        1200,
+        1800
+      ],
+      "maskPixels": 37110,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 Small foreground/background prompts; visually authored anatomical boundary; actual photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "aspectRatio": 0.1875,
+      "shape": {
+        "aspectRatio": 0.1875,
+        "fillRatio": 0.63112,
+        "elongation": 6.37124
+      },
+      "anatomicalGroup": "arm",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "bent-arm",
+      "kind": "arm",
+      "name": "Bent arm / standing figure",
+      "sourceId": "VA-IMG-IMG_9365",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9365.jpg",
+      "sourceTitle": "A full-length frontal view emphasizes a nude male statue's turned head, muscular torso, and relaxed",
+      "sourceFilename": "IMG_9365.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/bent-arm.png",
+      "width": 178,
+      "height": 272,
+      "bbox": [
+        675,
+        409,
+        853,
+        681
+      ],
+      "sourceSize": [
+        1200,
+        1800
+      ],
+      "maskPixels": 23760,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 Small foreground/background prompts; visually authored anatomical boundary; actual photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "aspectRatio": 0.65441,
+      "shape": {
+        "aspectRatio": 0.65441,
+        "fillRatio": 0.49075,
+        "elongation": 2.65138
+      },
+      "anatomicalGroup": "arm",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "standing-leg",
+      "kind": "leg",
+      "name": "Upright leg / standing figure",
+      "sourceId": "VA-IMG-IMG_9365",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9365.jpg",
+      "sourceTitle": "A full-length frontal view emphasizes a nude male statue's turned head, muscular torso, and relaxed",
+      "sourceFilename": "IMG_9365.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/standing-leg.png",
+      "width": 160,
+      "height": 634,
+      "bbox": [
+        490,
+        864,
+        650,
+        1498
+      ],
+      "sourceSize": [
+        1200,
+        1800
+      ],
+      "maskPixels": 58663,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 Small foreground/background prompts; visually authored anatomical boundary; actual photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "aspectRatio": 0.25237,
+      "shape": {
+        "aspectRatio": 0.25237,
+        "fillRatio": 0.5783,
+        "elongation": 4.96471
+      },
+      "anatomicalGroup": "leg",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "slanted-leg",
+      "kind": "leg",
+      "name": "Angled leg / standing figure",
+      "sourceId": "VA-IMG-IMG_9365",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9365.jpg",
+      "sourceTitle": "A full-length frontal view emphasizes a nude male statue's turned head, muscular torso, and relaxed",
+      "sourceFilename": "IMG_9365.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/slanted-leg.png",
+      "width": 318,
+      "height": 692,
+      "bbox": [
+        624,
+        882,
+        942,
+        1574
+      ],
+      "sourceSize": [
+        1200,
+        1800
+      ],
+      "maskPixels": 58787,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 Small foreground/background prompts; visually authored anatomical boundary; actual photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "aspectRatio": 0.45954,
+      "shape": {
+        "aspectRatio": 0.45954,
+        "fillRatio": 0.26715,
+        "elongation": 7.93991
+      },
+      "anatomicalGroup": "leg",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "lowered-hand",
+      "kind": "hand",
+      "name": "Lowered hand / standing figure",
+      "sourceId": "VA-IMG-IMG_9365",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9365.jpg",
+      "sourceTitle": "A full-length frontal view emphasizes a nude male statue's turned head, muscular torso, and relaxed",
+      "sourceFilename": "IMG_9365.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/lowered-hand.png",
+      "width": 96,
+      "height": 141,
+      "bbox": [
+        378,
+        913,
+        474,
+        1054
+      ],
+      "sourceSize": [
+        1200,
+        1800
+      ],
+      "maskPixels": 8608,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 Small foreground/background prompts; visually authored anatomical boundary; actual photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "aspectRatio": 0.68085,
+      "shape": {
+        "aspectRatio": 0.68085,
+        "fillRatio": 0.63593,
+        "elongation": 2.24688
+      },
+      "anatomicalGroup": "hand",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "standing-foot",
+      "kind": "foot",
+      "name": "Foot / standing figure",
+      "sourceId": "VA-IMG-IMG_9365",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9365.jpg",
+      "sourceTitle": "A full-length frontal view emphasizes a nude male statue's turned head, muscular torso, and relaxed",
+      "sourceFilename": "IMG_9365.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/standing-foot.png",
+      "width": 131,
+      "height": 144,
+      "bbox": [
+        815,
+        1443,
+        946,
+        1587
+      ],
+      "sourceSize": [
+        1200,
+        1800
+      ],
+      "maskPixels": 10247,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 Small foreground/background prompts; visually authored anatomical boundary; actual photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "aspectRatio": 0.90972,
+      "shape": {
+        "aspectRatio": 0.90972,
+        "fillRatio": 0.5432,
+        "elongation": 2.38244
+      },
+      "anatomicalGroup": "foot",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "raised-arm",
+      "kind": "arm",
+      "name": "Upraised arm / draped figure",
+      "sourceId": "VA-IMG-IMG_9388",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9388.jpg",
+      "sourceTitle": "A slightly shifted close view of a male sculpture shows an upraised arm, tilted head, and cloth stre",
+      "sourceFilename": "IMG_9388.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/raised-arm.png",
+      "width": 342,
+      "height": 1100,
+      "bbox": [
+        764,
+        142,
+        1106,
+        1243
+      ],
+      "sourceSize": [
+        1200,
+        1800
+      ],
+      "maskPixels": 232480,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 Small foreground/background prompts; visually authored anatomical boundary; actual photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "aspectRatio": 0.31091,
+      "shape": {
+        "aspectRatio": 0.31091,
+        "fillRatio": 0.61734,
+        "elongation": 4.51233
+      },
+      "anatomicalGroup": "arm",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "twisted-torso",
+      "kind": "torso",
+      "name": "Twisting torso / draped figure",
+      "sourceId": "VA-IMG-IMG_9388",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9388.jpg",
+      "sourceTitle": "A slightly shifted close view of a male sculpture shows an upraised arm, tilted head, and cloth stre",
+      "sourceFilename": "IMG_9388.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/twisted-torso.png",
+      "width": 804,
+      "height": 823,
+      "bbox": [
+        193,
+        972,
+        997,
+        1795
+      ],
+      "sourceSize": [
+        1200,
+        1800
+      ],
+      "maskPixels": 529952,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 Small foreground/background prompts; visually authored anatomical boundary; actual photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "aspectRatio": 0.97691,
+      "shape": {
+        "aspectRatio": 0.97691,
+        "fillRatio": 0.8009,
+        "elongation": 1.24888
+      },
+      "anatomicalGroup": "torso",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "chest-hand",
+      "kind": "hand",
+      "name": "Hand holding drapery",
+      "sourceId": "VA-IMG-IMG_9388",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9388.jpg",
+      "sourceTitle": "A slightly shifted close view of a male sculpture shows an upraised arm, tilted head, and cloth stre",
+      "sourceFilename": "IMG_9388.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/chest-hand.png",
+      "width": 460,
+      "height": 289,
+      "bbox": [
+        141,
+        1062,
+        601,
+        1351
+      ],
+      "sourceSize": [
+        1200,
+        1800
+      ],
+      "maskPixels": 96206,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 Small foreground/background prompts; visually authored anatomical boundary; actual photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "aspectRatio": 1.5917,
+      "shape": {
+        "aspectRatio": 1.5917,
+        "fillRatio": 0.72368,
+        "elongation": 1.73314
+      },
+      "anatomicalGroup": "hand",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "feathered-wing",
+      "kind": "wing",
+      "name": "Feathered wing / praying figure",
+      "sourceId": "VA-IMG-IMG_9401",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9401.jpg",
+      "sourceTitle": "A winged sculptural figure gazes upward with hands joined in prayer",
+      "sourceFilename": "IMG_9401.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/feathered-wing.png",
+      "width": 569,
+      "height": 879,
+      "bbox": [
+        174,
+        297,
+        743,
+        1176
+      ],
+      "sourceSize": [
+        1800,
+        1200
+      ],
+      "maskPixels": 311982,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 Small foreground/background prompts; visually authored anatomical boundary; actual photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "aspectRatio": 0.64733,
+      "shape": {
+        "aspectRatio": 0.64733,
+        "fillRatio": 0.62378,
+        "elongation": 2.14443
+      },
+      "anatomicalGroup": "wing",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "praying-hands",
+      "kind": "hand",
+      "name": "Joined hands / praying figure",
+      "sourceId": "VA-IMG-IMG_9401",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9401.jpg",
+      "sourceTitle": "A winged sculptural figure gazes upward with hands joined in prayer",
+      "sourceFilename": "IMG_9401.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/praying-hands.png",
+      "width": 334,
+      "height": 383,
+      "bbox": [
+        1266,
+        602,
+        1600,
+        985
+      ],
+      "sourceSize": [
+        1800,
+        1200
+      ],
+      "maskPixels": 83466,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 Small foreground/background prompts; visually authored anatomical boundary; actual photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "aspectRatio": 0.87206,
+      "shape": {
+        "aspectRatio": 0.87206,
+        "fillRatio": 0.65248,
+        "elongation": 1.53062
+      },
+      "anatomicalGroup": "hand",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "portrait-head",
+      "kind": "head",
+      "name": "Portrait head / bust",
+      "sourceId": "VA-IMG-IMG_9359",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9359.jpg",
+      "sourceTitle": "Three portrait busts appear in a staggered row on dark display bases",
+      "sourceFilename": "IMG_9359.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/portrait-head.png",
+      "width": 415,
+      "height": 521,
+      "bbox": [
+        530,
+        556,
+        945,
+        1077
+      ],
+      "sourceSize": [
+        1200,
+        1800
+      ],
+      "maskPixels": 169641,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 Small foreground/background prompts; visually authored anatomical boundary; actual photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "aspectRatio": 0.79655,
+      "shape": {
+        "aspectRatio": 0.79655,
+        "fillRatio": 0.78459,
+        "elongation": 1.26654
+      },
+      "anatomicalGroup": "head",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "female-head",
+      "kind": "head",
+      "name": "Turned head / female figure",
+      "sourceId": "VA-IMG-IMG_9404",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9404.jpg",
+      "sourceTitle": "A pale female sculptural head turns to the side beneath softly curled hair",
+      "sourceFilename": "IMG_9404.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/female-head.png",
+      "width": 624,
+      "height": 697,
+      "bbox": [
+        542,
+        252,
+        1166,
+        949
+      ],
+      "sourceSize": [
+        1800,
+        1200
+      ],
+      "maskPixels": 333948,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 Small foreground/background prompts; visually authored anatomical boundary; actual photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "aspectRatio": 0.89527,
+      "shape": {
+        "aspectRatio": 0.89527,
+        "fillRatio": 0.76782,
+        "elongation": 1.15754
+      },
+      "anatomicalGroup": "head",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "raised-foot",
+      "kind": "foot",
+      "name": "Raised foot / sculpture detail",
+      "sourceId": "VA-IMG-IMG_9368",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9368.jpg",
+      "sourceTitle": "A shallow-focus sculpture detail isolates the underside of a raised bare foot, including its toes an",
+      "sourceFilename": "IMG_9368.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/raised-foot.png",
+      "width": 592,
+      "height": 1003,
+      "bbox": [
+        276,
+        689,
+        868,
+        1692
+      ],
+      "sourceSize": [
+        1200,
+        1800
+      ],
+      "maskPixels": 426556,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 Small foreground/background prompts; visually authored anatomical boundary; actual photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "aspectRatio": 0.59023,
+      "shape": {
+        "aspectRatio": 0.59023,
+        "fillRatio": 0.71838,
+        "elongation": 1.90132
+      },
+      "anatomicalGroup": "foot",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "extended-arm",
+      "kind": "arm",
+      "name": "Extended arm / dark figure",
+      "sourceId": "VA-IMG-IMG_9391",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9391.jpg",
+      "sourceTitle": "A close side profile of a dark sculptural figure shows curled hair and an arm extended toward a smal",
+      "sourceFilename": "IMG_9391.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/extended-arm.png",
+      "width": 1100,
+      "height": 502,
+      "bbox": [
+        522,
+        500,
+        1782,
+        1075
+      ],
+      "sourceSize": [
+        1800,
+        1200
+      ],
+      "maskPixels": 218259,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 Small foreground/background prompts; visually authored anatomical boundary; actual photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "aspectRatio": 2.19124,
+      "shape": {
+        "aspectRatio": 2.19124,
+        "fillRatio": 0.30132,
+        "elongation": 5.1559
+      },
+      "anatomicalGroup": "arm",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "rider-head",
+      "kind": "head",
+      "name": "Armoured rider / head",
+      "description": "Armoured rider / head. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9329",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9329.jpg",
+      "sourceTitle": "A dark equestrian sculpture depicts an armored rider raising a long spear above a horse",
+      "sourceFilename": "IMG_9329.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/rider-head.png",
+      "width": 224,
+      "height": 202,
+      "bbox": [
+        360,
+        411,
+        584,
+        613
+      ],
+      "sourceSize": [
+        1200,
+        1800
+      ],
+      "maskPixels": 27118,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "f8209b4ddb453e9ed43c4700615b0256c898b8015f01335e5d3641d88c28f9a9",
+      "aspectRatio": 1.10891,
+      "shape": {
+        "aspectRatio": 1.10891,
+        "fillRatio": 0.59932,
+        "elongation": 1.30135
+      },
+      "anatomicalGroup": "head",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "rider-raised-arm",
+      "kind": "arm",
+      "name": "Armoured rider / raised arm",
+      "description": "Armoured rider / raised arm. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9329",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9329.jpg",
+      "sourceTitle": "A dark equestrian sculpture depicts an armored rider raising a long spear above a horse",
+      "sourceFilename": "IMG_9329.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/rider-raised-arm.png",
+      "width": 234,
+      "height": 188,
+      "bbox": [
+        247,
+        383,
+        481,
+        571
+      ],
+      "sourceSize": [
+        1200,
+        1800
+      ],
+      "maskPixels": 15248,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "f8209b4ddb453e9ed43c4700615b0256c898b8015f01335e5d3641d88c28f9a9",
+      "aspectRatio": 1.24468,
+      "shape": {
+        "aspectRatio": 1.24468,
+        "fillRatio": 0.34661,
+        "elongation": 3.59184
+      },
+      "anatomicalGroup": "arm",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "rider-gripping-hand",
+      "kind": "hand",
+      "name": "Armoured rider / gripping hand",
+      "description": "Armoured rider / gripping hand. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9329",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9329.jpg",
+      "sourceTitle": "A dark equestrian sculpture depicts an armored rider raising a long spear above a horse",
+      "sourceFilename": "IMG_9329.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/rider-gripping-hand.png",
+      "width": 80,
+      "height": 90,
+      "bbox": [
+        247,
+        383,
+        327,
+        473
+      ],
+      "sourceSize": [
+        1200,
+        1800
+      ],
+      "maskPixels": 4484,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "f8209b4ddb453e9ed43c4700615b0256c898b8015f01335e5d3641d88c28f9a9",
+      "aspectRatio": 0.88889,
+      "shape": {
+        "aspectRatio": 0.88889,
+        "fillRatio": 0.62278,
+        "elongation": 1.60821
+      },
+      "anatomicalGroup": "hand",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "rider-bent-arm",
+      "kind": "arm",
+      "name": "Armoured rider / bent arm",
+      "description": "Armoured rider / bent arm. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9329",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9329.jpg",
+      "sourceTitle": "A dark equestrian sculpture depicts an armored rider raising a long spear above a horse",
+      "sourceFilename": "IMG_9329.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/rider-bent-arm.png",
+      "width": 193,
+      "height": 188,
+      "bbox": [
+        514,
+        585,
+        707,
+        773
+      ],
+      "sourceSize": [
+        1200,
+        1800
+      ],
+      "maskPixels": 14554,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "f8209b4ddb453e9ed43c4700615b0256c898b8015f01335e5d3641d88c28f9a9",
+      "aspectRatio": 1.0266,
+      "shape": {
+        "aspectRatio": 1.0266,
+        "fillRatio": 0.40111,
+        "elongation": 1.63431
+      },
+      "anatomicalGroup": "arm",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "rider-torso",
+      "kind": "torso",
+      "name": "Armoured rider / cuirass",
+      "description": "Armoured rider / cuirass. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9329",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9329.jpg",
+      "sourceTitle": "A dark equestrian sculpture depicts an armored rider raising a long spear above a horse",
+      "sourceFilename": "IMG_9329.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/rider-torso.png",
+      "width": 200,
+      "height": 307,
+      "bbox": [
+        494,
+        562,
+        694,
+        869
+      ],
+      "sourceSize": [
+        1200,
+        1800
+      ],
+      "maskPixels": 37533,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "f8209b4ddb453e9ed43c4700615b0256c898b8015f01335e5d3641d88c28f9a9",
+      "aspectRatio": 0.65147,
+      "shape": {
+        "aspectRatio": 0.65147,
+        "fillRatio": 0.61129,
+        "elongation": 2.13017
+      },
+      "anatomicalGroup": "torso",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "rider-leg",
+      "kind": "leg",
+      "name": "Armoured rider / extended booted leg",
+      "description": "Armoured rider / extended booted leg. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9329",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9329.jpg",
+      "sourceTitle": "A dark equestrian sculpture depicts an armored rider raising a long spear above a horse",
+      "sourceFilename": "IMG_9329.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/rider-leg.png",
+      "width": 227,
+      "height": 345,
+      "bbox": [
+        394,
+        828,
+        621,
+        1173
+      ],
+      "sourceSize": [
+        1200,
+        1800
+      ],
+      "maskPixels": 31696,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "f8209b4ddb453e9ed43c4700615b0256c898b8015f01335e5d3641d88c28f9a9",
+      "aspectRatio": 0.65797,
+      "shape": {
+        "aspectRatio": 0.65797,
+        "fillRatio": 0.40472,
+        "elongation": 3.83119
+      },
+      "anatomicalGroup": "leg",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "seated-curled-head",
+      "kind": "head",
+      "name": "Seated figure / curled head",
+      "description": "Seated figure / curled head. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9349",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9349.jpg",
+      "sourceTitle": "Two seated sculptural figures, one dark and one pale, appear inside a glass display among other smal",
+      "sourceFilename": "IMG_9349.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/seated-curled-head.png",
+      "width": 214,
+      "height": 218,
+      "bbox": [
+        1235,
+        156,
+        1449,
+        374
+      ],
+      "sourceSize": [
+        1800,
+        1200
+      ],
+      "maskPixels": 33185,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "84796fde4e79f81fde438d45d590e32e18c379e5e7e07b1e48aecee6ba52ae1b",
+      "aspectRatio": 0.98165,
+      "shape": {
+        "aspectRatio": 0.98165,
+        "fillRatio": 0.71133,
+        "elongation": 1.11584
+      },
+      "anatomicalGroup": "head",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "seated-curved-torso",
+      "kind": "torso",
+      "name": "Seated figure / curved torso",
+      "description": "Seated figure / curved torso. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9349",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9349.jpg",
+      "sourceTitle": "Two seated sculptural figures, one dark and one pale, appear inside a glass display among other smal",
+      "sourceFilename": "IMG_9349.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/seated-curved-torso.png",
+      "width": 376,
+      "height": 439,
+      "bbox": [
+        985,
+        294,
+        1361,
+        733
+      ],
+      "sourceSize": [
+        1800,
+        1200
+      ],
+      "maskPixels": 112503,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "84796fde4e79f81fde438d45d590e32e18c379e5e7e07b1e48aecee6ba52ae1b",
+      "aspectRatio": 0.85649,
+      "shape": {
+        "aspectRatio": 0.85649,
+        "fillRatio": 0.68157,
+        "elongation": 1.12082
+      },
+      "anatomicalGroup": "torso",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "seated-reaching-arm",
+      "kind": "arm",
+      "name": "Seated figure / reaching arm",
+      "description": "Seated figure / reaching arm. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9349",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9349.jpg",
+      "sourceTitle": "Two seated sculptural figures, one dark and one pale, appear inside a glass display among other smal",
+      "sourceFilename": "IMG_9349.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/seated-reaching-arm.png",
+      "width": 337,
+      "height": 451,
+      "bbox": [
+        1240,
+        388,
+        1577,
+        839
+      ],
+      "sourceSize": [
+        1800,
+        1200
+      ],
+      "maskPixels": 47070,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "84796fde4e79f81fde438d45d590e32e18c379e5e7e07b1e48aecee6ba52ae1b",
+      "aspectRatio": 0.74723,
+      "shape": {
+        "aspectRatio": 0.74723,
+        "fillRatio": 0.3097,
+        "elongation": 4.08378
+      },
+      "anatomicalGroup": "arm",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "seated-curled-hand",
+      "kind": "hand",
+      "name": "Seated figure / curled hand",
+      "description": "Seated figure / curled hand. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9349",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9349.jpg",
+      "sourceTitle": "Two seated sculptural figures, one dark and one pale, appear inside a glass display among other smal",
+      "sourceFilename": "IMG_9349.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/seated-curled-hand.png",
+      "width": 138,
+      "height": 200,
+      "bbox": [
+        1463,
+        715,
+        1601,
+        915
+      ],
+      "sourceSize": [
+        1800,
+        1200
+      ],
+      "maskPixels": 15225,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "84796fde4e79f81fde438d45d590e32e18c379e5e7e07b1e48aecee6ba52ae1b",
+      "aspectRatio": 0.69,
+      "shape": {
+        "aspectRatio": 0.69,
+        "fillRatio": 0.55163,
+        "elongation": 2.11755
+      },
+      "anatomicalGroup": "hand",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "seated-bent-leg",
+      "kind": "leg",
+      "name": "Seated figure / bent leg",
+      "description": "Seated figure / bent leg. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9349",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9349.jpg",
+      "sourceTitle": "Two seated sculptural figures, one dark and one pale, appear inside a glass display among other smal",
+      "sourceFilename": "IMG_9349.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/seated-bent-leg.png",
+      "width": 455,
+      "height": 233,
+      "bbox": [
+        1060,
+        698,
+        1515,
+        931
+      ],
+      "sourceSize": [
+        1800,
+        1200
+      ],
+      "maskPixels": 51060,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "84796fde4e79f81fde438d45d590e32e18c379e5e7e07b1e48aecee6ba52ae1b",
+      "aspectRatio": 1.95279,
+      "shape": {
+        "aspectRatio": 1.95279,
+        "fillRatio": 0.48163,
+        "elongation": 3.57992
+      },
+      "anatomicalGroup": "leg",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "seated-lower-leg",
+      "kind": "leg",
+      "name": "Seated figure / lower leg",
+      "description": "Seated figure / lower leg. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9349",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9349.jpg",
+      "sourceTitle": "Two seated sculptural figures, one dark and one pale, appear inside a glass display among other smal",
+      "sourceFilename": "IMG_9349.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/seated-lower-leg.png",
+      "width": 265,
+      "height": 331,
+      "bbox": [
+        1235,
+        864,
+        1500,
+        1195
+      ],
+      "sourceSize": [
+        1800,
+        1200
+      ],
+      "maskPixels": 27410,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "84796fde4e79f81fde438d45d590e32e18c379e5e7e07b1e48aecee6ba52ae1b",
+      "aspectRatio": 0.8006,
+      "shape": {
+        "aspectRatio": 0.8006,
+        "fillRatio": 0.31249,
+        "elongation": 4.85154
+      },
+      "anatomicalGroup": "leg",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "seated-bare-foot",
+      "kind": "foot",
+      "name": "Seated figure / bare foot",
+      "description": "Seated figure / bare foot. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9349",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9349.jpg",
+      "sourceTitle": "Two seated sculptural figures, one dark and one pale, appear inside a glass display among other smal",
+      "sourceFilename": "IMG_9349.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/seated-bare-foot.png",
+      "width": 195,
+      "height": 71,
+      "bbox": [
+        1223,
+        1129,
+        1418,
+        1200
+      ],
+      "sourceSize": [
+        1800,
+        1200
+      ],
+      "maskPixels": 8706,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "84796fde4e79f81fde438d45d590e32e18c379e5e7e07b1e48aecee6ba52ae1b",
+      "aspectRatio": 2.74648,
+      "shape": {
+        "aspectRatio": 2.74648,
+        "fillRatio": 0.62882,
+        "elongation": 2.607
+      },
+      "anatomicalGroup": "foot",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "crucifix-head",
+      "kind": "head",
+      "name": "Crucifix figure / bearded head",
+      "description": "Crucifix figure / bearded head. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9374",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9374.jpg",
+      "sourceTitle": "A dark crucifix sculpture is mounted on a simple pale cross against a green wall",
+      "sourceFilename": "IMG_9374.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/crucifix-head.png",
+      "width": 205,
+      "height": 267,
+      "bbox": [
+        427,
+        720,
+        632,
+        987
+      ],
+      "sourceSize": [
+        1200,
+        1800
+      ],
+      "maskPixels": 42083,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "5b1c7fb3dd7845b616905c3cb1fa400c93a26bd3f8783199d4cba813cab9b8eb",
+      "aspectRatio": 0.76779,
+      "shape": {
+        "aspectRatio": 0.76779,
+        "fillRatio": 0.76885,
+        "elongation": 1.43133
+      },
+      "anatomicalGroup": "head",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "crucifix-left-arm",
+      "kind": "arm",
+      "name": "Crucifix figure / extended arm, left",
+      "description": "Crucifix figure / extended arm, left. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9374",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9374.jpg",
+      "sourceTitle": "A dark crucifix sculpture is mounted on a simple pale cross against a green wall",
+      "sourceFilename": "IMG_9374.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/crucifix-left-arm.png",
+      "width": 500,
+      "height": 176,
+      "bbox": [
+        0,
+        829,
+        500,
+        1005
+      ],
+      "sourceSize": [
+        1200,
+        1800
+      ],
+      "maskPixels": 31995,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "5b1c7fb3dd7845b616905c3cb1fa400c93a26bd3f8783199d4cba813cab9b8eb",
+      "aspectRatio": 2.84091,
+      "shape": {
+        "aspectRatio": 2.84091,
+        "fillRatio": 0.36358,
+        "elongation": 6.83097
+      },
+      "anatomicalGroup": "arm",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "crucifix-right-arm",
+      "kind": "arm",
+      "name": "Crucifix figure / extended arm, right",
+      "description": "Crucifix figure / extended arm, right. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9374",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9374.jpg",
+      "sourceTitle": "A dark crucifix sculpture is mounted on a simple pale cross against a green wall",
+      "sourceFilename": "IMG_9374.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/crucifix-right-arm.png",
+      "width": 515,
+      "height": 197,
+      "bbox": [
+        685,
+        828,
+        1200,
+        1025
+      ],
+      "sourceSize": [
+        1200,
+        1800
+      ],
+      "maskPixels": 34121,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "5b1c7fb3dd7845b616905c3cb1fa400c93a26bd3f8783199d4cba813cab9b8eb",
+      "aspectRatio": 2.61421,
+      "shape": {
+        "aspectRatio": 2.61421,
+        "fillRatio": 0.33632,
+        "elongation": 7.64281
+      },
+      "anatomicalGroup": "arm",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "crucifix-torso",
+      "kind": "torso",
+      "name": "Crucifix figure / torso",
+      "description": "Crucifix figure / torso. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9374",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9374.jpg",
+      "sourceTitle": "A dark crucifix sculpture is mounted on a simple pale cross against a green wall",
+      "sourceFilename": "IMG_9374.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/crucifix-torso.png",
+      "width": 297,
+      "height": 366,
+      "bbox": [
+        456,
+        956,
+        753,
+        1322
+      ],
+      "sourceSize": [
+        1200,
+        1800
+      ],
+      "maskPixels": 84542,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "5b1c7fb3dd7845b616905c3cb1fa400c93a26bd3f8783199d4cba813cab9b8eb",
+      "aspectRatio": 0.81148,
+      "shape": {
+        "aspectRatio": 0.81148,
+        "fillRatio": 0.77774,
+        "elongation": 1.41701
+      },
+      "anatomicalGroup": "torso",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "crucifix-drapery",
+      "kind": "drapery",
+      "name": "Crucifix figure / wrapped loincloth",
+      "description": "Crucifix figure / wrapped loincloth. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9374",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9374.jpg",
+      "sourceTitle": "A dark crucifix sculpture is mounted on a simple pale cross against a green wall",
+      "sourceFilename": "IMG_9374.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/crucifix-drapery.png",
+      "width": 345,
+      "height": 239,
+      "bbox": [
+        415,
+        1256,
+        760,
+        1495
+      ],
+      "sourceSize": [
+        1200,
+        1800
+      ],
+      "maskPixels": 33023,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "5b1c7fb3dd7845b616905c3cb1fa400c93a26bd3f8783199d4cba813cab9b8eb",
+      "aspectRatio": 1.44351,
+      "shape": {
+        "aspectRatio": 1.44351,
+        "fillRatio": 0.4005,
+        "elongation": 2.91413
+      },
+      "anatomicalGroup": "drapery",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "crucifix-left-leg",
+      "kind": "leg",
+      "name": "Crucifix figure / bent leg, left",
+      "description": "Crucifix figure / bent leg, left. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9374",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9374.jpg",
+      "sourceTitle": "A dark crucifix sculpture is mounted on a simple pale cross against a green wall",
+      "sourceFilename": "IMG_9374.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/crucifix-left-leg.png",
+      "width": 192,
+      "height": 461,
+      "bbox": [
+        457,
+        1339,
+        649,
+        1800
+      ],
+      "sourceSize": [
+        1200,
+        1800
+      ],
+      "maskPixels": 55409,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "5b1c7fb3dd7845b616905c3cb1fa400c93a26bd3f8783199d4cba813cab9b8eb",
+      "aspectRatio": 0.41649,
+      "shape": {
+        "aspectRatio": 0.41649,
+        "fillRatio": 0.62601,
+        "elongation": 3.33892
+      },
+      "anatomicalGroup": "leg",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "crucifix-right-leg",
+      "kind": "leg",
+      "name": "Crucifix figure / bent leg, right",
+      "description": "Crucifix figure / bent leg, right. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9374",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9374.jpg",
+      "sourceTitle": "A dark crucifix sculpture is mounted on a simple pale cross against a green wall",
+      "sourceFilename": "IMG_9374.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/crucifix-right-leg.png",
+      "width": 145,
+      "height": 416,
+      "bbox": [
+        608,
+        1384,
+        753,
+        1800
+      ],
+      "sourceSize": [
+        1200,
+        1800
+      ],
+      "maskPixels": 39738,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "5b1c7fb3dd7845b616905c3cb1fa400c93a26bd3f8783199d4cba813cab9b8eb",
+      "aspectRatio": 0.34856,
+      "shape": {
+        "aspectRatio": 0.34856,
+        "fillRatio": 0.65879,
+        "elongation": 3.95085
+      },
+      "anatomicalGroup": "leg",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "dark-lifted-arm",
+      "kind": "arm",
+      "name": "Dark figure / bent overhead arm",
+      "description": "Dark figure / bent overhead arm. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9383",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9383.jpg",
+      "sourceTitle": "A dark sculptural figure raises a separate sculpted head overhead with one arm",
+      "sourceFilename": "IMG_9383.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/dark-lifted-arm.png",
+      "width": 600,
+      "height": 897,
+      "bbox": [
+        378,
+        369,
+        978,
+        1266
+      ],
+      "sourceSize": [
+        1200,
+        1800
+      ],
+      "maskPixels": 86767,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "5a61827037c24e8b8dea569fcb311ee2fab0f01688d48eef689ceb4c1342218c",
+      "aspectRatio": 0.6689,
+      "shape": {
+        "aspectRatio": 0.6689,
+        "fillRatio": 0.16122,
+        "elongation": 5.6396
+      },
+      "anatomicalGroup": "arm",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "dark-helmeted-head",
+      "kind": "head",
+      "name": "Dark figure / tilted helmeted head",
+      "description": "Dark figure / tilted helmeted head. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9383",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9383.jpg",
+      "sourceTitle": "A dark sculptural figure raises a separate sculpted head overhead with one arm",
+      "sourceFilename": "IMG_9383.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/dark-helmeted-head.png",
+      "width": 344,
+      "height": 429,
+      "bbox": [
+        482,
+        698,
+        826,
+        1127
+      ],
+      "sourceSize": [
+        1200,
+        1800
+      ],
+      "maskPixels": 102159,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 initial segmentation; final silhouette manually traced against real source photograph after full-resolution review; actual source pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "5a61827037c24e8b8dea569fcb311ee2fab0f01688d48eef689ceb4c1342218c",
+      "aspectRatio": 0.80186,
+      "shape": {
+        "aspectRatio": 0.80186,
+        "fillRatio": 0.765,
+        "elongation": 1.25608
+      },
+      "anatomicalGroup": "head",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "dark-chest",
+      "kind": "torso",
+      "name": "Dark figure / turned chest",
+      "description": "Dark figure / turned chest. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9383",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9383.jpg",
+      "sourceTitle": "A dark sculptural figure raises a separate sculpted head overhead with one arm",
+      "sourceFilename": "IMG_9383.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/dark-chest.png",
+      "width": 330,
+      "height": 731,
+      "bbox": [
+        687,
+        1069,
+        1017,
+        1800
+      ],
+      "sourceSize": [
+        1200,
+        1800
+      ],
+      "maskPixels": 195368,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "5a61827037c24e8b8dea569fcb311ee2fab0f01688d48eef689ceb4c1342218c",
+      "aspectRatio": 0.45144,
+      "shape": {
+        "aspectRatio": 0.45144,
+        "fillRatio": 0.80988,
+        "elongation": 2.32371
+      },
+      "anatomicalGroup": "torso",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "veiled-mother-head",
+      "kind": "head",
+      "name": "Veiled woman / head",
+      "description": "Veiled woman / head. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9389",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9389.jpg",
+      "sourceTitle": "A pale sculpture portrays a veiled woman holding a small child close to her chest",
+      "sourceFilename": "IMG_9389.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/veiled-mother-head.png",
+      "width": 376,
+      "height": 568,
+      "bbox": [
+        380,
+        207,
+        756,
+        775
+      ],
+      "sourceSize": [
+        1200,
+        1800
+      ],
+      "maskPixels": 167344,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "ddfc2893f6d2877bf04894cb2f3e5bc5faa2616279400fa2a620e6310a3540f9",
+      "aspectRatio": 0.66197,
+      "shape": {
+        "aspectRatio": 0.66197,
+        "fillRatio": 0.78356,
+        "elongation": 1.66807
+      },
+      "anatomicalGroup": "head",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "child-curled-head",
+      "kind": "head",
+      "name": "Child / curled head",
+      "description": "Child / curled head. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9389",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9389.jpg",
+      "sourceTitle": "A pale sculpture portrays a veiled woman holding a small child close to her chest",
+      "sourceFilename": "IMG_9389.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/child-curled-head.png",
+      "width": 453,
+      "height": 501,
+      "bbox": [
+        386,
+        684,
+        839,
+        1185
+      ],
+      "sourceSize": [
+        1200,
+        1800
+      ],
+      "maskPixels": 183476,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "ddfc2893f6d2877bf04894cb2f3e5bc5faa2616279400fa2a620e6310a3540f9",
+      "aspectRatio": 0.90419,
+      "shape": {
+        "aspectRatio": 0.90419,
+        "fillRatio": 0.80843,
+        "elongation": 1.18017
+      },
+      "anatomicalGroup": "head",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "child-crossed-arm",
+      "kind": "arm",
+      "name": "Child / crossed arm",
+      "description": "Child / crossed arm. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9389",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9389.jpg",
+      "sourceTitle": "A pale sculpture portrays a veiled woman holding a small child close to her chest",
+      "sourceFilename": "IMG_9389.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/child-crossed-arm.png",
+      "width": 547,
+      "height": 328,
+      "bbox": [
+        396,
+        1102,
+        943,
+        1430
+      ],
+      "sourceSize": [
+        1200,
+        1800
+      ],
+      "maskPixels": 90131,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "ddfc2893f6d2877bf04894cb2f3e5bc5faa2616279400fa2a620e6310a3540f9",
+      "aspectRatio": 1.66768,
+      "shape": {
+        "aspectRatio": 1.66768,
+        "fillRatio": 0.50236,
+        "elongation": 2.04567
+      },
+      "anatomicalGroup": "arm",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "child-reaching-hand",
+      "kind": "hand",
+      "name": "Child / small reaching hand",
+      "description": "Child / small reaching hand. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9389",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9389.jpg",
+      "sourceTitle": "A pale sculpture portrays a veiled woman holding a small child close to her chest",
+      "sourceFilename": "IMG_9389.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/child-reaching-hand.png",
+      "width": 207,
+      "height": 118,
+      "bbox": [
+        770,
+        1170,
+        977,
+        1288
+      ],
+      "sourceSize": [
+        1200,
+        1800
+      ],
+      "maskPixels": 17474,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "ddfc2893f6d2877bf04894cb2f3e5bc5faa2616279400fa2a620e6310a3540f9",
+      "aspectRatio": 1.75424,
+      "shape": {
+        "aspectRatio": 1.75424,
+        "fillRatio": 0.71539,
+        "elongation": 1.8244
+      },
+      "anatomicalGroup": "hand",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "mother-supporting-hand",
+      "kind": "hand",
+      "name": "Veiled woman / supporting hand",
+      "description": "Veiled woman / supporting hand. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9389",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9389.jpg",
+      "sourceTitle": "A pale sculpture portrays a veiled woman holding a small child close to her chest",
+      "sourceFilename": "IMG_9389.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/mother-supporting-hand.png",
+      "width": 254,
+      "height": 231,
+      "bbox": [
+        785,
+        1170,
+        1039,
+        1401
+      ],
+      "sourceSize": [
+        1200,
+        1800
+      ],
+      "maskPixels": 35541,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "ddfc2893f6d2877bf04894cb2f3e5bc5faa2616279400fa2a620e6310a3540f9",
+      "aspectRatio": 1.09957,
+      "shape": {
+        "aspectRatio": 1.09957,
+        "fillRatio": 0.60574,
+        "elongation": 1.43148
+      },
+      "anatomicalGroup": "hand",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "mother-lowered-hand",
+      "kind": "hand",
+      "name": "Veiled woman / lowered hand",
+      "description": "Veiled woman / lowered hand. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9389",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9389.jpg",
+      "sourceTitle": "A pale sculpture portrays a veiled woman holding a small child close to her chest",
+      "sourceFilename": "IMG_9389.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/mother-lowered-hand.png",
+      "width": 232,
+      "height": 270,
+      "bbox": [
+        28,
+        1475,
+        260,
+        1745
+      ],
+      "sourceSize": [
+        1200,
+        1800
+      ],
+      "maskPixels": 46235,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "ddfc2893f6d2877bf04894cb2f3e5bc5faa2616279400fa2a620e6310a3540f9",
+      "aspectRatio": 0.85926,
+      "shape": {
+        "aspectRatio": 0.85926,
+        "fillRatio": 0.73811,
+        "elongation": 1.25069
+      },
+      "anatomicalGroup": "hand",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "child-lowered-hand",
+      "kind": "hand",
+      "name": "Child / lowered hand",
+      "description": "Child / lowered hand. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9389",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9389.jpg",
+      "sourceTitle": "A pale sculpture portrays a veiled woman holding a small child close to her chest",
+      "sourceFilename": "IMG_9389.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/child-lowered-hand.png",
+      "width": 151,
+      "height": 238,
+      "bbox": [
+        934,
+        1478,
+        1085,
+        1716
+      ],
+      "sourceSize": [
+        1200,
+        1800
+      ],
+      "maskPixels": 23899,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "ddfc2893f6d2877bf04894cb2f3e5bc5faa2616279400fa2a620e6310a3540f9",
+      "aspectRatio": 0.63445,
+      "shape": {
+        "aspectRatio": 0.63445,
+        "fillRatio": 0.66501,
+        "elongation": 1.79953
+      },
+      "anatomicalGroup": "hand",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "back-curled-head",
+      "kind": "head",
+      "name": "Standing figure / head from behind",
+      "description": "Standing figure / head from behind. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9390",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9390.jpg",
+      "sourceTitle": "A low-angle rear view of a nude male statue emphasizes the back, shoulders, and carved curls",
+      "sourceFilename": "IMG_9390.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/back-curled-head.png",
+      "width": 426,
+      "height": 379,
+      "bbox": [
+        414,
+        113,
+        840,
+        492
+      ],
+      "sourceSize": [
+        1200,
+        1800
+      ],
+      "maskPixels": 114960,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "5a928b93a35a4c99ba9909ff18293735be715e2066b5109e26bf8a12a01e753d",
+      "aspectRatio": 1.12401,
+      "shape": {
+        "aspectRatio": 1.12401,
+        "fillRatio": 0.71203,
+        "elongation": 1.34668
+      },
+      "anatomicalGroup": "head",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "broad-sculpted-back",
+      "kind": "torso",
+      "name": "Standing figure / broad back",
+      "description": "Standing figure / broad back. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9390",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9390.jpg",
+      "sourceTitle": "A low-angle rear view of a nude male statue emphasizes the back, shoulders, and carved curls",
+      "sourceFilename": "IMG_9390.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/broad-sculpted-back.png",
+      "width": 721,
+      "height": 869,
+      "bbox": [
+        268,
+        388,
+        989,
+        1257
+      ],
+      "sourceSize": [
+        1200,
+        1800
+      ],
+      "maskPixels": 500727,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "5a928b93a35a4c99ba9909ff18293735be715e2066b5109e26bf8a12a01e753d",
+      "aspectRatio": 0.82969,
+      "shape": {
+        "aspectRatio": 0.82969,
+        "fillRatio": 0.79918,
+        "elongation": 1.18934
+      },
+      "anatomicalGroup": "torso",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "back-left-arm",
+      "kind": "arm",
+      "name": "Standing figure / bent arm from behind",
+      "description": "Standing figure / bent arm from behind. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9390",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9390.jpg",
+      "sourceTitle": "A low-angle rear view of a nude male statue emphasizes the back, shoulders, and carved curls",
+      "sourceFilename": "IMG_9390.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/back-left-arm.png",
+      "width": 317,
+      "height": 565,
+      "bbox": [
+        0,
+        388,
+        317,
+        953
+      ],
+      "sourceSize": [
+        1200,
+        1800
+      ],
+      "maskPixels": 87956,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "5a928b93a35a4c99ba9909ff18293735be715e2066b5109e26bf8a12a01e753d",
+      "aspectRatio": 0.56106,
+      "shape": {
+        "aspectRatio": 0.56106,
+        "fillRatio": 0.49109,
+        "elongation": 3.26388
+      },
+      "anatomicalGroup": "arm",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "back-right-arm",
+      "kind": "arm",
+      "name": "Standing figure / long lowered arm",
+      "description": "Standing figure / long lowered arm. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9390",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9390.jpg",
+      "sourceTitle": "A low-angle rear view of a nude male statue emphasizes the back, shoulders, and carved curls",
+      "sourceFilename": "IMG_9390.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/back-right-arm.png",
+      "width": 228,
+      "height": 1000,
+      "bbox": [
+        934,
+        637,
+        1190,
+        1758
+      ],
+      "sourceSize": [
+        1200,
+        1800
+      ],
+      "maskPixels": 156265,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "5a928b93a35a4c99ba9909ff18293735be715e2066b5109e26bf8a12a01e753d",
+      "aspectRatio": 0.228,
+      "shape": {
+        "aspectRatio": 0.228,
+        "fillRatio": 0.54454,
+        "elongation": 6.65729
+      },
+      "anatomicalGroup": "arm",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "back-hip",
+      "kind": "torso",
+      "name": "Standing figure / sculpted hip",
+      "description": "Standing figure / sculpted hip. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9390",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9390.jpg",
+      "sourceTitle": "A low-angle rear view of a nude male statue emphasizes the back, shoulders, and carved curls",
+      "sourceFilename": "IMG_9390.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/back-hip.png",
+      "width": 811,
+      "height": 692,
+      "bbox": [
+        173,
+        1100,
+        984,
+        1792
+      ],
+      "sourceSize": [
+        1200,
+        1800
+      ],
+      "maskPixels": 467208,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "5a928b93a35a4c99ba9909ff18293735be715e2066b5109e26bf8a12a01e753d",
+      "aspectRatio": 1.17197,
+      "shape": {
+        "aspectRatio": 1.17197,
+        "fillRatio": 0.8325,
+        "elongation": 1.14671
+      },
+      "anatomicalGroup": "torso",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "bearded-halo-head",
+      "kind": "head",
+      "name": "Haloed figure / bearded head",
+      "description": "Haloed figure / bearded head. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9392",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9392.jpg",
+      "sourceTitle": "A dark standing male figure wears a circular halo-like ring and holds a slender cross and shallow di",
+      "sourceFilename": "IMG_9392.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/bearded-halo-head.png",
+      "width": 456,
+      "height": 619,
+      "bbox": [
+        189,
+        269,
+        645,
+        888
+      ],
+      "sourceSize": [
+        1200,
+        1800
+      ],
+      "maskPixels": 211435,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "ff19e05777aea6abdd8f17c2ecb0325cc8eb9c70c9c9aacf1d8e5319259193b5",
+      "aspectRatio": 0.73667,
+      "shape": {
+        "aspectRatio": 0.73667,
+        "fillRatio": 0.74907,
+        "elongation": 1.36989
+      },
+      "anatomicalGroup": "head",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "haloed-shoulder",
+      "kind": "shoulder",
+      "name": "Haloed figure / rounded shoulder",
+      "description": "Haloed figure / rounded shoulder. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9392",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9392.jpg",
+      "sourceTitle": "A dark standing male figure wears a circular halo-like ring and holds a slender cross and shallow di",
+      "sourceFilename": "IMG_9392.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/haloed-shoulder.png",
+      "width": 310,
+      "height": 343,
+      "bbox": [
+        44,
+        801,
+        354,
+        1144
+      ],
+      "sourceSize": [
+        1200,
+        1800
+      ],
+      "maskPixels": 77201,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "ff19e05777aea6abdd8f17c2ecb0325cc8eb9c70c9c9aacf1d8e5319259193b5",
+      "aspectRatio": 0.90379,
+      "shape": {
+        "aspectRatio": 0.90379,
+        "fillRatio": 0.72605,
+        "elongation": 1.24602
+      },
+      "anatomicalGroup": "shoulder",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "haloed-torso",
+      "kind": "torso",
+      "name": "Haloed figure / chest and waist",
+      "description": "Haloed figure / chest and waist. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9392",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9392.jpg",
+      "sourceTitle": "A dark standing male figure wears a circular halo-like ring and holds a slender cross and shallow di",
+      "sourceFilename": "IMG_9392.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/haloed-torso.png",
+      "width": 472,
+      "height": 649,
+      "bbox": [
+        212,
+        778,
+        684,
+        1427
+      ],
+      "sourceSize": [
+        1200,
+        1800
+      ],
+      "maskPixels": 198403,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "ff19e05777aea6abdd8f17c2ecb0325cc8eb9c70c9c9aacf1d8e5319259193b5",
+      "aspectRatio": 0.72727,
+      "shape": {
+        "aspectRatio": 0.72727,
+        "fillRatio": 0.64768,
+        "elongation": 1.37562
+      },
+      "anatomicalGroup": "torso",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "haloed-bent-arm",
+      "kind": "arm",
+      "name": "Haloed figure / extended bent arm",
+      "description": "Haloed figure / extended bent arm. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9392",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9392.jpg",
+      "sourceTitle": "A dark standing male figure wears a circular halo-like ring and holds a slender cross and shallow di",
+      "sourceFilename": "IMG_9392.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/haloed-bent-arm.png",
+      "width": 756,
+      "height": 470,
+      "bbox": [
+        55,
+        976,
+        811,
+        1446
+      ],
+      "sourceSize": [
+        1200,
+        1800
+      ],
+      "maskPixels": 144058,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "ff19e05777aea6abdd8f17c2ecb0325cc8eb9c70c9c9aacf1d8e5319259193b5",
+      "aspectRatio": 1.60851,
+      "shape": {
+        "aspectRatio": 1.60851,
+        "fillRatio": 0.40543,
+        "elongation": 3.27509
+      },
+      "anatomicalGroup": "arm",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "haloed-hand",
+      "kind": "hand",
+      "name": "Haloed figure / outstretched hand",
+      "description": "Haloed figure / outstretched hand. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9392",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9392.jpg",
+      "sourceTitle": "A dark standing male figure wears a circular halo-like ring and holds a slender cross and shallow di",
+      "sourceFilename": "IMG_9392.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/haloed-hand.png",
+      "width": 359,
+      "height": 263,
+      "bbox": [
+        628,
+        1271,
+        987,
+        1534
+      ],
+      "sourceSize": [
+        1200,
+        1800
+      ],
+      "maskPixels": 50357,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "ff19e05777aea6abdd8f17c2ecb0325cc8eb9c70c9c9aacf1d8e5319259193b5",
+      "aspectRatio": 1.36502,
+      "shape": {
+        "aspectRatio": 1.36502,
+        "fillRatio": 0.53335,
+        "elongation": 2.20602
+      },
+      "anatomicalGroup": "hand",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "haloed-drapery",
+      "kind": "drapery",
+      "name": "Haloed figure / gathered drapery",
+      "description": "Haloed figure / gathered drapery. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9392",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9392.jpg",
+      "sourceTitle": "A dark standing male figure wears a circular halo-like ring and holds a slender cross and shallow di",
+      "sourceFilename": "IMG_9392.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/haloed-drapery.png",
+      "width": 632,
+      "height": 360,
+      "bbox": [
+        52,
+        1440,
+        684,
+        1800
+      ],
+      "sourceSize": [
+        1200,
+        1800
+      ],
+      "maskPixels": 200696,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "ff19e05777aea6abdd8f17c2ecb0325cc8eb9c70c9c9aacf1d8e5319259193b5",
+      "aspectRatio": 1.75556,
+      "shape": {
+        "aspectRatio": 1.75556,
+        "fillRatio": 0.8821,
+        "elongation": 1.82166
+      },
+      "anatomicalGroup": "drapery",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "bending-woman-head",
+      "kind": "head",
+      "name": "Bending woman / bowed head",
+      "description": "Bending woman / bowed head. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9393",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9393.jpg",
+      "sourceTitle": "A pale figural sculpture shows a younger woman bending toward an older seated woman in a head coveri",
+      "sourceFilename": "IMG_9393.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/bending-woman-head.png",
+      "width": 435,
+      "height": 494,
+      "bbox": [
+        616,
+        8,
+        1051,
+        502
+      ],
+      "sourceSize": [
+        1800,
+        1200
+      ],
+      "maskPixels": 143322,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "68bdda0a709b3fd3bf7ca7357d416d945c31bb4877b6261920aac8f0c074416f",
+      "aspectRatio": 0.88057,
+      "shape": {
+        "aspectRatio": 0.88057,
+        "fillRatio": 0.66696,
+        "elongation": 1.20723
+      },
+      "anatomicalGroup": "head",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "elderly-veiled-head",
+      "kind": "head",
+      "name": "Elderly woman / upturned veiled head",
+      "description": "Elderly woman / upturned veiled head. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9393",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9393.jpg",
+      "sourceTitle": "A pale figural sculpture shows a younger woman bending toward an older seated woman in a head coveri",
+      "sourceFilename": "IMG_9393.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/elderly-veiled-head.png",
+      "width": 518,
+      "height": 449,
+      "bbox": [
+        1001,
+        684,
+        1519,
+        1133
+      ],
+      "sourceSize": [
+        1800,
+        1200
+      ],
+      "maskPixels": 170358,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "68bdda0a709b3fd3bf7ca7357d416d945c31bb4877b6261920aac8f0c074416f",
+      "aspectRatio": 1.15367,
+      "shape": {
+        "aspectRatio": 1.15367,
+        "fillRatio": 0.73246,
+        "elongation": 1.22058
+      },
+      "anatomicalGroup": "head",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "bending-draped-arm",
+      "kind": "arm",
+      "name": "Bending woman / bent draped arm",
+      "description": "Bending woman / bent draped arm. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9393",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9393.jpg",
+      "sourceTitle": "A pale figural sculpture shows a younger woman bending toward an older seated woman in a head coveri",
+      "sourceFilename": "IMG_9393.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/bending-draped-arm.png",
+      "width": 683,
+      "height": 820,
+      "bbox": [
+        265,
+        380,
+        948,
+        1200
+      ],
+      "sourceSize": [
+        1800,
+        1200
+      ],
+      "maskPixels": 220927,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "68bdda0a709b3fd3bf7ca7357d416d945c31bb4877b6261920aac8f0c074416f",
+      "aspectRatio": 0.83293,
+      "shape": {
+        "aspectRatio": 0.83293,
+        "fillRatio": 0.39447,
+        "elongation": 2.857
+      },
+      "anatomicalGroup": "arm",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "embracing-hand",
+      "kind": "hand",
+      "name": "Embracing figure / hand around shoulder",
+      "description": "Embracing figure / hand around shoulder. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9393",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9393.jpg",
+      "sourceTitle": "A pale figural sculpture shows a younger woman bending toward an older seated woman in a head coveri",
+      "sourceFilename": "IMG_9393.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/embracing-hand.png",
+      "width": 102,
+      "height": 246,
+      "bbox": [
+        162,
+        794,
+        264,
+        1040
+      ],
+      "sourceSize": [
+        1800,
+        1200
+      ],
+      "maskPixels": 17911,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "68bdda0a709b3fd3bf7ca7357d416d945c31bb4877b6261920aac8f0c074416f",
+      "aspectRatio": 0.41463,
+      "shape": {
+        "aspectRatio": 0.41463,
+        "fillRatio": 0.71381,
+        "elongation": 2.51593
+      },
+      "anatomicalGroup": "hand",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "effigy-veiled-head",
+      "kind": "head",
+      "name": "Reclining effigy / veiled head, front",
+      "description": "Reclining effigy / veiled head, front. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9394",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9394.jpg",
+      "sourceTitle": "A frontal close-up of a reclining female effigy shows a veiled head resting on a broad cushion",
+      "sourceFilename": "IMG_9394.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/effigy-veiled-head.png",
+      "width": 540,
+      "height": 654,
+      "bbox": [
+        627,
+        270,
+        1167,
+        924
+      ],
+      "sourceSize": [
+        1800,
+        1200
+      ],
+      "maskPixels": 291557,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "e64e827ccf1db8a79a45e64aef1ff89a44e68bba07b798d3d5ac07f6500eb1ca",
+      "aspectRatio": 0.82569,
+      "shape": {
+        "aspectRatio": 0.82569,
+        "fillRatio": 0.82557,
+        "elongation": 1.29246
+      },
+      "anatomicalGroup": "head",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "helmet-back-head",
+      "kind": "head",
+      "name": "Helmeted bust / head from behind",
+      "description": "Helmeted bust / head from behind. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9396",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9396.jpg",
+      "sourceTitle": "A helmeted sculptural bust is seen from behind on a dark pedestal",
+      "sourceFilename": "IMG_9396.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/helmet-back-head.png",
+      "width": 494,
+      "height": 672,
+      "bbox": [
+        348,
+        224,
+        842,
+        896
+      ],
+      "sourceSize": [
+        1200,
+        1800
+      ],
+      "maskPixels": 230453,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "15855cb707e9856dab6ca3b99febf59112e2cc0c42c6f4ca79d1749b68816383",
+      "aspectRatio": 0.73512,
+      "shape": {
+        "aspectRatio": 0.73512,
+        "fillRatio": 0.6942,
+        "elongation": 1.53742
+      },
+      "anatomicalGroup": "head",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "helmet-shoulder",
+      "kind": "shoulder",
+      "name": "Helmeted bust / carved shoulder",
+      "description": "Helmeted bust / carved shoulder. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9396",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9396.jpg",
+      "sourceTitle": "A helmeted sculptural bust is seen from behind on a dark pedestal",
+      "sourceFilename": "IMG_9396.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/helmet-shoulder.png",
+      "width": 701,
+      "height": 492,
+      "bbox": [
+        238,
+        811,
+        939,
+        1303
+      ],
+      "sourceSize": [
+        1200,
+        1800
+      ],
+      "maskPixels": 86071,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "15855cb707e9856dab6ca3b99febf59112e2cc0c42c6f4ca79d1749b68816383",
+      "aspectRatio": 1.4248,
+      "shape": {
+        "aspectRatio": 1.4248,
+        "fillRatio": 0.24956,
+        "elongation": 3.22564
+      },
+      "anatomicalGroup": "shoulder",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "crowned-woman-head",
+      "kind": "head",
+      "name": "Crowned woman / crowned head",
+      "description": "Crowned woman / crowned head. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9399",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9399.jpg",
+      "sourceTitle": "A closer full-length view shows a crowned draped woman carrying a child beside her shoulder",
+      "sourceFilename": "IMG_9399.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/crowned-woman-head.png",
+      "width": 176,
+      "height": 271,
+      "bbox": [
+        449,
+        279,
+        625,
+        550
+      ],
+      "sourceSize": [
+        1200,
+        1800
+      ],
+      "maskPixels": 35419,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "2851bde6dfa5990b9b7fd67157637114ddf491870c0f726013a5aafc983aa79e",
+      "aspectRatio": 0.64945,
+      "shape": {
+        "aspectRatio": 0.64945,
+        "fillRatio": 0.7426,
+        "elongation": 1.80154
+      },
+      "anatomicalGroup": "head",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "crowned-child-head",
+      "kind": "head",
+      "name": "Crowned woman and child / child head",
+      "description": "Crowned woman and child / child head. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9399",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9399.jpg",
+      "sourceTitle": "A closer full-length view shows a crowned draped woman carrying a child beside her shoulder",
+      "sourceFilename": "IMG_9399.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/crowned-child-head.png",
+      "width": 113,
+      "height": 128,
+      "bbox": [
+        686,
+        400,
+        799,
+        528
+      ],
+      "sourceSize": [
+        1200,
+        1800
+      ],
+      "maskPixels": 10870,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "2851bde6dfa5990b9b7fd67157637114ddf491870c0f726013a5aafc983aa79e",
+      "aspectRatio": 0.88281,
+      "shape": {
+        "aspectRatio": 0.88281,
+        "fillRatio": 0.75152,
+        "elongation": 1.20311
+      },
+      "anatomicalGroup": "head",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "crowned-woman-torso",
+      "kind": "torso",
+      "name": "Crowned woman / draped torso",
+      "description": "Crowned woman / draped torso. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9399",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9399.jpg",
+      "sourceTitle": "A closer full-length view shows a crowned draped woman carrying a child beside her shoulder",
+      "sourceFilename": "IMG_9399.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/crowned-woman-torso.png",
+      "width": 287,
+      "height": 413,
+      "bbox": [
+        415,
+        508,
+        702,
+        921
+      ],
+      "sourceSize": [
+        1200,
+        1800
+      ],
+      "maskPixels": 96070,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "2851bde6dfa5990b9b7fd67157637114ddf491870c0f726013a5aafc983aa79e",
+      "aspectRatio": 0.69492,
+      "shape": {
+        "aspectRatio": 0.69492,
+        "fillRatio": 0.81051,
+        "elongation": 1.54931
+      },
+      "anatomicalGroup": "torso",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "crowned-bent-arm",
+      "kind": "arm",
+      "name": "Crowned woman / bent draped arm",
+      "description": "Crowned woman / bent draped arm. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9399",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9399.jpg",
+      "sourceTitle": "A closer full-length view shows a crowned draped woman carrying a child beside her shoulder",
+      "sourceFilename": "IMG_9399.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/crowned-bent-arm.png",
+      "width": 157,
+      "height": 109,
+      "bbox": [
+        418,
+        680,
+        575,
+        789
+      ],
+      "sourceSize": [
+        1200,
+        1800
+      ],
+      "maskPixels": 10966,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "2851bde6dfa5990b9b7fd67157637114ddf491870c0f726013a5aafc983aa79e",
+      "aspectRatio": 1.44037,
+      "shape": {
+        "aspectRatio": 1.44037,
+        "fillRatio": 0.6408,
+        "elongation": 2.06319
+      },
+      "anatomicalGroup": "arm",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "crowned-gathering-hand",
+      "kind": "hand",
+      "name": "Crowned woman / gathering hand",
+      "description": "Crowned woman / gathering hand. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9399",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9399.jpg",
+      "sourceTitle": "A closer full-length view shows a crowned draped woman carrying a child beside her shoulder",
+      "sourceFilename": "IMG_9399.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/crowned-gathering-hand.png",
+      "width": 80,
+      "height": 77,
+      "bbox": [
+        499,
+        702,
+        579,
+        779
+      ],
+      "sourceSize": [
+        1200,
+        1800
+      ],
+      "maskPixels": 4507,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "2851bde6dfa5990b9b7fd67157637114ddf491870c0f726013a5aafc983aa79e",
+      "aspectRatio": 1.03896,
+      "shape": {
+        "aspectRatio": 1.03896,
+        "fillRatio": 0.73166,
+        "elongation": 1.37288
+      },
+      "anatomicalGroup": "hand",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "child-hanging-leg",
+      "kind": "leg",
+      "name": "Crowned child / hanging leg",
+      "description": "Crowned child / hanging leg. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9399",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9399.jpg",
+      "sourceTitle": "A closer full-length view shows a crowned draped woman carrying a child beside her shoulder",
+      "sourceFilename": "IMG_9399.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/child-hanging-leg.png",
+      "width": 91,
+      "height": 123,
+      "bbox": [
+        712,
+        648,
+        803,
+        771
+      ],
+      "sourceSize": [
+        1200,
+        1800
+      ],
+      "maskPixels": 6088,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "2851bde6dfa5990b9b7fd67157637114ddf491870c0f726013a5aafc983aa79e",
+      "aspectRatio": 0.73984,
+      "shape": {
+        "aspectRatio": 0.73984,
+        "fillRatio": 0.54391,
+        "elongation": 2.23159
+      },
+      "anatomicalGroup": "leg",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "crowned-dress",
+      "kind": "drapery",
+      "name": "Crowned woman / long draped skirt",
+      "description": "Crowned woman / long draped skirt. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9399",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9399.jpg",
+      "sourceTitle": "A closer full-length view shows a crowned draped woman carrying a child beside her shoulder",
+      "sourceFilename": "IMG_9399.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/crowned-dress.png",
+      "width": 300,
+      "height": 632,
+      "bbox": [
+        443,
+        913,
+        743,
+        1545
+      ],
+      "sourceSize": [
+        1200,
+        1800
+      ],
+      "maskPixels": 157310,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "2851bde6dfa5990b9b7fd67157637114ddf491870c0f726013a5aafc983aa79e",
+      "aspectRatio": 0.47468,
+      "shape": {
+        "aspectRatio": 0.47468,
+        "fillRatio": 0.82969,
+        "elongation": 2.35036
+      },
+      "anatomicalGroup": "drapery",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "book-left-hand",
+      "kind": "hand",
+      "name": "Reclining effigy / hand holding book, left",
+      "description": "Reclining effigy / hand holding book, left. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9410",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9410.jpg",
+      "sourceTitle": "A close view of a reclining effigy shows two sculpted hands holding an open book above the face",
+      "sourceFilename": "IMG_9410.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/book-left-hand.png",
+      "width": 321,
+      "height": 443,
+      "bbox": [
+        413,
+        171,
+        734,
+        614
+      ],
+      "sourceSize": [
+        1800,
+        1200
+      ],
+      "maskPixels": 67805,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 initial segmentation; final silhouette manually traced against real source photograph after full-resolution review; actual source pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "e4af6de37960634470906b699d39312adbeccbf377fb60152a9a636cd3df3130",
+      "aspectRatio": 0.7246,
+      "shape": {
+        "aspectRatio": 0.7246,
+        "fillRatio": 0.4895,
+        "elongation": 2.44763
+      },
+      "anatomicalGroup": "hand",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "book-right-hand",
+      "kind": "hand",
+      "name": "Reclining effigy / hand holding book, right",
+      "description": "Reclining effigy / hand holding book, right. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9410",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9410.jpg",
+      "sourceTitle": "A close view of a reclining effigy shows two sculpted hands holding an open book above the face",
+      "sourceFilename": "IMG_9410.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/book-right-hand.png",
+      "width": 278,
+      "height": 414,
+      "bbox": [
+        1273,
+        191,
+        1551,
+        605
+      ],
+      "sourceSize": [
+        1800,
+        1200
+      ],
+      "maskPixels": 53472,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 initial segmentation; final silhouette manually traced against real source photograph after full-resolution review; actual source pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "e4af6de37960634470906b699d39312adbeccbf377fb60152a9a636cd3df3130",
+      "aspectRatio": 0.6715,
+      "shape": {
+        "aspectRatio": 0.6715,
+        "fillRatio": 0.42099,
+        "elongation": 2.63342
+      },
+      "anatomicalGroup": "hand",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "book-left-forearm",
+      "kind": "arm",
+      "name": "Reclining effigy / forearm, left",
+      "description": "Reclining effigy / forearm, left. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9410",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9410.jpg",
+      "sourceTitle": "A close view of a reclining effigy shows two sculpted hands holding an open book above the face",
+      "sourceFilename": "IMG_9410.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/book-left-forearm.png",
+      "width": 408,
+      "height": 470,
+      "bbox": [
+        187,
+        511,
+        595,
+        981
+      ],
+      "sourceSize": [
+        1800,
+        1200
+      ],
+      "maskPixels": 98619,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "e4af6de37960634470906b699d39312adbeccbf377fb60152a9a636cd3df3130",
+      "aspectRatio": 0.86809,
+      "shape": {
+        "aspectRatio": 0.86809,
+        "fillRatio": 0.51428,
+        "elongation": 1.90081
+      },
+      "anatomicalGroup": "arm",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "book-right-forearm",
+      "kind": "arm",
+      "name": "Reclining effigy / forearm, right",
+      "description": "Reclining effigy / forearm, right. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9410",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9410.jpg",
+      "sourceTitle": "A close view of a reclining effigy shows two sculpted hands holding an open book above the face",
+      "sourceFilename": "IMG_9410.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/book-right-forearm.png",
+      "width": 341,
+      "height": 473,
+      "bbox": [
+        1375,
+        511,
+        1716,
+        984
+      ],
+      "sourceSize": [
+        1800,
+        1200
+      ],
+      "maskPixels": 80802,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "e4af6de37960634470906b699d39312adbeccbf377fb60152a9a636cd3df3130",
+      "aspectRatio": 0.72093,
+      "shape": {
+        "aspectRatio": 0.72093,
+        "fillRatio": 0.50096,
+        "elongation": 2.79256
+      },
+      "anatomicalGroup": "arm",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "open-book",
+      "kind": "object",
+      "name": "Reclining effigy / open sculpted book",
+      "description": "Reclining effigy / open sculpted book. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9410",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9410.jpg",
+      "sourceTitle": "A close view of a reclining effigy shows two sculpted hands holding an open book above the face",
+      "sourceFilename": "IMG_9410.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/open-book.png",
+      "width": 626,
+      "height": 437,
+      "bbox": [
+        684,
+        176,
+        1310,
+        613
+      ],
+      "sourceSize": [
+        1800,
+        1200
+      ],
+      "maskPixels": 249984,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "e4af6de37960634470906b699d39312adbeccbf377fb60152a9a636cd3df3130",
+      "aspectRatio": 1.43249,
+      "shape": {
+        "aspectRatio": 1.43249,
+        "fillRatio": 0.91381,
+        "elongation": 1.4332
+      },
+      "anatomicalGroup": "object",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "wing-helmet-head",
+      "kind": "head",
+      "name": "Armoured figure / winged helmet and head",
+      "description": "Armoured figure / winged helmet and head. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9430",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9430.jpg",
+      "sourceTitle": "A dark helmeted figure raises a sculpted head above one shoulder",
+      "sourceFilename": "IMG_9430.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/wing-helmet-head.png",
+      "width": 477,
+      "height": 602,
+      "bbox": [
+        438,
+        321,
+        915,
+        923
+      ],
+      "sourceSize": [
+        1800,
+        1200
+      ],
+      "maskPixels": 141275,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "b89827c6c3d0a06a0061e405dea68d761fd62c5f53f62022a895b4691eab75bc",
+      "aspectRatio": 0.79236,
+      "shape": {
+        "aspectRatio": 0.79236,
+        "fillRatio": 0.49198,
+        "elongation": 1.55689
+      },
+      "anatomicalGroup": "head",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "held-serpent-head",
+      "kind": "head",
+      "name": "Armoured figure / sculpted head held aloft",
+      "description": "Armoured figure / sculpted head held aloft. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9430",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9430.jpg",
+      "sourceTitle": "A dark helmeted figure raises a sculpted head above one shoulder",
+      "sourceFilename": "IMG_9430.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/held-serpent-head.png",
+      "width": 455,
+      "height": 476,
+      "bbox": [
+        1026,
+        166,
+        1481,
+        642
+      ],
+      "sourceSize": [
+        1800,
+        1200
+      ],
+      "maskPixels": 128144,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "b89827c6c3d0a06a0061e405dea68d761fd62c5f53f62022a895b4691eab75bc",
+      "aspectRatio": 0.95588,
+      "shape": {
+        "aspectRatio": 0.95588,
+        "fillRatio": 0.59167,
+        "elongation": 1.36916
+      },
+      "anatomicalGroup": "head",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "armour-raised-arm",
+      "kind": "arm",
+      "name": "Armoured figure / raised bent arm",
+      "description": "Armoured figure / raised bent arm. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9430",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9430.jpg",
+      "sourceTitle": "A dark helmeted figure raises a sculpted head above one shoulder",
+      "sourceFilename": "IMG_9430.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/armour-raised-arm.png",
+      "width": 408,
+      "height": 381,
+      "bbox": [
+        1001,
+        592,
+        1409,
+        973
+      ],
+      "sourceSize": [
+        1800,
+        1200
+      ],
+      "maskPixels": 63298,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "b89827c6c3d0a06a0061e405dea68d761fd62c5f53f62022a895b4691eab75bc",
+      "aspectRatio": 1.07087,
+      "shape": {
+        "aspectRatio": 1.07087,
+        "fillRatio": 0.4072,
+        "elongation": 2.64265
+      },
+      "anatomicalGroup": "arm",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "armour-torso",
+      "kind": "torso",
+      "name": "Armoured figure / breastplate",
+      "description": "Armoured figure / breastplate. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9430",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9430.jpg",
+      "sourceTitle": "A dark helmeted figure raises a sculpted head above one shoulder",
+      "sourceFilename": "IMG_9430.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/armour-torso.png",
+      "width": 671,
+      "height": 336,
+      "bbox": [
+        394,
+        864,
+        1065,
+        1200
+      ],
+      "sourceSize": [
+        1800,
+        1200
+      ],
+      "maskPixels": 166746,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "b89827c6c3d0a06a0061e405dea68d761fd62c5f53f62022a895b4691eab75bc",
+      "aspectRatio": 1.99702,
+      "shape": {
+        "aspectRatio": 1.99702,
+        "fillRatio": 0.73959,
+        "elongation": 2.2035
+      },
+      "anatomicalGroup": "torso",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "armoured-left-leg",
+      "kind": "leg",
+      "name": "Armoured effigy / lower leg, left",
+      "description": "Armoured effigy / lower leg, left. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9443",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9443.jpg",
+      "sourceTitle": "A close sculpture detail shows armored feet resting on a small dog-shaped support with an open mouth",
+      "sourceFilename": "IMG_9443.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/armoured-left-leg.png",
+      "width": 219,
+      "height": 615,
+      "bbox": [
+        628,
+        0,
+        847,
+        615
+      ],
+      "sourceSize": [
+        1800,
+        1200
+      ],
+      "maskPixels": 102290,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "6c61a93bd199dc95500ac7732910188cfbd5c30ffefd50f1bebbd904513accd7",
+      "aspectRatio": 0.3561,
+      "shape": {
+        "aspectRatio": 0.3561,
+        "fillRatio": 0.75948,
+        "elongation": 3.40554
+      },
+      "anatomicalGroup": "leg",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "armoured-right-leg",
+      "kind": "leg",
+      "name": "Armoured effigy / lower leg, right",
+      "description": "Armoured effigy / lower leg, right. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9443",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9443.jpg",
+      "sourceTitle": "A close sculpture detail shows armored feet resting on a small dog-shaped support with an open mouth",
+      "sourceFilename": "IMG_9443.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/armoured-right-leg.png",
+      "width": 329,
+      "height": 631,
+      "bbox": [
+        844,
+        0,
+        1173,
+        631
+      ],
+      "sourceSize": [
+        1800,
+        1200
+      ],
+      "maskPixels": 156441,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "6c61a93bd199dc95500ac7732910188cfbd5c30ffefd50f1bebbd904513accd7",
+      "aspectRatio": 0.52139,
+      "shape": {
+        "aspectRatio": 0.52139,
+        "fillRatio": 0.75357,
+        "elongation": 2.21174
+      },
+      "anatomicalGroup": "leg",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "armoured-left-foot",
+      "kind": "foot",
+      "name": "Armoured effigy / plated foot, left",
+      "description": "Armoured effigy / plated foot, left. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9443",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9443.jpg",
+      "sourceTitle": "A close sculpture detail shows armored feet resting on a small dog-shaped support with an open mouth",
+      "sourceFilename": "IMG_9443.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/armoured-left-foot.png",
+      "width": 335,
+      "height": 418,
+      "bbox": [
+        522,
+        542,
+        857,
+        960
+      ],
+      "sourceSize": [
+        1800,
+        1200
+      ],
+      "maskPixels": 91617,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "6c61a93bd199dc95500ac7732910188cfbd5c30ffefd50f1bebbd904513accd7",
+      "aspectRatio": 0.80144,
+      "shape": {
+        "aspectRatio": 0.80144,
+        "fillRatio": 0.65427,
+        "elongation": 1.76806
+      },
+      "anatomicalGroup": "foot",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "armoured-right-foot",
+      "kind": "foot",
+      "name": "Armoured effigy / plated foot, right",
+      "description": "Armoured effigy / plated foot, right. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9443",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9443.jpg",
+      "sourceTitle": "A close sculpture detail shows armored feet resting on a small dog-shaped support with an open mouth",
+      "sourceFilename": "IMG_9443.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/armoured-right-foot.png",
+      "width": 330,
+      "height": 421,
+      "bbox": [
+        903,
+        565,
+        1233,
+        986
+      ],
+      "sourceSize": [
+        1800,
+        1200
+      ],
+      "maskPixels": 92544,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "6c61a93bd199dc95500ac7732910188cfbd5c30ffefd50f1bebbd904513accd7",
+      "aspectRatio": 0.78385,
+      "shape": {
+        "aspectRatio": 0.78385,
+        "fillRatio": 0.66612,
+        "elongation": 1.83858
+      },
+      "anatomicalGroup": "foot",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "cloak-profile-head",
+      "kind": "head",
+      "name": "Cloaked figure / head in profile",
+      "description": "Cloaked figure / head in profile. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9426",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9426.jpg",
+      "sourceTitle": "A close side-rear view of a draped male statue emphasizes broad cloak folds across the shoulders",
+      "sourceFilename": "IMG_9426.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/cloak-profile-head.png",
+      "width": 349,
+      "height": 394,
+      "bbox": [
+        400,
+        138,
+        749,
+        532
+      ],
+      "sourceSize": [
+        1200,
+        1800
+      ],
+      "maskPixels": 99171,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "515b8bb7c631e00fc1bdbc85c08877e0b417ff7c203f42cf63f749f1d156e537",
+      "aspectRatio": 0.88579,
+      "shape": {
+        "aspectRatio": 0.88579,
+        "fillRatio": 0.72121,
+        "elongation": 1.10648
+      },
+      "anatomicalGroup": "head",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "broad-cloak",
+      "kind": "drapery",
+      "name": "Cloaked figure / broad folded cloak",
+      "description": "Cloaked figure / broad folded cloak. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9426",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9426.jpg",
+      "sourceTitle": "A close side-rear view of a draped male statue emphasizes broad cloak folds across the shoulders",
+      "sourceFilename": "IMG_9426.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/broad-cloak.png",
+      "width": 424,
+      "height": 1000,
+      "bbox": [
+        377,
+        376,
+        941,
+        1707
+      ],
+      "sourceSize": [
+        1200,
+        1800
+      ],
+      "maskPixels": 528626,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "515b8bb7c631e00fc1bdbc85c08877e0b417ff7c203f42cf63f749f1d156e537",
+      "aspectRatio": 0.424,
+      "shape": {
+        "aspectRatio": 0.424,
+        "fillRatio": 0.70399,
+        "elongation": 2.77384
+      },
+      "anatomicalGroup": "drapery",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "cloaked-arm",
+      "kind": "arm",
+      "name": "Cloaked figure / covered bent arm",
+      "description": "Cloaked figure / covered bent arm. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9426",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9426.jpg",
+      "sourceTitle": "A close side-rear view of a draped male statue emphasizes broad cloak folds across the shoulders",
+      "sourceFilename": "IMG_9426.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/cloaked-arm.png",
+      "width": 294,
+      "height": 667,
+      "bbox": [
+        179,
+        662,
+        473,
+        1329
+      ],
+      "sourceSize": [
+        1200,
+        1800
+      ],
+      "maskPixels": 98797,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "515b8bb7c631e00fc1bdbc85c08877e0b417ff7c203f42cf63f749f1d156e537",
+      "aspectRatio": 0.44078,
+      "shape": {
+        "aspectRatio": 0.44078,
+        "fillRatio": 0.50381,
+        "elongation": 3.61942
+      },
+      "anatomicalGroup": "arm",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "crowned-effigy-profile",
+      "kind": "head",
+      "name": "Crowned effigy / head in profile",
+      "description": "Crowned effigy / head in profile. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9323",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9323.jpg",
+      "sourceTitle": "A reclining crowned effigy rests its head on a patterned cushion",
+      "sourceFilename": "IMG_9323.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/crowned-effigy-profile.png",
+      "width": 922,
+      "height": 576,
+      "bbox": [
+        545,
+        337,
+        1467,
+        913
+      ],
+      "sourceSize": [
+        1800,
+        1200
+      ],
+      "maskPixels": 391953,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "419cc6ee7365d115b24d55859cac8c09293fdb48c79c3ec705fd6720103e65a9",
+      "aspectRatio": 1.60069,
+      "shape": {
+        "aspectRatio": 1.60069,
+        "fillRatio": 0.73804,
+        "elongation": 1.57064
+      },
+      "anatomicalGroup": "head",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "close-portrait-head",
+      "kind": "head",
+      "name": "Portrait bust / close head",
+      "description": "Portrait bust / close head. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9360",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9360.jpg",
+      "sourceTitle": "A closer shallow-focus view isolates the nearest portrait bust in a row of three",
+      "sourceFilename": "IMG_9360.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/close-portrait-head.png",
+      "width": 479,
+      "height": 619,
+      "bbox": [
+        490,
+        422,
+        969,
+        1041
+      ],
+      "sourceSize": [
+        1200,
+        1800
+      ],
+      "maskPixels": 224524,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "c62cfe8c52122b44c5ce87697a20f2a110474735ee3d10044c31dc3d01f6475c",
+      "aspectRatio": 0.77383,
+      "shape": {
+        "aspectRatio": 0.77383,
+        "fillRatio": 0.75725,
+        "elongation": 1.29373
+      },
+      "anatomicalGroup": "head",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "portrait-neck",
+      "kind": "neck",
+      "name": "Portrait bust / slender neck",
+      "description": "Portrait bust / slender neck. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9360",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9360.jpg",
+      "sourceTitle": "A closer shallow-focus view isolates the nearest portrait bust in a row of three",
+      "sourceFilename": "IMG_9360.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/portrait-neck.png",
+      "width": 271,
+      "height": 245,
+      "bbox": [
+        665,
+        895,
+        936,
+        1140
+      ],
+      "sourceSize": [
+        1200,
+        1800
+      ],
+      "maskPixels": 45984,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "c62cfe8c52122b44c5ce87697a20f2a110474735ee3d10044c31dc3d01f6475c",
+      "aspectRatio": 1.10612,
+      "shape": {
+        "aspectRatio": 1.10612,
+        "fillRatio": 0.69258,
+        "elongation": 1.22746
+      },
+      "anatomicalGroup": "neck",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "portrait-embroidered-shoulder",
+      "kind": "shoulder",
+      "name": "Portrait bust / embroidered shoulder",
+      "description": "Portrait bust / embroidered shoulder. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9360",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9360.jpg",
+      "sourceTitle": "A closer shallow-focus view isolates the nearest portrait bust in a row of three",
+      "sourceFilename": "IMG_9360.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/portrait-embroidered-shoulder.png",
+      "width": 491,
+      "height": 321,
+      "bbox": [
+        506,
+        990,
+        997,
+        1311
+      ],
+      "sourceSize": [
+        1200,
+        1800
+      ],
+      "maskPixels": 106794,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "c62cfe8c52122b44c5ce87697a20f2a110474735ee3d10044c31dc3d01f6475c",
+      "aspectRatio": 1.5296,
+      "shape": {
+        "aspectRatio": 1.5296,
+        "fillRatio": 0.67758,
+        "elongation": 1.55738
+      },
+      "anatomicalGroup": "shoulder",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "curled-effigy-profile",
+      "kind": "head",
+      "name": "Reclining effigy / curled head in profile",
+      "description": "Reclining effigy / curled head in profile. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9376",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9376.jpg",
+      "sourceTitle": "A neighboring reclining effigy rests on a rounded cushion, with long carved curls beside the face",
+      "sourceFilename": "IMG_9376.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/curled-effigy-profile.png",
+      "width": 764,
+      "height": 384,
+      "bbox": [
+        425,
+        471,
+        1189,
+        855
+      ],
+      "sourceSize": [
+        1800,
+        1200
+      ],
+      "maskPixels": 224409,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "04c8b9356098ba6dee057ed6b3fddbd59d31cd0c9d2a9dadbd79cdc56c4038b4",
+      "aspectRatio": 1.98958,
+      "shape": {
+        "aspectRatio": 1.98958,
+        "fillRatio": 0.76492,
+        "elongation": 1.89682
+      },
+      "anatomicalGroup": "head",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "dark-pipe-head",
+      "kind": "head",
+      "name": "Pipe-playing figure / curled head",
+      "description": "Pipe-playing figure / curled head. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9391",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9391.jpg",
+      "sourceTitle": "A close side profile of a dark sculptural figure shows curled hair and an arm extended toward a smal",
+      "sourceFilename": "IMG_9391.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/dark-pipe-head.png",
+      "width": 701,
+      "height": 761,
+      "bbox": [
+        281,
+        37,
+        982,
+        798
+      ],
+      "sourceSize": [
+        1800,
+        1200
+      ],
+      "maskPixels": 355364,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "20b2ffc10ed76c57a3502b34abec28f3c00c49e29f504340f77995e2e9d097d7",
+      "aspectRatio": 0.92116,
+      "shape": {
+        "aspectRatio": 0.92116,
+        "fillRatio": 0.66615,
+        "elongation": 1.21767
+      },
+      "anatomicalGroup": "head",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "dark-pipe-neck",
+      "kind": "neck",
+      "name": "Pipe-playing figure / neck",
+      "description": "Pipe-playing figure / neck. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9391",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9391.jpg",
+      "sourceTitle": "A close side profile of a dark sculptural figure shows curled hair and an arm extended toward a smal",
+      "sourceFilename": "IMG_9391.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/dark-pipe-neck.png",
+      "width": 498,
+      "height": 325,
+      "bbox": [
+        207,
+        630,
+        705,
+        955
+      ],
+      "sourceSize": [
+        1800,
+        1200
+      ],
+      "maskPixels": 105833,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "20b2ffc10ed76c57a3502b34abec28f3c00c49e29f504340f77995e2e9d097d7",
+      "aspectRatio": 1.53231,
+      "shape": {
+        "aspectRatio": 1.53231,
+        "fillRatio": 0.6539,
+        "elongation": 1.58961
+      },
+      "anatomicalGroup": "neck",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "dark-pipe-torso",
+      "kind": "torso",
+      "name": "Pipe-playing figure / upper torso",
+      "description": "Pipe-playing figure / upper torso. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9391",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9391.jpg",
+      "sourceTitle": "A close side profile of a dark sculptural figure shows curled hair and an arm extended toward a smal",
+      "sourceFilename": "IMG_9391.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/dark-pipe-torso.png",
+      "width": 683,
+      "height": 468,
+      "bbox": [
+        0,
+        732,
+        683,
+        1200
+      ],
+      "sourceSize": [
+        1800,
+        1200
+      ],
+      "maskPixels": 224914,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "20b2ffc10ed76c57a3502b34abec28f3c00c49e29f504340f77995e2e9d097d7",
+      "aspectRatio": 1.4594,
+      "shape": {
+        "aspectRatio": 1.4594,
+        "fillRatio": 0.70364,
+        "elongation": 1.76753
+      },
+      "anatomicalGroup": "torso",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "dark-pipe-hand",
+      "kind": "hand",
+      "name": "Pipe-playing figure / hand holding pipe",
+      "description": "Pipe-playing figure / hand holding pipe. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9391",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9391.jpg",
+      "sourceTitle": "A close side profile of a dark sculptural figure shows curled hair and an arm extended toward a smal",
+      "sourceFilename": "IMG_9391.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/dark-pipe-hand.png",
+      "width": 408,
+      "height": 234,
+      "bbox": [
+        1327,
+        551,
+        1735,
+        785
+      ],
+      "sourceSize": [
+        1800,
+        1200
+      ],
+      "maskPixels": 55155,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "20b2ffc10ed76c57a3502b34abec28f3c00c49e29f504340f77995e2e9d097d7",
+      "aspectRatio": 1.74359,
+      "shape": {
+        "aspectRatio": 1.74359,
+        "fillRatio": 0.57771,
+        "elongation": 2.23242
+      },
+      "anatomicalGroup": "hand",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "angel-upturned-head",
+      "kind": "head",
+      "name": "Winged figure / upturned head",
+      "description": "Winged figure / upturned head. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9401",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9401.jpg",
+      "sourceTitle": "A winged sculptural figure gazes upward with hands joined in prayer",
+      "sourceFilename": "IMG_9401.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/angel-upturned-head.png",
+      "width": 466,
+      "height": 485,
+      "bbox": [
+        950,
+        52,
+        1416,
+        537
+      ],
+      "sourceSize": [
+        1800,
+        1200
+      ],
+      "maskPixels": 174885,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "e620a7a411995ed53c560dcd645534a46359fece184ccfff9dc3f7ae0f0a1a03",
+      "aspectRatio": 0.96082,
+      "shape": {
+        "aspectRatio": 0.96082,
+        "fillRatio": 0.77379,
+        "elongation": 1.08215
+      },
+      "anatomicalGroup": "head",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "angel-neck",
+      "kind": "neck",
+      "name": "Winged figure / slender neck",
+      "description": "Winged figure / slender neck. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9401",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9401.jpg",
+      "sourceTitle": "A winged sculptural figure gazes upward with hands joined in prayer",
+      "sourceFilename": "IMG_9401.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/angel-neck.png",
+      "width": 267,
+      "height": 263,
+      "bbox": [
+        1031,
+        475,
+        1298,
+        738
+      ],
+      "sourceSize": [
+        1800,
+        1200
+      ],
+      "maskPixels": 47073,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "e620a7a411995ed53c560dcd645534a46359fece184ccfff9dc3f7ae0f0a1a03",
+      "aspectRatio": 1.01521,
+      "shape": {
+        "aspectRatio": 1.01521,
+        "fillRatio": 0.67036,
+        "elongation": 1.1884
+      },
+      "anatomicalGroup": "neck",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "angel-praying-forearm",
+      "kind": "arm",
+      "name": "Winged figure / bent praying forearm",
+      "description": "Winged figure / bent praying forearm. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9401",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9401.jpg",
+      "sourceTitle": "A winged sculptural figure gazes upward with hands joined in prayer",
+      "sourceFilename": "IMG_9401.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/angel-praying-forearm.png",
+      "width": 478,
+      "height": 385,
+      "bbox": [
+        956,
+        815,
+        1434,
+        1200
+      ],
+      "sourceSize": [
+        1800,
+        1200
+      ],
+      "maskPixels": 101090,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "e620a7a411995ed53c560dcd645534a46359fece184ccfff9dc3f7ae0f0a1a03",
+      "aspectRatio": 1.24156,
+      "shape": {
+        "aspectRatio": 1.24156,
+        "fillRatio": 0.54931,
+        "elongation": 1.44507
+      },
+      "anatomicalGroup": "arm",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    },
+    {
+      "id": "angel-draped-torso",
+      "kind": "torso",
+      "name": "Winged figure / draped chest",
+      "description": "Winged figure / draped chest. A transparent photographic fragment cut from the supplied V&A museum visit photograph. Silhouette segmented with SAM 2.1 and anatomical separation visually authored. Some fragments retain clothing, armour or the photographed crop where explicitly named.",
+      "sourceId": "VA-IMG-IMG_9401",
+      "sourceImage": "assets/va/images/VA-IMG-IMG_9401.jpg",
+      "sourceTitle": "A winged sculptural figure gazes upward with hands joined in prayer",
+      "sourceFilename": "IMG_9401.JPG",
+      "sourceArchive": "va",
+      "url": "assets/sculpture-parts/angel-draped-torso.png",
+      "width": 568,
+      "height": 587,
+      "bbox": [
+        630,
+        613,
+        1198,
+        1200
+      ],
+      "sourceSize": [
+        1800,
+        1200
+      ],
+      "maskPixels": 229039,
+      "credits": [
+        {
+          "creator": "User-provided V&A visit material",
+          "license": "Not supplied",
+          "licenseUrl": ""
+        }
+      ],
+      "sources": [],
+      "method": "SAM 2.1 foreground segmentation; visually authored anatomical boundary; reviewed solid-surface mask repair; actual source photograph pixels",
+      "geometry": "2D photographed fragment, not a reconstructed 3D mesh",
+      "sourceImageSha256": "e620a7a411995ed53c560dcd645534a46359fece184ccfff9dc3f7ae0f0a1a03",
+      "aspectRatio": 0.96763,
+      "shape": {
+        "aspectRatio": 0.96763,
+        "fillRatio": 0.68695,
+        "elongation": 1.47201
+      },
+      "anatomicalGroup": "torso",
+      "reviewStatus": "Source photograph and transparent silhouette visually reviewed; genuine photographic fragment"
+    }
+  ],
+  "mappingNote": "Editorial shape analogy, not a historical attribution. Transparent silhouette aspect ratio, area fill and principal-axis elongation support city-to-anatomy pairing.",
+  "photosReviewed": 170,
+  "sourcePhotos": 25,
+  "expandedFragmentCount": 84
+}

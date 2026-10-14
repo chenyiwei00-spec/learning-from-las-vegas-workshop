@@ -1,0 +1,142 @@
+[
+  {
+    "display": 1,
+    "name": "Golden Nugget",
+    "fullUrl": "assets/exhibition-desert/models/sign_01_full.glb",
+    "previewUrl": "assets/exhibition-desert/models/sign_01_preview.glb",
+    "bounds": [
+      [
+        -0.368012011051178,
+        -3.89984400328558e-09,
+        -0.05165507271885872
+      ],
+      [
+        0.36831700801849365,
+        0.9768069982528687,
+        0.05181499943137169
+      ]
+    ],
+    "fullTriangles": 1790009,
+    "previewTriangles": 80000
+  },
+  {
+    "display": 2,
+    "name": "Dunes",
+    "fullUrl": "assets/exhibition-desert/models/sign_02_full.glb",
+    "previewUrl": "assets/exhibition-desert/models/sign_02_preview.glb",
+    "bounds": [
+      [
+        -0.25503501296043396,
+        -2.290455380915546e-09,
+        -0.030338075011968613
+      ],
+      [
+        0.25500500202178955,
+        0.9821169972419739,
+        0.028967000544071198
+      ]
+    ],
+    "fullTriangles": 1976508,
+    "previewTriangles": 80000
+  },
+  {
+    "display": 3,
+    "name": "Sahara",
+    "fullUrl": "assets/exhibition-desert/models/sign_03_full.glb",
+    "previewUrl": "assets/exhibition-desert/models/sign_03_preview.glb",
+    "bounds": [
+      [
+        -0.1566469967365265,
+        -5.7859326219045215e-09,
+        -0.07663707435131073
+      ],
+      [
+        0.1567690074443817,
+        0.9775090217590332,
+        0.0759579986333847
+      ]
+    ],
+    "fullTriangles": 1943941,
+    "previewTriangles": 80000
+  },
+  {
+    "display": 4,
+    "name": "Pinball Hall of Fame",
+    "fullUrl": "assets/exhibition-desert/models/sign_04_full.glb",
+    "previewUrl": "assets/exhibition-desert/models/sign_04_preview.glb",
+    "bounds": [
+      [
+        -0.3776549994945526,
+        -6.2161951142059024e-09,
+        -0.08233607560396194
+      ],
+      [
+        0.3775329887866974,
+        0.9794009923934937,
+        0.08223000168800354
+      ]
+    ],
+    "fullTriangles": 1952360,
+    "previewTriangles": 79999
+  },
+  {
+    "display": 5,
+    "name": "Sam's Town",
+    "fullUrl": "assets/exhibition-desert/models/sign_05_full.glb",
+    "previewUrl": "assets/exhibition-desert/models/sign_05_preview.glb",
+    "bounds": [
+      [
+        -0.13736000657081604,
+        -3.892596467380827e-09,
+        -0.051559075713157654
+      ],
+      [
+        0.1371919959783554,
+        0.9801939725875854,
+        0.053467001765966415
+      ]
+    ],
+    "fullTriangles": 1985974,
+    "previewTriangles": 80000
+  },
+  {
+    "display": 6,
+    "name": "Vegas World",
+    "fullUrl": "assets/exhibition-desert/models/sign_06_full.glb",
+    "previewUrl": "assets/exhibition-desert/models/sign_06_preview.glb",
+    "bounds": [
+      [
+        -0.48931899666786194,
+        -3.2161351359860646e-09,
+        -0.042599067091941833
+      ],
+      [
+        0.4890750050544739,
+        0.8919069766998291,
+        0.0425029993057251
+      ]
+    ],
+    "fullTriangles": 1938170,
+    "previewTriangles": 80000
+  },
+  {
+    "display": 7,
+    "name": "Imperial Palace",
+    "fullUrl": "assets/exhibition-desert/models/sign_07_full.glb",
+    "previewUrl": "assets/exhibition-desert/models/sign_07_preview.glb",
+    "bounds": [
+      [
+        -0.29620400071144104,
+        -9.273633416739813e-09,
+        -0.12283307313919067
+      ],
+      [
+        0.2979130148887634,
+        0.9798579812049866,
+        0.12254299968481064
+      ]
+    ],
+    "fullTriangles": 1877648,
+    "previewTriangles": 80000
+  }
+]

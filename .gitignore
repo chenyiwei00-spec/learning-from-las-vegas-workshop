@@ -1,0 +1,17 @@
+settings.local.json
+runtime/
+external-assets/
+node_modules/
+site/assets/**
+!site/assets/exhibition-desert/
+!site/assets/exhibition-desert/model-manifest.json
+qa/exhibition-loop/clip/
+**/__pycache__/
+*.log
+*.zip
+*.glb
+*.blend
+*.ckpt
+*.safetensors
+.env*
+.DS_Store

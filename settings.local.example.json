@@ -1,0 +1,7 @@
+{
+  "readOnlyMediaRoot": "external-assets/archive-assets",
+  "sharedSiteAssets": "external-assets/site-assets",
+  "cutoutRoot": "external-assets/collage-objects",
+  "generationModelRoot": "external-assets/single-photo-3d",
+  "relevanceModelRoot": "qa/exhibition-loop/clip"
+}

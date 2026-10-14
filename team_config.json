@@ -1,0 +1,12 @@
+{
+  "name": "Learning from Las Vegas team workspace",
+  "sourceCommit": "team-main",
+  "localOnly": true,
+  "publishDisabled": true,
+  "readOnlyMediaRoot": "external-assets/archive-assets",
+  "sharedSiteAssets": "external-assets/site-assets",
+  "cutoutRoot": "external-assets/collage-objects",
+  "analysisRoot": "external-assets/analysis",
+  "remoteMediaBase": "https://vegas-architecture-archive.lightjam64.chatgpt.site",
+  "generationModelRoot": "external-assets/single-photo-3d"
+}
