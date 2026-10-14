@@ -54,12 +54,9 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
     camera.updateMatrixWorld();
   }
   function ui() {
-    $('walk-mode').textContent = fly ? 'Fly mode' : 'Walk mode';
-    $('walk-mode').setAttribute('aria-pressed',String(fly));
-    $('walk-mode').title = 'Space: switch between walking and flying';
     const axon = viewMode === 'axonometric';
-    $('walk-mode').disabled = axon;
-    $('walk-two-point').disabled = axon;
+    $('walk-two-point').hidden = axon;
+    $('exhibition-proximity-sound').hidden = axon;
     $('walk-two-point').textContent = 'Two-point ' + (twoPoint ? 'on' : 'off');
     $('walk-two-point').setAttribute('aria-pressed',String(twoPoint));
     $('walk-view-toggle').textContent=axon?'Axonometric / switch':'Eye level / switch';$('walk-view-toggle').setAttribute('aria-pressed',String(axon));
@@ -67,8 +64,6 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
     $('walk-view-label').textContent = axon ? 'FLOOR PLAN' : 'WHITE ROOM';
     $('walk-caption-text').textContent = axon ? 'Drag to rotate · Wheel to zoom · Right / middle drag to pan' : 'Click to explore · Drag to look · WASD to walk · Shift to move faster';
     $('walk-dimensions').textContent = axon ? '40 \u00d7 40 M / 400 CELLS' : '40 \u00d7 40 \u00d7 '+ROOM.height.toFixed(1)+' M';
-    $('walk-room-help').hidden = axon;
-    $('walk-axon-help').hidden = !axon;
     surface.setAttribute('aria-label',axon ? 'Orthographic floor view with four hundred two metre grid cells. Drag to rotate; wheel to zoom; right or middle drag to pan.' : 'Walk through a forty by forty metre white studio hall with windows');
     surface.dataset.view = viewMode;
   }
@@ -209,7 +204,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
     renderer.domElement.setAttribute('aria-hidden','true');
 
     const wall = new THREE.MeshStandardMaterial({color:0xffffff,roughness:0.94,metalness:0});
-    const floor = new THREE.MeshStandardMaterial({color:0xe8e8e3,roughness:0.83,metalness:0});
+    const floor = new THREE.MeshStandardMaterial({color:0xe2e5e8,roughness:0.83,metalness:0});
     const t = ROOM.wallThickness, half = ROOM.width/2;
     function box(name,width,height,depth,x,y,z,material=wall) {
       const mesh = new THREE.Mesh(new THREE.BoxGeometry(width,height,depth),material);
@@ -225,7 +220,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
       new THREE.Vector3(-19.996,0.009,-19.996),new THREE.Vector3(19.996,0.009,-19.996),
       new THREE.Vector3(19.996,0.009,19.996),new THREE.Vector3(-19.996,0.009,19.996)
     ]);
-    roomDetailGroup.add(new THREE.LineLoop(seamGeometry,new THREE.LineBasicMaterial({color:0xbcbcb5,transparent:true,opacity:0.7,toneMapped:false})));
+    roomDetailGroup.add(new THREE.LineLoop(seamGeometry,new THREE.LineBasicMaterial({color:0xb8c0c8,transparent:true,opacity:0.7,toneMapped:false})));
     const contactGeometry = new THREE.PlaneGeometry(40,0.22,1,12);
     const coordinates = contactGeometry.attributes.position, colors = [];
     for (let i=0;i<coordinates.count;i++) {
@@ -233,7 +228,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
       colors.push(1,1,1,0.16*Math.pow(distance,2));
     }
     contactGeometry.setAttribute('color',new THREE.Float32BufferAttribute(colors,4));
-    const contactMaterial = new THREE.MeshBasicMaterial({color:0x999992,vertexColors:true,transparent:true,depthWrite:false,toneMapped:false,side:THREE.DoubleSide});
+    const contactMaterial = new THREE.MeshBasicMaterial({color:0x919aa3,vertexColors:true,transparent:true,depthWrite:false,toneMapped:false,side:THREE.DoubleSide});
     for (const [x,z,rotation] of [[0,-19.89,0],[0,19.89,Math.PI],[-19.89,0,Math.PI/2],[19.89,0,-Math.PI/2]]) {
       const contact = new THREE.Mesh(contactGeometry,contactMaterial);
       contact.rotation.set(-Math.PI/2,0,rotation);contact.position.set(x,0.005,z);
@@ -242,9 +237,9 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
 
     // A separate exact 40m floor avoids exposing the room's wall thickness in plan.
     axonGroup = new THREE.Group();axonGroup.name='axonometric-floor-view';axonGroup.visible=false;scene.add(axonGroup);
-    const planFloor = new THREE.Mesh(new THREE.PlaneGeometry(40,40),new THREE.MeshBasicMaterial({color:0xf7f7f4,side:THREE.DoubleSide,toneMapped:false}));
+    const planFloor = new THREE.Mesh(new THREE.PlaneGeometry(40,40),new THREE.MeshBasicMaterial({color:0xe2e5e8,side:THREE.DoubleSide,toneMapped:false}));
     planFloor.name='axonometric-floor';planFloor.rotation.x=-Math.PI/2;axonGroup.add(planFloor);
-    floorGrid = new THREE.GridHelper(40,20,0xbdbdb7,0xbdbdb7);
+    floorGrid = new THREE.GridHelper(40,20,0xadb5bd,0xadb5bd);
     floorGrid.name='two-metre-grid';floorGrid.position.y=0.004;
     floorGrid.material.transparent=true;floorGrid.material.opacity=0.48;
     floorGrid.material.depthWrite=false;floorGrid.material.toneMapped=false;
@@ -253,7 +248,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
       new THREE.BufferGeometry().setFromPoints([
         new THREE.Vector3(-20,0.006,-20),new THREE.Vector3(20,0.006,-20),
         new THREE.Vector3(20,0.006,20),new THREE.Vector3(-20,0.006,20)
-      ]),new THREE.LineBasicMaterial({color:0xb4b4ae,transparent:true,opacity:0.6,toneMapped:false})
+      ]),new THREE.LineBasicMaterial({color:0x9eabb6,transparent:true,opacity:0.6,toneMapped:false})
     );
     axonGroup.add(planBorder);
 
@@ -411,15 +406,9 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
     if (document.hidden) {clearInput();teleport=null;if(raf)cancelAnimationFrame(raf);raf=0;}
     else requestFrame();
   });
-  $('walk-mode').addEventListener('click',() => {fly=!fly;constrain(eye);ui();focusView();requestFrame();});
   $('walk-two-point').addEventListener('click',() => {setTwoPoint(!twoPoint);focusView();});
   $('walk-view-toggle').addEventListener('click',() => {setViewMode(viewMode==='room'?'axonometric':'room');focusView();});
   $('walk-reset').addEventListener('click',() => {reset();focusView();});
-  $('walk-help-toggle').addEventListener('click',() => {
-    const open = $('walk-help-panel').hidden;
-    $('walk-help-panel').hidden = !open;
-    $('walk-help-toggle').setAttribute('aria-expanded',String(open));
-  });
   $('walk-fullscreen').addEventListener('click',async () => {
     try {
       if (document.fullscreenElement === surface) await document.exitFullscreen();
