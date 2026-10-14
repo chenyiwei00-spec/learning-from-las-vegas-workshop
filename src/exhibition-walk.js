@@ -30,6 +30,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
     position.z = clamp(position.z,-LIMIT,LIMIT);
     position.y = fly ? clamp(position.y,RADIUS,ROOM.height-RADIUS) : EYE_HEIGHT;
     space?.constrain(position,RADIUS);
+    position.x=clamp(position.x,-LIMIT,LIMIT);position.z=clamp(position.z,-LIMIT,LIMIT);
     return position;
   }
   function orient() {
