@@ -26,6 +26,6 @@ export function modelGrowthProfile(source,bounds,anchor){
  return {method:'mesh-cross-sections-v1',sampledFaces,inverted,profile,branches};
 }
 export function growthSection(p,t){const profile=p.growth.profile,f=clamp(t,0,1)*(profile.length-1),at=Math.floor(f),b=Math.min(at+1,profile.length-1),blend=f-at,smooth=blend*blend*(3-2*blend),a=profile[at],next=profile[b],lerp=k=>a[k]+(next[k]-a[k])*smooth;
- const funnel=clamp((t-.58)/.42,0,1),flare=(funnel*funnel*(3-2*funnel))*(.85+p.radius*.40),fade=1-funnel*funnel;
+ const onset=Math.max(.60,(5.7-p.baseY)/p.height),funnel=clamp((t-onset)/(1-onset),0,1),flare=(funnel*funnel*(3-2*funnel))*(.85+p.radius*.40),fade=1-funnel*funnel;
  return {x:p.x+lerp('x')*fade,z:p.z+lerp('z')*fade,rx:p.radius*(.26+.70*lerp('rx'))+flare,rz:p.radius*(.26+.70*lerp('rz'))+flare};
 }

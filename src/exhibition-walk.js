@@ -9,7 +9,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
   const host = document.getElementById('walk-canvas-host');
   if (!surface || !host) return;
   const $ = id => document.getElementById(id);
-  const ROOM = Object.freeze({width:20, depth:20, height:5, wallThickness:0.18});
+  let ROOM = Object.freeze({width:20, depth:20, height:12, wallThickness:0.18});
   const EYE_HEIGHT = 1.65, RADIUS = 0.35, SPEED = 1.8;
   const LIMIT = ROOM.width / 2 - RADIUS;
   const keys = new Set(), raycaster = new THREE.Raycaster(), pointer = new THREE.Vector2();
@@ -238,7 +238,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
     scene.add(new THREE.HemisphereLight(0xffffff,0xf3f3f3,3.8));
     for (const x of [-5,5]) for (const z of [-5,5]) {
       const light = new THREE.PointLight(0xffffff,24,28,2);
-      light.position.set(x,4.55,z); scene.add(light);
+      light.name='gallery-ceiling-light';light.position.set(x,ROOM.height-.45,z); scene.add(light);
     }
     ready = true;
     surface.setAttribute('aria-busy','false');
@@ -250,8 +250,8 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
   }
 
   const canvas = renderer.domElement;
-  const placement=createExhibitionPlacement({scene,canvas,getCamera:()=>camera,getRoomMeshes:()=>roomMeshes,isRoom:()=>viewMode==='room',orient,invalidate:requestFrame,suspend:suspendNavigation});
-  space=createCanopy({scene,renderer,placement,getView:()=>viewMode,setView:setViewMode,navigate:value=>{clearInput();teleport=null;fly=false;eye.set(value.x,value.y,value.z);yaw=value.yaw;pitch=value.pitch||0;constrain(eye);ui();requestFrame();focusView();},invalidate:requestFrame});
+  const placement=createExhibitionPlacement({scene,canvas,getCamera:()=>camera,getRoomMeshes:()=>roomMeshes,isRoom:()=>viewMode==='room',orient,invalidate:requestFrame,suspend:suspendNavigation,getMaxHeight:()=>11.5});
+  space=createCanopy({scene,renderer,placement,onSpaceBounds:frameSpace,getView:()=>viewMode,setView:setViewMode,navigate:value=>{clearInput();teleport=null;fly=false;eye.set(value.x,value.y,value.z);yaw=value.yaw;pitch=value.pitch||0;constrain(eye);ui();requestFrame();focusView();},invalidate:requestFrame});
   // Capture focus before OrbitControls receives the pointer-down event.
   canvas.addEventListener('pointerdown',() => {if(viewMode==='axonometric')focusView();},true);
   axonControls = new OrbitControls(axonCamera,canvas);
@@ -271,6 +271,8 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
     axonControls.enabled=axon&&active;
     ui();resize();requestFrame();
   }
+  function setRoomHeight(value){const height=clamp(Number(value)||12,12,40);if(Math.abs(height-ROOM.height)<.01)return;ROOM=Object.freeze({...ROOM,height});for(const mesh of roomMeshes){if(mesh.name==='ceiling')mesh.position.y=height+ROOM.wallThickness/2;else if(mesh.name.endsWith('-wall')){const p=mesh.geometry.parameters;mesh.geometry.dispose();mesh.geometry=new THREE.BoxGeometry(p.width,height,p.depth);mesh.position.y=height/2;}}scene.traverse(o=>{if(o.isPointLight&&o.name==='gallery-ceiling-light')o.position.y=height-.45;});constrain(eye);ui();requestFrame();}
+  function frameSpace(bounds){setRoomHeight(Math.max(12,bounds.max.y+1.5));const offset=axonCamera.position.clone().sub(axonControls.target),centre=bounds.getCenter(new THREE.Vector3());centre.y=bounds.max.y*.25;axonControls.target.copy(centre);axonCamera.position.copy(centre).add(offset);axonControls.update();axonCamera.updateMatrixWorld(true);const points=[];for(const x of [-10,10])for(const z of [-10,10])points.push(new THREE.Vector3(x,0,z));for(const x of [bounds.min.x,bounds.max.x])for(const y of [0,bounds.max.y])for(const z of [bounds.min.z,bounds.max.z])points.push(new THREE.Vector3(x,y,z));points.forEach(p=>p.applyMatrix4(axonCamera.matrixWorldInverse));const extentX=Math.max(...points.map(p=>Math.abs(p.x))),extentY=Math.max(...points.map(p=>Math.abs(p.y)));axonCamera.zoom=Math.max(.35,Math.min(1,(axonCamera.right-axonCamera.left)/(2*extentX)*.88,(axonCamera.top-axonCamera.bottom)/(2*extentY)*.88));axonCamera.updateProjectionMatrix();requestFrame();}
   function setTwoPoint(value) {
     twoPoint=!!value;
     if(twoPoint)pitch=clamp(pitch,-0.8,0.8);
@@ -430,7 +432,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
       performance:{triangles:renderer.info.render.triangles,drawCalls:renderer.info.render.calls,pixelRatio:renderer.getPixelRatio(),continuousRendering:!!raf,frameCount},
       moving:!!teleport || movingByKeys()
     }),
-    reset,setViewMode,setTwoPoint,suspendNavigation,placement,space,
+    reset,setViewMode,setTwoPoint,setRoomHeight,suspendNavigation,placement,space,
     gridSegments:()=>Array.from(floorGrid.geometry.attributes.position.array),
     setCamera:value => {
       clearInput();teleport=null;
