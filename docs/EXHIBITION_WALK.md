@@ -1,6 +1,6 @@
 # Exhibition Walk
 
-Exhibition Walk is a single 3D viewport of a 20 m × 20 m × 5 m enclosed white gallery. Walking eye height is 1.65 m. A fine perimeter seam and soft contact shading distinguish the walls from the floor. Open exhibition.html in the local collaboration preview.
+Exhibition Walk is a single 3D viewport of a 20 m × 20 m with an initial 12 m height enclosed white gallery. Walking eye height is 1.65 m. A steel-grid glass skylight casts cached sunlight shadows in eye-level view. Nearby associated exhibit audio fades in after the first click; axis/editing views fade it out. A fine perimeter seam and soft contact shading distinguish the walls from the floor. Open exhibition.html in the local collaboration preview.
 
 ## Views and navigation
 
@@ -26,7 +26,7 @@ Generate 3D uses the existing local TripoSR client/backend and the actual collag
 
 Drag from the second small preview card, or from Drag model into room in the expanded model tools. A snapshot of that exact model follows the pointer. A coloured floor square and cell number indicate the destination. Release over a free cell to place the textured GLB. Materials retain the texture and vertex colours, bypass the room tone mapping and use gentle directional shading with a modest saturation boost, making the exhibits stand out against the white room. Drops outside the floor, behind room walls, over interface panels or onto occupied cells leave the layout unchanged.
 
-The model origin snaps to the cell centre. Its footprint fills 98% of its allocated area. Choose 1, 4 or 9 cells (1 × 1, 2 × 2 or 3 × 3) using the size buttons or minus/plus. Resizing, moving and restoring check the full occupied rectangle, including room boundaries. Proportions are preserved; very tall models stop below the ceiling at 4.65 m. Both cameras use one shared scene group, so placement, movement and rotation appear immediately in either view.
+The model origin snaps to the cell centre. Its footprint fills 98% of its allocated area. Choose 1, 4 or 9 cells (1 × 1, 2 × 2 or 3 × 3) using the size buttons or minus/plus. Resizing, moving and restoring check the full occupied rectangle, including room boundaries. Proportions are preserved; very tall models stop below the ceiling at 11.5 m. Both cameras use one shared scene group, so placement, movement and rotation appear immediately in either view.
 
 Click an exhibited model in either view to open the shared large 3D model browser. Dragging instead of clicking still moves the instance. Drag it to move it to another free cell, or use Move and click a destination. Rotate changes its orientation by 45 degrees. Remove deletes that instance; Done clears selection. Fine mesh edges have a two-pixel click tolerance. Camera gestures remain available on empty space.
 

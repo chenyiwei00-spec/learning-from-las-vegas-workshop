@@ -1,0 +1,10 @@
+import * as THREE from 'three';
+/* Real steel geometry casts a single cached directional shadow map through clear glazing. */
+export function createSkylight({scene,renderer,height}){
+ const frame=new THREE.Group();frame.name='steel-glass-skylight';scene.add(frame);const steel=new THREE.MeshStandardMaterial({color:0x5f6870,roughness:.48,metalness:.65});const glazing=new THREE.MeshPhysicalMaterial({color:0xe7f1f4,roughness:.09,metalness:.02,transparent:true,opacity:.18,depthWrite:false,clearcoat:1,clearcoatRoughness:.06,side:THREE.DoubleSide});
+ const glass=new THREE.Mesh(new THREE.PlaneGeometry(20,20),glazing);glass.name='skylight-glazing';glass.rotation.x=-Math.PI/2;glass.position.y=.12;frame.add(glass);
+ const beams=[];for(let i=-10;i<=10;i+=2){for(const alongX of [true,false]){const mesh=new THREE.Mesh(new THREE.BoxGeometry(alongX?20:.13,.18,alongX?.13:20),steel);mesh.position.set(alongX?0:i,0,alongX?i:0);mesh.name='skylight-steel-beam';mesh.castShadow=true;mesh.receiveShadow=true;frame.add(mesh);beams.push(mesh);}}
+ const sun=new THREE.DirectionalLight(0xffedce,3.0);sun.name='gallery-sunlight';sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);Object.assign(sun.shadow.camera,{left:-18,right:18,top:18,bottom:-18,near:.1,far:75});sun.shadow.normalBias=.025;sun.shadow.bias=-.00015;sun.shadow.radius=2;sun.target.position.set(-3,0,-4);scene.add(sun,sun.target);
+ let roomMode=true;function setHeight(y){frame.position.y=y-.15;sun.position.set(6,y+9,9);sun.shadow.camera.updateProjectionMatrix();renderer.shadowMap.needsUpdate=true;}function setRoomMode(value){roomMode=!!value;frame.visible=roomMode;sun.castShadow=roomMode;renderer.shadowMap.enabled=roomMode;renderer.shadowMap.needsUpdate=true;}
+ setHeight(height);return {setHeight,setRoomMode,state:()=>({visible:frame.visible,glass:true,steelBeams:beams.length,height:frame.position.y+.15,shadowCasting:roomMode&&sun.castShadow,shadowResolution:1024}),dispose:()=>{scene.remove(frame,sun,sun.target);frame.children.forEach(m=>m.geometry.dispose());steel.dispose();glazing.dispose();sun.shadow.map?.dispose();}};
+}
