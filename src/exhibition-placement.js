@@ -16,7 +16,7 @@ export function createExhibitionPlacement({scene,canvas,getCamera,getRoomMeshes,
  const cellCounts=new Map(),cellMatrix=new THREE.Matrix4(),cellRotation=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),-Math.PI/2);
  const handleLayer=document.createElement('div');handleLayer.className='exhibition-scale-handles';canvas.parentElement.append(handleLayer);
  const handles=Array.from({length:8},(_,i)=>{const b=document.createElement('button');b.className='exhibition-scale-handle';b.type='button';b.dataset.corner=i;b.setAttribute('aria-label','Drag to scale selected model');b.title='Drag to scale';b.hidden=true;handleLayer.append(b);return b;});
- const rotateHandle=document.createElement('button');rotateHandle.className='exhibition-rotate-handle';rotateHandle.type='button';rotateHandle.textContent='\u21bb';rotateHandle.title='Drag to rotate model';rotateHandle.setAttribute('aria-label','Drag to rotate selected model');rotateHandle.hidden=true;handleLayer.append(rotateHandle);
+ const rotateHandle=document.createElement('button');rotateHandle.className='exhibition-rotate-handle';rotateHandle.type='button';rotateHandle.textContent='\u21bb';rotateHandle.title='Drag to rotate in 90 degree steps';rotateHandle.setAttribute('aria-label','Drag to rotate selected model');rotateHandle.hidden=true;handleLayer.append(rotateHandle);
  function updateCells(){
   cellCounts.clear();for(const e of entries.values())for(let row=e.record.row;row<e.record.row+e.record.span;row++)for(let col=e.record.col;col<e.record.col+e.record.span;col++){const k=row*20+col;cellCounts.set(k,(cellCounts.get(k)||0)+1);}
   let i=0;for(const k of cellCounts.keys()){cellMatrix.compose(new THREE.Vector3(k%20-9.5,.002,Math.floor(k/20)-9.5),cellRotation,new THREE.Vector3(1,1,1));cells.setMatrixAt(i++,cellMatrix);}cells.count=i;cells.instanceMatrix.needsUpdate=true;invalidate();
@@ -29,6 +29,7 @@ export function createExhibitionPlacement({scene,canvas,getCamera,getRoomMeshes,
   const visible=handles.filter(b=>!b.hidden).map(b=>({x:parseFloat(b.style.left),y:parseFloat(b.style.top)}));rotateHandle.hidden=!visible.length;
   if(visible.length){const x=(Math.min(...visible.map(p=>p.x))+Math.max(...visible.map(p=>p.x)))/2,y=Math.max(16,Math.min(...visible.map(p=>p.y))-26);rotateHandle.style.left=x+'px';rotateHandle.style.top=y+'px';}
  }
+ const snapAngle=a=>(((Math.round(a/(Math.PI/2))%4+4)%4)||4)*Math.PI/2;
  const notice=s=>{$('exhibition-placement-status').textContent=s;};
  function db(){return new Promise((resolve,reject)=>{const r=indexedDB.open('learning-vegas-exhibition-floor-v1',1);r.onupgradeneeded=()=>{r.result.createObjectStore('models',{keyPath:'id'});r.result.createObjectStore('layout');};r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});}
  async function read(){const d=await db();try{return await new Promise((resolve,reject)=>{const tx=d.transaction(['models','layout'],'readonly');const m=tx.objectStore('models').getAll(),l=tx.objectStore('layout').get('current');tx.oncomplete=()=>resolve({models:m.result,layout:l.result||[]});tx.onerror=()=>reject(tx.error);});}finally{d.close();}}
@@ -86,9 +87,11 @@ export function createExhibitionPlacement({scene,canvas,getCamera,getRoomMeshes,
   $('exhibition-placement-name').textContent=e?e.record.name+' / '+(e.record.span||1)**2+' CELL'+((e.record.span||1)>1?'S':''):'';
   $('exhibition-move-model').setAttribute('aria-pressed','false');
     $('exhibition-model-smaller').disabled=!e||(e.record.span||1)===1;$('exhibition-model-larger').disabled=!e||(e.record.span||1)===3;
+  if(e)$('exhibition-model-angle').value=String(Math.round(snapAngle(e.record.rotation||0)*180/Math.PI));
   updateOutline();
  }
  function fit(entry){
+  entry.record.rotation=snapAngle(entry.record.rotation||0);
   const m=models.get(entry.record.modelId),n=entry.record.span||1,a=entry.record.rotation||0,c=Math.abs(Math.cos(a)),s=Math.abs(Math.sin(a));
   const factor=Math.min(.98*n*(entry.record.scale||1)/Math.max(m.width*c+m.depth*s,m.width*s+m.depth*c,1e-5),getMaxHeight()/Math.max(m.height,1e-5));
   entry.object.scale.copy(m.template.scale).multiplyScalar(factor);entry.object.rotation.y=a;
@@ -171,17 +174,18 @@ export function createExhibitionPlacement({scene,canvas,getCamera,getRoomMeshes,
  for(const button of handles){button.addEventListener('pointerdown',e=>{if(e.button!==0||!selected)return;e.preventDefault();e.stopPropagation();suspend();const entry=entries.get(selected),box=new THREE.Box3().setFromObject(entry.object),c=box.getCenter(new THREE.Vector3()).project(getCamera()),r=canvas.getBoundingClientRect(),cx=r.left+(c.x+1)*r.width/2,cy=r.top+(1-c.y)*r.height/2;scaleDrag={id:selected,pointerId:e.pointerId,cx,cy,distance:Math.max(20,Math.hypot(e.clientX-cx,e.clientY-cy)),units:entry.record.span*(entry.record.scale||1)};button.setPointerCapture(e.pointerId);});
   button.addEventListener('keydown',e=>{if(e.key==='ArrowUp'||e.key==='ArrowRight'){e.preventDefault();resize(selected,Math.min(3,entries.get(selected).record.span+1));}if(e.key==='ArrowDown'||e.key==='ArrowLeft'){e.preventDefault();resize(selected,Math.max(1,entries.get(selected).record.span-1));}});
  }
- function rotate(id,angle,persist=true){const e=entries.get(id);if(!e||!Number.isFinite(angle))return false;e.record.rotation=angle;fit(e);updateOutline();if(persist)save();return true;}
+ function rotate(id,angle,persist=true){const e=entries.get(id);if(!e||!Number.isFinite(angle))return false;e.record.rotation=snapAngle(angle);if(selected===id)$('exhibition-model-angle').value=String(Math.round(e.record.rotation*180/Math.PI));fit(e);updateOutline();if(persist)save();return true;}
  rotateHandle.addEventListener('pointerdown',e=>{if(e.button!==0||!selected)return;e.preventDefault();e.stopPropagation();suspend();const entry=entries.get(selected),v=new THREE.Box3().setFromObject(entry.object).getCenter(new THREE.Vector3()).project(getCamera()),r=canvas.getBoundingClientRect(),cx=r.left+(v.x+1)*r.width/2,cy=r.top+(1-v.y)*r.height/2;rotateDrag={id:selected,pointerId:e.pointerId,cx,cy,last:Math.atan2(e.clientY-cy,e.clientX-cx),angle:entry.record.rotation||0};rotateHandle.setPointerCapture(e.pointerId);});
- rotateHandle.addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight'].includes(e.key)){e.preventDefault();rotate(selected,(entries.get(selected)?.record.rotation||0)+(e.key==='ArrowLeft'?-1:1)*Math.PI/12);}});
- document.addEventListener('pointermove',e=>{if(!rotateDrag||rotateDrag.pointerId!==e.pointerId)return;e.preventDefault();e.stopImmediatePropagation();const d=rotateDrag,a=Math.atan2(e.clientY-d.cy,e.clientX-d.cx),delta=Math.atan2(Math.sin(a-d.last),Math.cos(a-d.last));d.angle+=delta;d.last=a;rotate(d.id,e.shiftKey?Math.round(d.angle/(Math.PI/12))*Math.PI/12:d.angle,false);},{capture:true,passive:false});
+ rotateHandle.addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight'].includes(e.key)){e.preventDefault();rotate(selected,(entries.get(selected)?.record.rotation||0)+(e.key==='ArrowLeft'?-1:1)*Math.PI/2);}});
+ document.addEventListener('pointermove',e=>{if(!rotateDrag||rotateDrag.pointerId!==e.pointerId)return;e.preventDefault();e.stopImmediatePropagation();const d=rotateDrag,a=Math.atan2(e.clientY-d.cy,e.clientX-d.cx),delta=Math.atan2(Math.sin(a-d.last),Math.cos(a-d.last));d.angle+=delta;d.last=a;rotate(d.id,d.angle,false);},{capture:true,passive:false});
  for(const type of ['pointerup','pointercancel'])document.addEventListener(type,e=>{if(rotateDrag?.pointerId===e.pointerId){rotateDrag=null;save();}},true);
  document.addEventListener('pointermove',e=>{if(!scaleDrag||scaleDrag.pointerId!==e.pointerId)return;e.preventDefault();e.stopImmediatePropagation();const d=scaleDrag,units=Math.max(.35,Math.min(3,d.units*Math.hypot(e.clientX-d.cx,e.clientY-d.cy)/d.distance)),n=Math.ceil(units-1e-6);resize(d.id,n,units/n,false);},{capture:true,passive:false});
  for(const type of ['pointerup','pointercancel'])document.addEventListener(type,e=>{if(scaleDrag?.pointerId===e.pointerId){scaleDrag=null;save();}},true);
  canvas.addEventListener('pointerup',end,true);canvas.addEventListener('pointercancel',end,true);
  canvas.addEventListener('lostpointercapture',()=>{drag=null;hideGhost();stopHover();});
  $('exhibition-move-model').onclick=()=>{moving=!moving;suspend();$('exhibition-move-model').setAttribute('aria-pressed',String(moving));if(!moving)stopHover();else notice('Click a floor cell, or drag the selected model.');};
- $('exhibition-turn-model').onclick=()=>{const e=entries.get(selected);if(!e)return;e.record.rotation=((e.record.rotation||0)+Math.PI/4)%(2*Math.PI);fit(e);updateOutline();save();};
+ $('exhibition-turn-model').onclick=()=>rotate(selected,(entries.get(selected)?.record.rotation||0)+Math.PI/2);
+ $('exhibition-model-angle').onchange=e=>rotate(selected,Number(e.target.value)*Math.PI/180);
  $('exhibition-remove-model').onclick=()=>{const e=entries.get(selected);if(!e)return;group.remove(e.object);entries.delete(selected);updateCells();select(null);prune();save();notice('Model removed from the room.');};
   $('exhibition-model-smaller').onclick=()=>resize(selected,(entries.get(selected)?.record.span||1)-1);
  $('exhibition-model-larger').onclick=()=>resize(selected,(entries.get(selected)?.record.span||1)+1);

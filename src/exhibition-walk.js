@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import {createSkylight} from './exhibition-skylight.js';
 import {createCanopy} from './exhibition-canopy.js';
 import {createExhibitionPlacement} from './exhibition-placement.js';
+import {RoomEnvironment} from 'three/examples/jsm/environments/RoomEnvironment.js';
 import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
 
 (() => {
@@ -185,7 +186,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
     renderer.domElement.setAttribute('aria-hidden','true');
 
     const wall = new THREE.MeshStandardMaterial({color:0xffffff,roughness:0.94,metalness:0});
-    const floor = new THREE.MeshStandardMaterial({color:0xe8e8e3,roughness:0.96,metalness:0});
+    const floor = new THREE.MeshStandardMaterial({color:0xe8e8e3,roughness:0.83,metalness:0});
     const t = ROOM.wallThickness, half = ROOM.width/2;
     function box(name,width,height,depth,x,y,z,material=wall) {
       const mesh = new THREE.Mesh(new THREE.BoxGeometry(width,height,depth),material);
@@ -242,7 +243,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
       const light = new THREE.PointLight(0xffffff,7,28,2);
       light.name='gallery-ceiling-light';light.position.set(x,ROOM.height-.45,z); scene.add(light);
     }
-    skylight=createSkylight({scene,renderer,height:ROOM.height});
+    skylight=createSkylight({scene,renderer,height:ROOM.height,floorMaterial:floor});const pmrem=new THREE.PMREMGenerator(renderer),environment=new RoomEnvironment();scene.environment=pmrem.fromScene(environment,.05).texture;scene.environmentIntensity=.28;pmrem.dispose();environment.dispose();
     ready = true;
     surface.setAttribute('aria-busy','false');
     ui();
@@ -254,7 +255,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
 
   const canvas = renderer.domElement;
   const placement=createExhibitionPlacement({scene,canvas,getCamera:()=>camera,getRoomMeshes:()=>roomMeshes,isRoom:()=>viewMode==='room',orient,invalidate:invalidateScene,suspend:suspendNavigation,getMaxHeight:()=>11.5});
-  space=createCanopy({scene,renderer,placement,onSpaceBounds:frameSpace,getView:()=>viewMode,setView:setViewMode,navigate:value=>{clearInput();teleport=null;fly=false;eye.set(value.x,value.y,value.z);yaw=value.yaw;pitch=value.pitch||0;constrain(eye);ui();requestFrame();focusView();},invalidate:invalidateScene});
+  space=createCanopy({scene,renderer,placement,onSpaceLight:(result,active)=>skylight.updateCanopy(result,active),onSpaceBounds:frameSpace,getView:()=>viewMode,setView:setViewMode,navigate:value=>{clearInput();teleport=null;fly=false;eye.set(value.x,value.y,value.z);yaw=value.yaw;pitch=value.pitch||0;constrain(eye);ui();requestFrame();focusView();},invalidate:invalidateScene});
   // Capture focus before OrbitControls receives the pointer-down event.
   canvas.addEventListener('pointerdown',() => {if(viewMode==='axonometric')focusView();},true);
   axonControls = new OrbitControls(axonCamera,canvas);
@@ -417,7 +418,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
         if(object.material)for(const material of (Array.isArray(object.material)?object.material:[object.material]))materials.add(material);
       });
       geometries.forEach(geometry=>geometry.dispose());materials.forEach(material=>material.dispose());
-      space?.dispose();skylight?.dispose();renderer.dispose();
+      space?.dispose();skylight?.dispose();scene.environment?.dispose();renderer.dispose();
     }
   });
   window.addEventListener('pageshow',() => {resize();});

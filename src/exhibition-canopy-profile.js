@@ -28,6 +28,6 @@ export function modelGrowthProfile(source,bounds,anchor){
 export function growthSection(p,t){
  const profile=p.growth.profile,f=clamp(t,0,1)*(profile.length-1),at=Math.floor(f),u=f-at;
  const sample=k=>{const a=profile[Math.max(0,at-1)][k],b=profile[at][k],c=profile[Math.min(at+1,profile.length-1)][k],d=profile[Math.min(at+2,profile.length-1)][k];return .5*((2*b)+(-a+c)*u+(2*a-5*b+4*c-d)*u*u+(-a+3*b-3*c+d)*u*u*u);};
- const onset=Math.max(.55,(3.6-p.baseY)/p.height),v=clamp((t-onset)/(1-onset),0,1),blend=v*v*v*(v*(v*6-15)+10),forked=p.growth.branches.length>0,flare=blend*(forked?.03*p.radius:.65+p.radius*.35),taper=forked?1-.78*((q)=>q*q*q*(q*(q*6-15)+10))(clamp((t-.50)/.38,0,1)):1;
+ const onset=Math.max(.55,(2.6-p.baseY)/p.height),v=clamp((t-onset)/(1-onset),0,1),blend=v*v*v*(v*(v*6-15)+10),forked=p.growth.branches.length>0,flare=blend*(forked?.03*p.radius:.65+p.radius*.35),taper=forked?1-.78*((q)=>q*q*q*(q*(q*6-15)+10))(clamp((t-.50)/.38,0,1)):1;
  return {x:p.x+sample('x')*(1-blend),z:p.z+sample('z')*(1-blend),rx:p.radius*(.26+.70*clamp(sample('rx'),.14,1.1))*taper+flare,rz:p.radius*(.26+.70*clamp(sample('rz'),.14,1.1))*taper+flare};
 }

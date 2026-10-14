@@ -162,7 +162,7 @@ function attach(viewer,{frame,fitCamera,applyCamera,onChange,listEntries=null,on
   const start=down;down=null;if(phase!=='overview'||!start||start.id!==e.pointerId||Math.hypot(start.x-e.clientX,start.y-e.clientY)>6)return;if(start.hit)enter();
  },true);
  document.addEventListener('keydown',e=>{
-  if(!entry||e.altKey||e.ctrlKey||e.metaKey||e.shiftKey||!['ArrowLeft','ArrowRight'].includes(e.key)||(e.target.closest?.('#walk-surface')&&!e.target.closest?.('#exhibition-model-browser'))||e.target.closest?.('#exhibition-canvas,input,textarea,select,[contenteditable="true"],dialog')||document.querySelector('dialog[open]'))return;
+  if(!entry||e.altKey||e.ctrlKey||e.metaKey||e.shiftKey||!['ArrowLeft','ArrowRight'].includes(e.key)||(e.target.closest?.('#walk-surface')&&!e.target.closest?.('#exhibition-model-browser'))||e.target.closest?.('#exhibition-canvas,video,audio,.exhibition-model-media,input,textarea,select,[contenteditable="true"],dialog')||document.querySelector('dialog[open]'))return;
   if(!['overview','detail'].includes(phase))return;e.preventDefault();e.stopImmediatePropagation();navigate(e.key==='ArrowRight'?1:-1);
  },true);
  SavedSculptures.subscribe(async()=>{
