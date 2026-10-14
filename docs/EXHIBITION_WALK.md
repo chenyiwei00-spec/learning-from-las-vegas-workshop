@@ -12,7 +12,7 @@ In Eye level, click the room to activate navigation. WASD/arrows walk; Shift/Ctr
 
 ## Object collage
 
-Two small preview cards float at the upper right. Clicking Collage or 3D model opens a larger panel at the same upper-right anchor, covering those cards. A pointer-transparent shade dims the scene and interfaces underneath. Closing retains the composition and model.
+Two small preview cards align with the top edge of the viewport at the upper right. Fullscreen remains at the lower right, preserving the accepted teammate control layout. Clicking Collage or 3D model opens a larger panel at the same upper-right anchor, covering those cards. A pointer-transparent shade dims the scene and interfaces underneath. Closing retains the composition and model.
 
 Las Vegas objects opens a searchable archive picker with twelve photos per page. It includes only Las Vegas photos with existing isolated-object masks. Local uploads, V&A browsing and whole-photo insertion are not available in this workspace.
 
