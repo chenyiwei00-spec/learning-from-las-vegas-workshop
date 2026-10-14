@@ -1,7 +1,7 @@
 /* Saved-model browsing: a stationary render surface and eased model-only slides. */
 (()=>{
 'use strict';
-function attach(viewer,{frame,fitCamera,applyCamera,onChange}){
+function attach(viewer,{frame,fitCamera,applyCamera,onChange,listEntries=null,onNavigate=null}){
  let entry=null,phase='idle',ids=[],index=-1,ticket=0,raf=0,down=null,panResolve=null,switching=false,buffer=null,progress=0;
  const reduced=matchMedia('(prefers-reduced-motion: reduce)'),stage=frame.closest('.model-layout');
  const prev=document.createElement('button'),next=document.createElement('button'),hint=document.createElement('p');
@@ -23,7 +23,7 @@ function attach(viewer,{frame,fitCamera,applyCamera,onChange}){
  async function set(entryValue){
   reset(true);entry=entryValue;phase='loading';viewer.cameraControls=false;ui();
   const run=ticket,visible=[...document.querySelectorAll('#saved-model-grid [data-saved]')].map(e=>e.dataset.saved);
-  const rows=visible.includes(entry.id)?visible:(await SavedSculptures.list()).map(e=>e.id);
+  const rows=listEntries?(await listEntries()).map(e=>e.id):visible.includes(entry.id)?visible:(await SavedSculptures.list()).map(e=>e.id);
   if(run!==ticket)return;ids=rows;index=ids.indexOf(entry.id);ui();
  }
  function slideDistance(camera){
@@ -153,7 +153,7 @@ function attach(viewer,{frame,fitCamera,applyCamera,onChange}){
  }
  function navigate(direction){
   if(!entry||ids.length<2||!['overview','detail'].includes(phase))return;
-  window.dispatchEvent(new CustomEvent('saved-sculpture-open',{detail:{id:ids[(index+direction+ids.length)%ids.length],direction}}));
+  const id=ids[(index+direction+ids.length)%ids.length];if(onNavigate)onNavigate(id,direction);else window.dispatchEvent(new CustomEvent('saved-sculpture-open',{detail:{id,direction}}));
  }
  prev.addEventListener('click',()=>navigate(-1));next.addEventListener('click',()=>navigate(1));
  viewer.addEventListener('pointerdown',e=>{down=e.button===0?{x:e.clientX,y:e.clientY,id:e.pointerId,hit:phase==='overview'&&!!viewer.positionAndNormalFromPoint(e.clientX,e.clientY)}:null;},true);
@@ -162,14 +162,14 @@ function attach(viewer,{frame,fitCamera,applyCamera,onChange}){
   const start=down;down=null;if(phase!=='overview'||!start||start.id!==e.pointerId||Math.hypot(start.x-e.clientX,start.y-e.clientY)>6)return;if(start.hit)enter();
  },true);
  document.addEventListener('keydown',e=>{
-  if(!entry||e.altKey||e.ctrlKey||e.metaKey||e.shiftKey||!['ArrowLeft','ArrowRight'].includes(e.key)||e.target.closest?.('#walk-surface,#exhibition-canvas,input,textarea,select,[contenteditable="true"],dialog')||document.querySelector('dialog[open]'))return;
+  if(!entry||e.altKey||e.ctrlKey||e.metaKey||e.shiftKey||!['ArrowLeft','ArrowRight'].includes(e.key)||(e.target.closest?.('#walk-surface')&&!e.target.closest?.('#exhibition-model-browser'))||e.target.closest?.('#exhibition-canvas,input,textarea,select,[contenteditable="true"],dialog')||document.querySelector('dialog[open]'))return;
   if(!['overview','detail'].includes(phase))return;e.preventDefault();e.stopImmediatePropagation();navigate(e.key==='ArrowRight'?1:-1);
  },true);
  SavedSculptures.subscribe(async()=>{
-  if(!entry)return;const run=ticket,rows=await SavedSculptures.list();if(run!==ticket||!entry)return;
+  if(!entry)return;const run=ticket,rows=await (listEntries?listEntries():SavedSculptures.list());if(run!==ticket||!entry)return;
   ids=ids.filter(id=>rows.some(e=>e.id===id));if(!ids.includes(entry.id))ids.unshift(entry.id);index=ids.indexOf(entry.id);ui();
  });
- return {set,ready,prepare,slideOut,overview,reset,beginBrowse,source:id=>{if(buffer?.id===id&&buffer.ready){buffer.transferred=true;return buffer.url;}return null;},update:value=>{if(entry?.id===value?.id)entry=value;},state:()=>({phase,switching,progress,preparedId:buffer?.id||null,overlap:stage.dataset.galleryOverlap==='true',id:entry?.id||null,index,total:ids.length}),canSave:()=>!entry||phase==='detail'};
+ return {set,ready,prepare,slideOut,overview,reset,beginBrowse,source:id=>{if(buffer?.id===id&&buffer.ready){buffer.transferred=true;return buffer.url;}return null;},update:value=>{if(entry&&(entry.id===value?.id||entry.ephemeral)){const imported=entry.ephemeral;entry=value;if(listEntries||imported)Promise.resolve(listEntries?listEntries():SavedSculptures.list()).then(rows=>{if(!entry)return;ids=rows.map(e=>e.id);index=ids.indexOf(entry.id);ui();});else ui();}},state:()=>({phase,switching,progress,preparedId:buffer?.id||null,overlap:stage.dataset.galleryOverlap==='true',id:entry?.id||null,index,total:ids.length}),canSave:()=>!entry||phase==='detail'};
 }
 window.SavedModelGallery=Object.freeze({attach});
 })();

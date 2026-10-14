@@ -390,7 +390,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
     $('walk-fullscreen').textContent = fullscreen ? 'Exit fullscreen' : 'Fullscreen';
     $('walk-fullscreen').setAttribute('aria-pressed',String(fullscreen));
     clearInput(); resize();
-    if((document.fullscreenElement&&document.fullscreenElement!==surface)||(surface.dataset.workspaceOpen&&surface.dataset.workspaceOpen!=='none'))suspendNavigation();
+    if(surface.dataset.modelBrowse==='true'||(document.fullscreenElement&&document.fullscreenElement!==surface)||(surface.dataset.workspaceOpen&&surface.dataset.workspaceOpen!=='none'))suspendNavigation();
     else focusView();
   });
   canvas.addEventListener('webglcontextlost',event => {

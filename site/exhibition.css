@@ -171,3 +171,45 @@
 .exhibition-source-layout p,#exhibition-source-hint{font:11px/1.6 Arial,sans-serif}
 .exhibition-source-layout button{font:10px/1.5 Arial,sans-serif;border:1px solid #ccc;padding:8px;margin-right:5px;cursor:pointer}
 @media(max-width:760px){.workspace-expanded{left:auto;right:12px;width:calc(100% - 24px);max-width:620px}.exhibition-source-layout{grid-template-columns:minmax(0,1fr) 120px;gap:10px}#exhibition-source-canvas{height:310px}#exhibition-cutout-canvas{height:180px}}
+
+/* Keep the accepted teammate controls and align expanded tools to the cards. */
+.workspace-expanded{top:18px;right:18px;left:auto}
+.workspace-shade{z-index:26}
+.exhibition-size-options{display:inline-flex;gap:4px}
+.exhibition-placement-tools button[aria-pressed=true],#exhibition-browser-exhibit-tools button[aria-pressed=true]{background:#222;color:#fff;border-color:#222}
+.exhibition-model-library{width:100%;max-width:1440px;margin:36px auto 0;padding-inline:clamp(24px,5vw,80px)}
+.exhibition-model-library #model-history{margin-top:0;padding-top:18px;border-top:1px solid var(--line)}
+.exhibition-model-library .saved-model-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:22px}
+.exhibition-model-library .saved-model-card{min-width:0}
+.exhibition-model-library .saved-model-image img{height:210px;object-fit:contain;background:#ededeb}
+.exhibition-browser-title{display:none}
+.exhibition-model-browser{position:absolute;inset:0;z-index:40;background:#e7e7e2;outline:none}
+.walk-surface[data-model-browse=true]>.walk-toolbar,.walk-surface[data-model-browse=true]>.workspace-previews,.walk-surface[data-model-browse=true]>.walk-room-label,.walk-surface[data-model-browse=true]>#walk-status,.walk-surface[data-model-browse=true]>#walk-fullscreen,.walk-surface[data-model-browse=true]>.exhibition-placement-tools,.walk-surface[data-model-browse=true]>.exhibition-placement-status{visibility:hidden}
+.exhibition-browser-header{position:absolute;top:18px;left:24px;right:330px;z-index:38;display:flex;align-items:center;gap:18px;font:9px/1.5 Arial,sans-serif;color:#777}
+.exhibition-browser-header button{padding:9px 12px;background:#ffffffc9;border:1px solid #ccc;font:11px/1.5 Arial,sans-serif;cursor:pointer;white-space:nowrap}
+#exhibition-browser-body,#exhibition-model-browser #model-panel{position:absolute;inset:0;margin:0;padding:0;border:0}
+#exhibition-model-browser .workspace-model-meta,#exhibition-model-browser .workspace-model-placement{display:none}
+#exhibition-model-browser #model-stage{position:absolute;inset:0;left:0;width:100%;height:100%;min-height:0;max-height:none;margin:0;display:block;background:#e7e7e2;overflow:hidden}
+#exhibition-model-browser #model-frame{position:absolute;inset:0;width:100%;height:100%;min-height:0;aspect-ratio:auto;background:transparent;overflow:hidden}
+#exhibition-model-browser #generated-sculpture-viewer,#exhibition-model-browser .model-gallery-buffer{position:absolute;inset:0;left:-30%;right:auto;width:130%;height:100%;max-width:none;background:transparent}
+#exhibition-model-browser #model-empty{left:-30%;right:auto;width:130%;height:100%;padding:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:absolute}
+#exhibition-model-browser .model-stage-controls{position:absolute;top:18px;right:18px;left:auto;z-index:30;display:flex;gap:6px;width:auto;padding:0}
+#exhibition-model-browser .model-stage-controls button{background:#ffffffad;border:1px solid #ccc;padding:8px 10px;font:9px/1.5 Arial,sans-serif;cursor:pointer}
+#exhibition-model-browser .model-info{position:absolute;right:clamp(24px,5vw,80px);top:50%;transform:translateY(-50%);bottom:auto;left:auto;width:27%;max-width:360px;z-index:25;padding:20px 0;background:transparent;pointer-events:none}
+#exhibition-model-browser .model-info button,#exhibition-model-browser .model-info input,#exhibition-model-browser .model-info details{pointer-events:auto}
+#exhibition-model-browser .model-info p{font:11px/1.7 Arial,sans-serif;margin:0 0 15px}
+#exhibition-model-browser .exhibition-browser-title{display:block;font:clamp(30px,3vw,50px)/1.08 var(--display-font);font-weight:400;margin:0 0 28px;color:#292929}
+#exhibition-model-browser .model-save-fields{margin:12px 0}
+#exhibition-model-browser .sculpture-actions{display:flex;flex-wrap:wrap;gap:8px}
+#exhibition-model-browser .sculpture-actions button{font:10px/1.5 Arial,sans-serif;min-height:34px;padding:8px 11px;cursor:pointer}
+#exhibition-model-browser .model-reset{position:absolute;right:18px;bottom:18px;z-index:30}
+#exhibition-model-browser .model-wheel-note{position:absolute;left:24px;bottom:22px;z-index:25;font-size:9px;pointer-events:none}
+#exhibition-browser-exhibit-tools{position:absolute;left:24px;bottom:60px;display:flex;gap:7px;align-items:center;z-index:30;font:9px/1.5 Arial,sans-serif}
+#exhibition-browser-exhibit-tools button{font:10px/1.5 Arial,sans-serif;background:#ffffffad;border:1px solid #ccc;padding:7px 10px;cursor:pointer}
+#exhibition-model-browser .model-gallery-arrow{width:36px;height:54px;font-size:34px}
+#exhibition-model-browser #model-stage:fullscreen{position:relative;inset:auto;width:100vw;height:100dvh}
+#exhibition-model-browser #model-stage:fullscreen #generated-sculpture-viewer,#exhibition-model-browser #model-stage:fullscreen .model-gallery-buffer{left:0;width:100%}
+#exhibition-model-browser #model-stage:fullscreen #model-empty{left:0;width:100%}
+@media(max-width:1080px){.exhibition-model-library .saved-model-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.exhibition-browser-header>span{display:none}#exhibition-model-browser .model-info{right:24px;width:29%;max-width:300px}}
+@media(max-width:760px){.workspace-expanded{top:12px;right:12px}.exhibition-model-library{padding-inline:24px}.exhibition-model-library .saved-model-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.exhibition-browser-header{left:12px;right:auto;top:12px}.exhibition-browser-header button{padding:7px 9px;font-size:10px}#exhibition-model-browser .model-stage-controls{top:12px;right:12px;gap:3px}#exhibition-model-browser .model-stage-controls button{font-size:8px;padding:7px 6px}#exhibition-model-browser #generated-sculpture-viewer,#exhibition-model-browser .model-gallery-buffer{left:0;width:100%;height:65%}#exhibition-model-browser .model-info{top:auto;bottom:48px;right:18px;left:18px;transform:none;width:auto;max-width:none;padding:0;display:grid;grid-template-columns:1fr 1fr;column-gap:16px}#exhibition-model-browser .exhibition-browser-title{font-size:28px;grid-row:1/5;margin:0}#exhibition-model-browser .model-info p{font-size:10px;margin-bottom:8px}#exhibition-model-browser .model-naming{margin:8px 0}#exhibition-browser-exhibit-tools{left:12px;bottom:18px;gap:4px}#exhibition-browser-exhibit-tools>span{display:none}#exhibition-model-browser .model-wheel-note{display:none}.exhibition-placement-tools{left:12px;max-width:calc(100% - 24px)}}
+@media(max-width:480px){.exhibition-model-library{padding-inline:20px}.exhibition-model-library .saved-model-grid{grid-template-columns:1fr}.exhibition-browser-header{top:56px}.exhibition-model-library .saved-model-image img{height:230px}}

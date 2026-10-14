@@ -37,7 +37,7 @@ function syncModelPreview(){
 }
 function openPanel(kind){
  if(!['collage','model'].includes(kind))return;
- suspendScene();currentPanel=kind;panel.hidden=false;surface.dataset.workspaceOpen=kind;$('workspace-shade').hidden=false;
+ window.ExhibitionBrowse?.dock();suspendScene();currentPanel=kind;panel.hidden=false;surface.dataset.workspaceOpen=kind;$('workspace-shade').hidden=false;
  $('workspace-collage-pane').hidden=kind!=='collage';$('workspace-model-pane').hidden=kind!=='model';
  $('workspace-expanded-title').textContent=kind==='collage'?'PHOTO COLLAGE':'GENERATED MODEL';
  $('exhibition-export').hidden=kind==='model';
@@ -70,7 +70,7 @@ document.addEventListener('keydown',event=>{
  if(event.key==='Escape'&&currentPanel&&!document.fullscreenElement&&!$('exhibition-materials').open&&!$('saved-model-edit').open){closePanel();event.preventDefault();}
 });
 $('generate-model').addEventListener('click',()=>openPanel('model'));
-window.addEventListener('saved-sculpture-open',()=>openPanel('model'));
+
 window.addEventListener('exhibition-collage-change',queueCollagePreview);
 window.addEventListener('exhibition-studio-ready',()=>{queueCollagePreview();syncModelPreview();});
 viewer.addEventListener('load',syncModelPreview);

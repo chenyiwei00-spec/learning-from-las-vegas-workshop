@@ -4,17 +4,18 @@
 const $=id=>document.getElementById(id),thumb=$('workspace-model-thumbnail'),viewer=$('generated-sculpture-viewer'),ghost=$('exhibition-drag-ghost');
 let candidate=null,captureCache=null,capturePromise=null,ghostUrl='',suppressClick=false;
 function available(){const s=window.ExhibitionStudio?.state().model;return !!(s?.loaded&&!s.busy&&!s.stale&&s.jobId&&viewer.src&&!thumb.hidden);}
+function enrich(value){const source=window.ExhibitionStudio.captureModel();return {...value,record:source.record,libraryId:source.entry?.ephemeral?null:source.entry?.id||null,composition:window.ExhibitionStudio.getDocument(),camera:SavedSculptures.cameraView(viewer)};}
 async function capture(){
  const src=viewer.src;if(!available())throw Error('Generate or open a finished model first.');
- if(captureCache?.src===src)return captureCache;
- if(capturePromise?.src===src)return capturePromise.promise;
+ if(captureCache?.src===src)return enrich(captureCache);
+ if(capturePromise?.src===src)return enrich(await capturePromise.promise);
  const promise=(async()=>{
   const response=await fetch(src);if(!response.ok)throw Error('The model could not load for placement.');const blob=await response.blob();
   let preview=null;try{preview=await thumb.toBlob({mimeType:'image/png'});}catch{}
   const hash=await crypto.subtle.digest('SHA-256',await blob.arrayBuffer()),id=Array.from(new Uint8Array(hash),n=>n.toString(16).padStart(2,'0')).join('');
   const value={src,id,blob,preview,name:$('model-name').value.trim()||'Generated collage'};
   if(viewer.src===src)captureCache=value;return value;
- })();capturePromise={src,promise};try{return await promise;}finally{if(capturePromise?.promise===promise)capturePromise=null;}
+ })();capturePromise={src,promise};try{return enrich(await promise);}finally{if(capturePromise?.promise===promise)capturePromise=null;}
 }
 function tell(s){$('exhibition-placement-status').textContent=s;}
 function overFloor(e){

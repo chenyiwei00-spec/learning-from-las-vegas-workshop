@@ -13,7 +13,7 @@ async function create(options){
  const $=id=>document.getElementById(id),viewer=$('generated-sculpture-viewer');
  let ready=false,busy=false,record=null,loaded=false,current='',revision=0,job=null,loadingError=false,lastError='',saving=false,epoch=0,restoreRevision=0,libraryEntry=null;
  let pendingReveal=false;let meshUrl=null,meshTicket=0,pendingCamera=null,activeRecipe=null,incomingDirection=0;
- const gallery=SavedModelGallery.attach(viewer,{frame:$('model-frame'),fitCamera,applyCamera,onChange:()=>{if(status)render();}});
+ const gallery=SavedModelGallery.attach(viewer,{frame:$('model-frame'),fitCamera,applyCamera,onChange:()=>{if(status)render();},listEntries:options.browseEntries});
  async function loadMesh(input){
   const ticket=++meshTicket;
   try{
@@ -22,7 +22,7 @@ async function create(options){
    const enhanced=prepared?null:await ModelColour.enhance(blob);if(ticket!==meshTicket)return;const old=meshUrl;meshUrl=prepared?input:URL.createObjectURL(enhanced);viewer.src=meshUrl;if(old&&old!==meshUrl)setTimeout(()=>URL.revokeObjectURL(old),3000);
   }catch(error){if(ticket===meshTicket){loadingError=true;lastError=error.message;status.textContent=lastError;render();}}
  }
- function clearMesh(){meshTicket++;if(meshUrl)URL.revokeObjectURL(meshUrl);meshUrl=null;}
+ function clearMesh(){meshTicket++;const previous=meshUrl;meshUrl=null;if(previous)setTimeout(()=>URL.revokeObjectURL(previous),3000);}
 
  const interaction=ModelInteraction.attach($('model-stage'),viewer,{fullscreenButton:$('model-fullscreen'),zoomButton:$('model-zoom-toggle'),note:$('model-wheel-note')});
  const empty=$('model-empty'),status=$('model-status'),generate=$('generate-model');
@@ -34,7 +34,7 @@ async function create(options){
   $('model-description').hidden=!!libraryEntry;
   $('model-direction').textContent=(record?.target==='city'?'LAS VEGAS':record?'V&A SCULPTURE':city?'LAS VEGAS':'V&A SCULPTURE')+' / 3D';$('model-description').innerHTML=city?'Generate a volume from the Las Vegas collage.<br>Drag to rotate. Click the grey area to enable wheel zoom.':'Generate a volume from your assembled V&A fragments.<br>Drag to rotate. Click the grey area to enable wheel zoom.';
   generate.disabled=!ready||busy||!has||!!options.isPreview?.();generate.textContent=busy?'Generating…':record?'Generate updated 3D ↗':'Generate 3D ↗';
-  $('save-model').disabled=!record||(!has&&!libraryEntry)||!loaded||!same||busy||saving||!gallery.canSave();$('save-model').textContent=saving?'Saving…':libraryEntry?'Save changes':'Save model +';
+  $('save-model').disabled=!record||(!has&&!libraryEntry)||!loaded||!same||busy||saving||!gallery.canSave();$('save-model').textContent=saving?'Saving…':libraryEntry&&!libraryEntry.ephemeral?'Save changes':'Save model +';
   $('download-model-glb').disabled=!record||(!has&&!libraryEntry)||!same||busy;$('download-model-obj').disabled=!record||(!has&&!libraryEntry)||!same||busy;$('reset-model-view').disabled=!loaded||gallery.state().switching;
   viewer.hidden=(!has&&!libraryEntry)||!loaded||!same||busy;
   empty.hidden=(has||!!libraryEntry)&&loaded&&same&&!busy;
@@ -50,6 +50,7 @@ async function create(options){
   else if(!busy&&!lastError)status.textContent=record?(same?'3D model ready. Click the grey area for wheel zoom.':'Composition changed. Generate an updated model.'):(ready?city?'Ready to generate your Las Vegas collage.':'Ready to generate your assembled sculpture.':'Local generator unavailable. Restart the local test launcher.');
   if(libraryEntry&&!loadingError)status.textContent='';
   if(options.modelComposition&&record&&loaded&&!busy){viewer.hidden=false;empty.hidden=true;$('save-model').disabled=saving||!gallery.canSave();$('download-model-glb').disabled=false;$('download-model-obj').disabled=false;if(!same)status.textContent='Showing your last generation. Generate again to update it.';}
+  $('download-model-obj').disabled ||= !!libraryEntry&&!libraryEntry.obj;
   status.hidden=(!!libraryEntry||gallery.state().switching)&&!loadingError;if(gallery.state().switching&&!loadingError)empty.hidden=true;
   if(options.directCollage){
    $('model-direction').textContent=options.modelComposition?'MODEL COMPOSITION / IMAGE TO 3D':'PHOTO COLLAGE / 3D';
@@ -130,14 +131,14 @@ async function create(options){
  $('reset-model-view').addEventListener('click',()=>libraryEntry?gallery.overview():fitCamera());
  async function download(path,name){
   if(!record)return;
-  if(libraryEntry){SavedSculptures.download(name.endsWith('.obj')?libraryEntry.obj:libraryEntry.glb,libraryEntry.title.replace(/[^a-z0-9_-]+/gi,'-')+(name.endsWith('.obj')?'.obj':'.glb'));return;}
+  if(libraryEntry){if(name.endsWith('.obj')&&!libraryEntry.obj){options.message('OBJ is unavailable for this exhibit. Use GLB.');return;}SavedSculptures.download(name.endsWith('.obj')?libraryEntry.obj:libraryEntry.glb,libraryEntry.title.replace(/[^a-z0-9_-]+/gi,'-')+(name.endsWith('.obj')?'.obj':'.glb'));return;}
   try{const raw=await fetch(path).then(r=>{if(!r.ok)throw Error('Model download failed.');return r.blob();});const blob=name.endsWith('.obj')?await ModelColour.obj(raw):await ModelColour.enhance(raw);SavedSculptures.download(blob,name);}catch(e){options.message(e.message);}
  }
  $('download-model-glb').addEventListener('click',()=>download(record?.modelUrl,record?.target==='city'?'borrowed-worlds-city.glb':'borrowed-worlds-sculpture.glb'));
  $('download-model-obj').addEventListener('click',()=>download(record?.objUrl,record?.target==='city'?'borrowed-worlds-city.obj':'borrowed-worlds-sculpture.obj'));
  $('save-model').addEventListener('click',async()=>{
   if(!record||!loaded||busy||saving||!gallery.canSave())return;saving=true;const snapshot=structuredClone(record);render();
-  try{const metadata={title:$('model-name').value,group:$('model-group').value};let result;if(libraryEntry){libraryEntry=await SavedSculptures.overwrite(libraryEntry.id,viewer,{title:metadata.title||libraryEntry.title,group:metadata.group});gallery.update(libraryEntry);result={entry:libraryEntry,alreadySaved:true,updated:true};}else result=await SavedSculptures.save(snapshot,viewer,metadata);$('model-history').open=true;$('history-status').textContent=result.updated?result.entry.title+' updated with this view.':result.entry.title+' saved on this device.';options.message(result.updated?'Saved model updated: view and preview replaced.':'Model saved with its current view.');$('model-history').scrollIntoView({behavior:'smooth',block:'start'});}
+  try{const metadata={title:$('model-name').value,group:$('model-group').value};let result;if(libraryEntry?.ephemeral){const imported=await SavedSculptures.importEntry(libraryEntry,viewer,metadata);libraryEntry=imported.entry;gallery.update(libraryEntry);result=imported;}else if(libraryEntry){libraryEntry=await SavedSculptures.overwrite(libraryEntry.id,viewer,{title:metadata.title||libraryEntry.title,group:metadata.group});gallery.update(libraryEntry);result={entry:libraryEntry,alreadySaved:true,updated:true};}else result=await SavedSculptures.save(snapshot,viewer,metadata);$('model-history').open=true;$('history-status').textContent=result.updated?result.entry.title+' updated with this view.':result.entry.title+' saved on this device.';options.message(result.updated?'Saved model updated: view and preview replaced.':'Model saved with its current view.');$('model-history').scrollIntoView({behavior:'smooth',block:'start'});}
   catch(e){options.message(e.message);$('history-status').textContent=e.message;}
   finally{saving=false;render();}
  });

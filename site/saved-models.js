@@ -18,7 +18,7 @@ async function get(id){
   const responseMesh=await fetch(root+'sculpture.glb',{cache:'no-store'});if(!responseMesh.ok)throw Error('Legacy colour mesh unavailable.');const glb=await responseMesh.blob();if(await glb.slice(0,4).text()!=='glTF')throw Error('Legacy colour mesh invalid.');
   const db=await database();await new Promise((resolve,reject)=>{const tx=db.transaction(STORE,'readwrite'),s=tx.objectStore(STORE),r=s.get(id);r.onsuccess=()=>{const current=r.result;if(current){current.glb=glb;current.colourVersion='inferred-v2';delete current.textureVersion;s.put(current);entry.glb=glb;entry.colourVersion='inferred-v2';delete entry.textureVersion;entry.title=current.title;entry.group=current.group;}};tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);});
  }catch{/* The stored mesh remains available if its local source cache is absent. */}
- if(entry.colourVersion!==ModelColour.version){entry.glb=await ModelColour.enhance(entry.glb);entry.obj=await ModelColour.obj(entry.obj);entry.colourVersion=ModelColour.version;await transaction('readwrite',s=>s.put(entry));}
+ if(entry.colourVersion!==ModelColour.version){entry.glb=await ModelColour.enhance(entry.glb);entry.obj=entry.obj?await ModelColour.obj(entry.obj):null;entry.colourVersion=ModelColour.version;await transaction('readwrite',s=>s.put(entry));}
  return entry;
 }
 async function remove(id){await transaction('readwrite',s=>s.delete(id));notify();}
@@ -32,6 +32,7 @@ async function modelPreview(viewer,fallback){
   for(let attempt=0;attempt<5;attempt++){
    await viewer.updateComplete;
    await new Promise(resolve=>setTimeout(resolve,attempt?160:80));
+   await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
    const blob=await viewer.toBlob({mimeType:'image/png',idealAspect:false}),image=await createImageBitmap(blob);
    const raw=document.createElement('canvas');raw.width=image.width;raw.height=image.height;const g=raw.getContext('2d');g.drawImage(image,0,0);
    const pixels=g.getImageData(0,0,raw.width,raw.height).data,bg=Array.from(pixels.slice(0,4));let x0=raw.width,y0=raw.height,x1=0,y1=0,count=0;
@@ -74,6 +75,20 @@ async function save(record,viewer,metadata={}){
  return {entry,alreadySaved:false};
 }
 
+async function importEntry(source,viewer,metadata={}){
+ if(!(source?.glb instanceof Blob)||await source.glb.slice(0,4).text()!=='glTF'||!/^[a-f0-9]{64}$/.test(source.record?.id||''))throw Error('This exhibit does not contain a valid model.');
+ const rows=await list(),old=rows.find(e=>e.record.id===source.record.id);
+ if(old)return {entry:await overwrite(old.id,viewer,metadata),alreadySaved:true,updated:true};
+ let obj=source.obj||null;
+ if(!obj&&!source.record.localOnly&&source.record.objUrl){try{obj=await bytes(source.record.objUrl);}catch{}}
+ const glb=await ModelColour.enhance(source.glb);
+ let fallback=source.preview;
+ if(!(fallback instanceof Blob)){const canvas=document.createElement('canvas');canvas.width=320;canvas.height=240;fallback=await new Promise(r=>canvas.toBlob(r));}
+ const preview=await modelPreview(viewer,fallback),number=1+Math.max(0,...rows.map(e=>e.number||0));
+ const entry={id:crypto.randomUUID(),number,title:String(metadata.title||source.title||'Exhibit model '+number).trim().slice(0,120),group:String(metadata.group||'').trim().slice(0,80),savedAt:Date.now(),record:structuredClone(source.record),camera:cameraView(viewer),glb,obj,preview,composition:structuredClone(source.composition),colourVersion:ModelColour.version};
+ await transaction('readwrite',s=>s.put(entry));notify();return {entry,alreadySaved:false};
+}
+
 async function update(id,metadata){
  const db=await database();
  await new Promise((resolve,reject)=>{const tx=db.transaction(STORE,'readwrite'),store=tx.objectStore(STORE),r=store.get(id);
@@ -99,7 +114,7 @@ async function gallery(){
    document.getElementById('saved-model-count').textContent=rows.length+' model'+(rows.length===1?'':'s');
    const empty=document.getElementById('history-empty');empty.hidden=shown.length>0;empty.textContent=rows.length?'No models in this group.':'Your saved models will appear here.';
    grid.innerHTML=shown.map(r=>{const url=URL.createObjectURL(r.preview);urls.push(url);const date=new Date(r.savedAt).toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
-    return '<article class="saved-model-card" data-saved="'+text(r.id)+'"><button class="saved-model-image" data-open aria-label="Preview '+text(r.title)+' in the 3D stage"><img src="'+url+'" alt="Saved model preview"><span>3D / '+(r.record.target==='city'?'CITY':'SCULPTURE')+'</span></button><div class="saved-model-meta"><h3>'+text(r.title)+'</h3><p class="saved-group">'+text(r.group||'Ungrouped')+'</p><p>'+text(date)+' · '+Number(r.record.triangles||0).toLocaleString('en-GB')+' triangles</p><div class="saved-model-actions"><button data-open>Preview ↑</button><button data-edit>Name / group</button><button data-export="glb">GLB ↗</button><button data-export="obj">OBJ ↗</button><button class="delete-saved" data-delete aria-label="Delete '+text(r.title)+'">Delete</button></div></div></article>';
+    return '<article class="saved-model-card" data-saved="'+text(r.id)+'"><button class="saved-model-image" data-open aria-label="Preview '+text(r.title)+' in the 3D stage"><img src="'+url+'" alt="Saved model preview"><span>3D / '+(r.record.target==='city'?'CITY':'SCULPTURE')+'</span></button><div class="saved-model-meta"><h3>'+text(r.title)+'</h3><p class="saved-group">'+text(r.group||'Ungrouped')+'</p><p>'+text(date)+' · '+Number(r.record.triangles||0).toLocaleString('en-GB')+' triangles</p><div class="saved-model-actions"><button data-open>Preview ↑</button><button data-edit>Name / group</button><button data-export="glb">GLB ↗</button><button data-export="obj"'+(!r.obj?' disabled':'')+'>OBJ ↗</button><button class="delete-saved" data-delete aria-label="Delete '+text(r.title)+'">Delete</button></div></div></article>';
    }).join('');
   }catch(e){document.getElementById('history-status').textContent=e.message;}
  }
@@ -108,7 +123,7 @@ async function gallery(){
 
  grid.addEventListener('click',async e=>{const card=e.target.closest('[data-saved]');if(!card)return;
   try{
-   if(e.target.closest('[data-open]')){const item=await get(card.dataset.saved);if(item?.composition?.workspace==='exhibition-model-loop-v1'&&!window.ExhibitionStudio){location.href='exhibition.html?saved='+encodeURIComponent(card.dataset.saved);return;}window.dispatchEvent(new CustomEvent('saved-sculpture-open',{detail:{id:card.dataset.saved}}));return;}
+   if(e.target.closest('[data-open]')){const item=await get(card.dataset.saved);if((item?.composition?.workspace==='exhibition-model-loop-v1'||item?.composition?.format==='borrowed-worlds-exhibition-collage'||(!item?.composition&&item?.record?.localOnly))&&!document.body.classList.contains('exhibition-page')){location.href='exhibition.html?saved='+encodeURIComponent(card.dataset.saved);return;}window.dispatchEvent(new CustomEvent('saved-sculpture-open',{detail:{id:card.dataset.saved}}));return;}
    if(e.target.closest('[data-delete]')){await remove(card.dataset.saved);document.getElementById('history-status').textContent='Saved model removed from history.';return;}
    const entry=await get(card.dataset.saved);if(!entry)throw Error('This saved model was removed.');
    if(e.target.closest('[data-edit]')){editingId=entry.id;document.getElementById('saved-edit-name').value=entry.title;document.getElementById('saved-edit-group').value=entry.group||'';dialog.showModal();return;}
@@ -119,6 +134,6 @@ async function gallery(){
  document.getElementById('saved-model-edit-form')?.addEventListener('submit',async e=>{e.preventDefault();try{await update(editingId,{title:document.getElementById('saved-edit-name').value,group:document.getElementById('saved-edit-group').value});dialog.close();document.getElementById('history-status').textContent='Name and group updated.';window.dispatchEvent(new CustomEvent('saved-sculpture-renamed',{detail:{id:editingId}}));}catch(error){document.getElementById('history-status').textContent=error.message;}});
  listeners.add(render);window.addEventListener('focus',render);await render();
 }
-window.SavedSculptures=Object.freeze({list,get,remove,removeGroup,save,update,overwrite,cameraView,download,gallery,subscribe:fn=>{listeners.add(fn);return()=>listeners.delete(fn);}});
+window.SavedSculptures=Object.freeze({list,get,remove,removeGroup,save,importEntry,update,overwrite,cameraView,download,gallery,subscribe:fn=>{listeners.add(fn);return()=>listeners.delete(fn);}});
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',gallery);else gallery();
 })();
