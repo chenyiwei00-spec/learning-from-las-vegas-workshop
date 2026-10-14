@@ -59,7 +59,7 @@ async function create(options){
    else if(busy){$('model-empty-title').textContent='BUILDING YOUR MODEL.';$('model-empty-text').textContent='The local generator is inferring depth and hidden surfaces.';}
    else if(!record){$('model-empty-title').textContent='YOUR COMPOSITION IN 3D.';$('model-empty-text').textContent='Click Generate 3D above to create a volume.';}
   }
-  if(options.archivePresentation&&!has&&!busy){$('model-empty-title').textContent='A CITY WAITING TO HAPPEN.';$('model-empty-text').textContent='Choose objects from the Las Vegas archive, then generate their assembled volume in 3D.';}
+  if(options.archivePresentation&&!has&&!busy){$('model-empty-title').textContent=city?'A CITY WAITING TO HAPPEN.':'A SCULPTURE WAITING TO HAPPEN.';$('model-empty-text').textContent=city?'Choose objects from the Las Vegas archive, then generate their assembled volume in 3D.':'Choose Las Vegas objects, connect their V&A fragments, then generate a sculpture in 3D.';}
   if(record)$('model-stats').textContent=Number(record.triangles||0).toLocaleString('en-GB')+' triangles';
   else $('model-stats').textContent='AI INFERRED VOLUME';
   options.onModelState?.({record,entry:libraryEntry,busy,loaded,stale:!same,switching:gallery.state().switching});

@@ -10,10 +10,10 @@ function syncCollagePreview(){
  previewFrame=0;
  const studio=window.ExhibitionStudio;
  if(!studio)return;
- studio.renderPreview($('workspace-collage-preview'));
+ studio.renderPreview($('workspace-collage-preview'),'city');studio.renderPreview($('workspace-sculpture-preview'),'sculpture');
  const count=studio.state().layers;
  $('workspace-collage-placeholder').hidden=count>0;
- $('workspace-collage-preview').hidden=count===0;
+ $('workspace-collage-preview').hidden=count===0;$('workspace-sculpture-preview').hidden=count===0;$('workspace-sculpture-placeholder').hidden=count>0;$('workspace-sculpture-caption').textContent=count?count+' LINKED V&A FRAGMENTS':'CITY / SCULPTURE COUNTERPARTS';
  $('workspace-collage-caption').textContent=count?count+' OBJECT'+(count===1?'':'S')+' / COMPOSITION':'OBJECT COMPOSITION';
 }
 function queueCollagePreview(){if(!previewFrame)previewFrame=requestAnimationFrame(syncCollagePreview);}
@@ -36,32 +36,35 @@ function syncModelPreview(){
  }
 }
 function openPanel(kind){
- if(!['collage','model'].includes(kind))return;
+ if(!['collage','sculpture','model'].includes(kind))return;
  window.ExhibitionBrowse?.dock();suspendScene();currentPanel=kind;panel.hidden=false;surface.dataset.workspaceOpen=kind;$('workspace-shade').hidden=false;
- $('workspace-collage-pane').hidden=kind!=='collage';$('workspace-model-pane').hidden=kind!=='model';
- $('workspace-expanded-title').textContent=kind==='collage'?'PHOTO COLLAGE':'GENERATED MODEL';
+ $('workspace-collage-pane').hidden=kind==='model';if(kind!=='model')window.ExhibitionStudio?.setSurface(kind==='sculpture'?'sculpture':'city');$('workspace-model-pane').hidden=kind!=='model';
+ $('workspace-expanded-title').textContent=kind==='collage'?'LAS VEGAS COLLAGE':kind==='sculpture'?'V&A SCULPTURE COLLAGE':'GENERATED MODEL';
  $('exhibition-export').hidden=kind==='model';
  $('workspace-tab-collage').setAttribute('aria-pressed',String(kind==='collage'));
+ $('workspace-tab-sculpture').setAttribute('aria-pressed',String(kind==='sculpture'));$('open-sculpture-preview').setAttribute('aria-expanded',String(kind==='sculpture'));
  $('workspace-tab-model').setAttribute('aria-pressed',String(kind==='model'));
  $('open-collage-preview').setAttribute('aria-expanded',String(kind==='collage'));
  $('open-model-preview').setAttribute('aria-expanded',String(kind==='model'));
  panel.querySelector('.workspace-expanded-body').scrollTop=0;
  requestAnimationFrame(()=>{
   window.dispatchEvent(new Event('resize'));
-  if(kind==='collage')$('exhibition-canvas').focus({preventScroll:true});
+  if(kind!=='model')$('exhibition-canvas').focus({preventScroll:true});
   else $('workspace-close').focus({preventScroll:true});
   queueCollagePreview();syncModelPreview();
  });
 }
 function closePanel(){
  window.ExhibitionMedia?.stop();const previous=currentPanel;panel.hidden=true;$('workspace-shade').hidden=true;currentPanel=null;surface.dataset.workspaceOpen='none';
- $('open-collage-preview').setAttribute('aria-expanded','false');$('open-model-preview').setAttribute('aria-expanded','false');
+ $('open-sculpture-preview').setAttribute('aria-expanded','false');$('open-collage-preview').setAttribute('aria-expanded','false');$('open-model-preview').setAttribute('aria-expanded','false');
  queueCollagePreview();syncModelPreview();
- if(previous)$(previous==='collage'?'open-collage-preview':'open-model-preview').focus({preventScroll:true});
+ if(previous)$(previous==='collage'?'open-collage-preview':previous==='sculpture'?'open-sculpture-preview':'open-model-preview').focus({preventScroll:true});
 }
 $('open-collage-preview').addEventListener('click',()=>openPanel('collage'));
+$('open-sculpture-preview').addEventListener('click',()=>openPanel('sculpture'));
 $('open-model-preview').addEventListener('click',()=>openPanel('model'));
 $('workspace-tab-collage').addEventListener('click',()=>openPanel('collage'));
+$('workspace-tab-sculpture').addEventListener('click',()=>openPanel('sculpture'));
 $('workspace-tab-model').addEventListener('click',()=>openPanel('model'));
 $('workspace-close').addEventListener('click',closePanel);
 panel.addEventListener('pointerdown',suspendScene,true);

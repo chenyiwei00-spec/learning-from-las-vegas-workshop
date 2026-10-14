@@ -67,13 +67,13 @@ async function run(){
   let proposed;const excluded=new Set();
   for(let attempt=0;attempt<3;attempt++){
    proposed=await makePlan(excluded);setPhase('composing','Assembling '+proposed.title.toLowerCase()+'...');
-   try{const old=await ExhibitionStudio.applyAgentPlan(proposed);previous=old;plan=proposed;applied=true;break;}
+   try{const old=await ExhibitionStudio.applyAgentPlan(proposed);previous=old;plan=proposed;applied=true;plan=ExhibitionStudio.getDocument().agentPlan;break;}
    catch(e){proposed.pieces.forEach(p=>excluded.add(p.key));if(attempt===2)throw e;setPhase('selecting','Trying other available cutouts...');}
   }
   lastTheme=plan.themeIndex;plan.pieces.forEach(p=>recent.add(p.key));while(recent.size>24)recent.delete(recent.values().next().value);render();
   if(!ExhibitionStudio.state().model.ready){setPhase('collage-ready',plan.title+' is ready to edit. 3D generation is unavailable on this computer.');return;}
-  setPhase('generating','Generating '+plan.title.toLowerCase()+'. Your model will appear above.');await ExhibitionStudio.generate();await waitForPreview();
-  setPhase('ready',plan.title+' is ready. Drag the model into the exhibition, or edit its collage.');
+  setPhase('generating','Generating a V&A sculpture from '+plan.title.toLowerCase()+'.');await ExhibitionStudio.generate();await waitForPreview();
+  setPhase('ready',plan.title+' sculpture is ready. Drag the model into the exhibition, or edit its collage.');
  }catch(e){error=e.message;setPhase('error',applied?'The collage is kept. '+error:error);}
  finally{busy=false;lock(false);render();}
 }
@@ -84,6 +84,7 @@ $('exhibition-agent-previous').onclick=async()=>{
  try{const old=previous;await ExhibitionBrowse.close();await ExhibitionStudio.restoreDraft(old);previous=null;plan=old.document.agentPlan||null;setPhase('idle','Previous collage restored.');ExhibitionWorkspace.openPanel('collage');}
  catch(e){error=e.message;setPhase('error',error);}finally{busy=false;lock(false);render();}
 };
+window.addEventListener('exhibition-counterparts-preparing',()=>{if(busy)setPhase('matching','Matching city silhouettes to V&A sculpture fragments...');});
 window.addEventListener('exhibition-studio-ready',render);
 new MutationObserver(render).observe($('model-frame'),{attributes:true,attributeFilter:['aria-busy']});
 window.ExhibitionAgent=Object.freeze({run,makePlan,state:()=>({busy,phase,error,plan:plan?structuredClone(plan):null,canRestore:!!previous})});render();

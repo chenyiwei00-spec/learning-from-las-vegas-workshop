@@ -11,6 +11,26 @@ function shape(c){
  const xx=sxx/n-(sx/n)**2,yy=syy/n-(sy/n)**2,xy=sxy/n-sx*sy/n/n,t=xx+yy,r=Math.sqrt((xx-yy)**2+4*xy*xy);
  return{aspectRatio:w/h,fillRatio:Math.min(1,n*step*step/w/h),elongation:Math.min(30,Math.sqrt(Math.max(1,(t+r)/Math.max(.1,t-r))))};
 }
+function createMatcher(parts,getLayers=()=>[],getMetric=()=>null){
+ return function(layer,object,measured){
+  const b=object?.bbox,a0=b?(b[2]-b[0])/(b[3]-b[1]):layer.w/layer.h;
+  const m=measured||{aspectRatio:a0,fillRatio:.6,elongation:Math.max(a0,1/a0)},a=m.aspectRatio,long=Math.max(a,1/a)>=2||m.elongation>=3.2;
+  let preferred=long?(a<1?'leg':'arm'):(a>=.72&&a<=1.35?'head':'torso');
+  if(long&&/tower|spire|obelisk/i.test(object?.name||''))preferred='arm';
+  const usage=new Map();for(const l of getLayers())if(l.id!==layer.id)usage.set(l.vaPartId,(usage.get(l.vaPartId)||0)+1);
+  let best=null;
+  for(const p of parts){
+   const pm=getMetric(p.id)||{aspectRatio:p.width/p.height,fillRatio:.6,elongation:Math.max(p.width/p.height,p.height/p.width)};
+   let penalty=p.kind===preferred?0:long&&['arm','leg'].includes(p.kind)?.15:!long&&preferred==='head'&&p.kind==='hand'?.8:!long&&preferred==='torso'&&p.kind==='head'?.6:1.7;
+   for(const angle of [0,90]){
+    const aspect=angle?1/pm.aspectRatio:pm.aspectRatio;
+    const score=penalty+Math.abs(Math.log(aspect/a))*.8+Math.abs(pm.fillRatio-m.fillRatio)*.3+Math.abs(Math.log(pm.elongation/m.elongation))*.22+(angle?.035:0)+(usage.get(p.id)||0)*.22+(hash(layer.sourceId+'::'+(layer.objectId||'')+'::'+p.id)%101)/2500;
+    if(!best||score<best.score)best={id:p.id,angle,kind:p.kind,score,shape:m,reason:long?(a<1?'A narrow vertical silhouette':'A long horizontal silhouette'):preferred==='head'?'A compact, near-square silhouette':'A broader rectangular silhouette'};
+   }
+  }
+  return best;
+ };
+}
 async function create(options){
  const data=await fetch('sculpture-parts.json').then(r=>{if(!r.ok)throw Error('The V&A fragment library could not load.');return r.json();});
  const parts=data.parts,byId=new Map(parts.map(p=>[p.id,p])),images=new Map(),rasters=new Map(),metrics=new Map(),cityMetrics=new WeakMap();
@@ -21,23 +41,8 @@ async function create(options){
   const b=object?.bbox,aspect=b?(b[2]-b[0])/(b[3]-b[1]):layer.w/layer.h;
   return{aspectRatio:aspect,fillRatio:.6,elongation:Math.max(aspect,1/aspect)};
  }
- function recommend(layer,object,c){
-  const m=cityShape(layer,object,c),a=m.aspectRatio,long=Math.max(a,1/a)>=2||m.elongation>=3.2;
-  let preferred=long?(a<1?'leg':'arm'):(a>=.72&&a<=1.35?'head':'torso');
-  if(long&&/tower|spire|obelisk/i.test(object?.name||''))preferred='arm';
-  const usage=new Map();for(const l of options.getDocument().layers)if(l.id!==layer.id)usage.set(l.vaPartId,(usage.get(l.vaPartId)||0)+1);
-  let best=null;
-  for(const p of parts){
-   const pm=metrics.get(p.id)||{aspectRatio:p.width/p.height,fillRatio:.6,elongation:Math.max(p.width/p.height,p.height/p.width)};
-   let penalty=p.kind===preferred?0:long&&['arm','leg'].includes(p.kind)?.15:!long&&preferred==='head'&&p.kind==='hand'?.8:!long&&preferred==='torso'&&p.kind==='head'?.6:1.7;
-   for(const angle of [0,90]){
-    const aspect=angle?1/pm.aspectRatio:pm.aspectRatio;
-    const score=penalty+Math.abs(Math.log(aspect/a))*.8+Math.abs(pm.fillRatio-m.fillRatio)*.3+Math.abs(Math.log(pm.elongation/m.elongation))*.22+(angle?.035:0)+(usage.get(p.id)||0)*.22+(hash(layer.sourceId+'::'+(layer.objectId||'')+'::'+p.id)%101)/2500;
-    if(!best||score<best.score)best={id:p.id,angle,kind:p.kind,score,shape:m,reason:long?(a<1?'A narrow vertical silhouette':'A long horizontal silhouette'):preferred==='head'?'A compact, near-square silhouette':'A broader rectangular silhouette'};
-   }
-  }
-  return best;
- }
+ const matchShape=createMatcher(parts,()=>options.getDocument().layers,id=>metrics.get(id));
+ function recommend(layer,object,c){return matchShape(layer,object,cityShape(layer,object,c));}
  function assign(layer,object,c){
   if(!byId.has(layer.vaPartId)){const match=recommend(layer,object,c);layer.vaPartId=match.id;layer.vaRotation=match.angle;}
   return layer.vaPartId;
@@ -163,5 +168,5 @@ async function create(options){
  $('part-library-count').textContent=parts.length+' parts · '+new Set(parts.map(p=>p.sourceId)).size+' photographs';
  return Object.freeze({parts,has:id=>byId.has(id),assign,recommend,draw,render,drawDocument,bounds,raster,openPicker,clearPicker,selectedPart:()=>pickerSelected,pickerPurpose:()=>pickerPurpose,partCanvas:id=>images.get(id),records:layers=>[...new Set(layers.map(l=>l.vaPartId))].map(id=>byId.get(id)).filter(Boolean),pixel:(l,u,v)=>{const c=raster(l);return c?Array.from(c.getContext('2d').getImageData(Math.max(0,Math.min(c.width-1,Math.floor(u*c.width))),Math.max(0,Math.min(c.height-1,Math.floor(v*c.height))),1,1).data):null;},layerInfo:l=>({layerId:l.id,partId:l.vaPartId,partName:byId.get(l.vaPartId)?.name,kind:byId.get(l.vaPartId)?.kind,sourceId:byId.get(l.vaPartId)?.sourceId,bounds:bounds(l),rotation:l.rotation||0,vaRotation:l.vaRotation||0,flipX:!!l.flipX,flipY:!!l.flipY})});
 }
-window.SculptureLink=Object.freeze({create});
+window.SculptureLink=Object.freeze({create,createMatcher,shape});
 })();
