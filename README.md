@@ -42,3 +42,7 @@ Drafts and saved model galleries remain in each browser. Code synchronization do
 The original public website is a separate deployment. GitHub pushes do not deploy to it.
 
 See docs/TEAM_GUIDE.md and docs/TEAM_GUIDE_ZH.md for the handoff.
+
+## Inhabitable Sculpture
+
+The exhibition now includes a **Sculpture as Architecture / Inhabit** mode. It hands an actual selected, previewed or imported GLB to the embedded volumetric hollowing prototype, then returns to the existing exhibition without replacing its layout or collage. The compiled module runs on this same Python server; a separate Vite server and AI weights are not needed. See [the integration guide](docs/INHABITABLE_SCULPTURE_ZH.md) for usage, optional read-only local models, source/build instructions and automated checks. Private GLBs remain outside Git.

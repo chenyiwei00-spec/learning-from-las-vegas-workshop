@@ -14,7 +14,7 @@ for model in manifest:
 config=json.loads((ROOT/'team_config.json').read_text(encoding='utf-8'))
 assert config['localOnly'] and config['publishDisabled']
 assert all(not (isinstance(v,str) and (v.startswith('F:') or v.startswith('C:'))) for v in config.values())
-for name in ['app.js','sculpture-3d.js','exhibition-walk.js','exhibition-model-studio.js','team-live.js','exhibition-studio.js','exhibition-workspace.js','exhibition-picker.js','exhibition-transfer.js','exhibition-browse.js','model-gallery.js','saved-models.js']:
+for name in ['app.js','sculpture-3d.js','exhibition-walk.js','exhibition-model-studio.js','team-live.js','exhibition-studio.js','exhibition-workspace.js','exhibition-picker.js','exhibition-transfer.js','exhibition-browse.js','inhabitable-integration.js','model-gallery.js','saved-models.js']:
  result=subprocess.run(['node','--check',str(ROOT/'site'/name)],capture_output=True,text=True)
  if result.returncode:raise RuntimeError(result.stderr)
 print('Python and JavaScript syntax, 7720 records, seven exhibits and portable configuration passed.')

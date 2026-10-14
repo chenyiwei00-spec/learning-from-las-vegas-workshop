@@ -6,6 +6,8 @@
 <link rel="icon" href="favicon.svg"><link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="collage.css"><link rel="stylesheet" href="studio-modes.css"><link rel="stylesheet" href="exhibition.css">
 <script src="vendor/model-viewer.js" defer></script><script src="model-colour.js" defer></script><script src="saved-models.js" defer></script><script src="model-interaction.js" defer></script><script src="model-gallery.js" defer></script><script src="sculpture-3d.js" defer></script><script src="exhibition-walk.js" defer></script><script src="exhibition-studio.js" defer></script><script src="exhibition-picker.js" defer></script><script src="exhibition-workspace.js" defer></script><script src="exhibition-browse.js" defer></script><script src="exhibition-transfer.js" defer></script><script src="team-live.js" defer></script>
+<link rel="stylesheet" href="inhabitable-integration.css">
+<script defer src="inhabitable-integration.js"></script>
 </head>
 <body class="collage-page exhibition-page">
 <a class="skip-link" href="#walk-surface">Skip to exhibition</a>
@@ -18,10 +20,10 @@
 <section class="studio-intro"><div><p class="eyebrow">05 / EXHIBITION SPACE</p><h1>EXHIBITION WALK</h1></div><p>A room before the exhibition.<br>20 × 20 metres. An empty, enclosed white space.</p></section>
 <section class="walk-panel" aria-label="White exhibition room">
 <div id="walk-surface" class="walk-surface" tabindex="0" role="application" aria-label="Walk through a twenty by twenty metre enclosed white exhibition room" aria-describedby="walk-caption" aria-busy="true">
-<div id="walk-canvas-host" class="walk-canvas-host"></div><div id="exhibition-drag-ghost" class="exhibition-drag-ghost" hidden><img alt=""><span>Drop on a free cell</span></div><div id="exhibition-placement-tools" class="exhibition-placement-tools" hidden><span id="exhibition-placement-name"></span><button id="exhibition-open-model">View 3D</button><button id="exhibition-model-smaller" aria-label="Use fewer grid cells">−</button><span class="exhibition-size-options" role="group" aria-label="Exhibit footprint"><button data-exhibit-size="1">1 cell</button><button data-exhibit-size="2">4 cells</button><button data-exhibit-size="3">9 cells</button></span><button id="exhibition-model-larger" aria-label="Use more grid cells">+</button><button id="exhibition-move-model">Move</button><button id="exhibition-turn-model">Rotate 45°</button><button id="exhibition-remove-model">Remove</button><button id="exhibition-deselect-model">Done</button></div><p id="exhibition-placement-status" class="exhibition-placement-status" role="status"></p>
+<div id="walk-canvas-host" class="walk-canvas-host"></div><div id="exhibition-drag-ghost" class="exhibition-drag-ghost" hidden><img alt=""><span>Drop on a free cell</span></div><div id="exhibition-placement-tools" class="exhibition-placement-tools" hidden><span id="exhibition-placement-name"></span><button id="exhibition-open-model">View 3D</button><button id="exhibition-inhabit-model">进入雕塑建筑</button><button id="exhibition-model-smaller" aria-label="Use fewer grid cells">−</button><span class="exhibition-size-options" role="group" aria-label="Exhibit footprint"><button data-exhibit-size="1">1 cell</button><button data-exhibit-size="2">4 cells</button><button data-exhibit-size="3">9 cells</button></span><button id="exhibition-model-larger" aria-label="Use more grid cells">+</button><button id="exhibition-move-model">Move</button><button id="exhibition-turn-model">Rotate 45°</button><button id="exhibition-remove-model">Remove</button><button id="exhibition-deselect-model">Done</button></div><p id="exhibition-placement-status" class="exhibition-placement-status" role="status"></p>
 <div class="walk-toolbar" id="walk-toolbar">
 <div class="walk-controls"><button id="walk-mode" aria-pressed="false">Walk mode</button><button id="walk-reset">Reset view</button><button id="walk-two-point" aria-pressed="false" title="Keep vertical wall edges parallel">Two-point off</button><button id="walk-help-toggle" aria-expanded="false" aria-controls="walk-help-panel">Controls</button></div>
-<div class="walk-view-switch" role="group" aria-label="Space view"><button id="walk-eye-view" aria-pressed="true">Eye level</button><button id="walk-axonometric" aria-pressed="false">Axonometric</button></div>
+<div class="walk-view-switch" role="group" aria-label="Space view"><button id="walk-eye-view" aria-pressed="true">Eye level</button><button id="walk-inhabitable" class="inhabitable-entry">雕塑建筑 / Inhabit</button><button id="walk-axonometric" aria-pressed="false">Axonometric</button></div>
 </div>
 <div id="walk-help-panel" class="walk-help-panel" hidden>
 <p class="eyebrow">MOVE THROUGH THE ROOM</p>
@@ -31,6 +33,13 @@
 </div>
 
 <section id="exhibition-model-browser" class="exhibition-model-browser" tabindex="0" aria-label="3D model browser" hidden><header class="exhibition-browser-header"><button id="exhibition-browser-back">← Back to exhibition</button><span>MODEL GALLERY / LEARNING FROM LAS VEGAS</span></header><div id="exhibition-browser-body"></div><div id="exhibition-browser-exhibit-tools" hidden><span>EXHIBIT SIZE</span><button data-exhibit-size="1">1 cell</button><button data-exhibit-size="2">4 cells</button><button data-exhibit-size="3">9 cells</button></div></section>
+<section id="inhabitable-panel" class="inhabitable-panel" aria-label="Inhabitable Sculpture" aria-busy="false" hidden>
+<header class="inhabitable-header"><div><strong>SCULPTURE AS ARCHITECTURE / 可进入的雕塑</strong><small>原始模型 → 建筑尺度 → 实体掏空 / 剖切 → 第一人称内部</small></div><div class="inhabitable-actions"><button id="inhabitable-change">切换模型</button><button id="inhabitable-import">导入 GLB</button><button id="inhabitable-back">← 返回展厅</button></div></header>
+<p id="inhabitable-status" class="inhabitable-status" role="status"></p>
+<div id="inhabitable-picker" class="inhabitable-picker"><p>每个模型独立生成建筑，不连接走廊。可读取当前展厅、模型库或本机 GLB；原始文件保持不变。选择后自动进行体素化和内部挖空。</p><button id="inhabitable-refresh">刷新模型列表</button><div id="inhabitable-models" class="inhabitable-models"></div><p>内部楼层位于雕塑可容纳区域，尚未生成地面通达的楼梯或坡道。</p></div>
+<input id="inhabitable-file" type="file" accept=".glb,model/gltf-binary" hidden>
+<iframe id="inhabitable-frame" title="Inhabitable Sculpture geometric hollowing and exploration" allow="fullscreen" hidden></iframe>
+</section>
 <div id="workspace-shade" class="workspace-shade" aria-hidden="true" hidden></div>
 <aside class="workspace-previews" aria-label="Making workspace previews">
 <button id="open-collage-preview" class="workspace-preview-card" aria-controls="workspace-expanded" aria-expanded="false">
@@ -69,7 +78,7 @@
 </div>
 <div class="model-info"><h3 class="exhibition-browser-title">learning<br>from las vegas</h3><p id="model-status" role="status">Checking the local 3D generator…</p><p id="model-saved-name" hidden></p><p id="model-description">Generate a volume from the photo collage.</p>
 <details class="model-naming"><summary>Name &amp; group</summary><div class="model-save-fields"><label>Model name<input id="model-name" maxlength="120" placeholder="Name your model"></label><label>Group<input id="model-group" maxlength="80" list="model-group-options" placeholder="Ungrouped"></label></div></details>
-<div class="sculpture-actions"><button id="save-model" class="primary-link" disabled>Save model</button><button id="download-model-glb" class="outline-link" disabled>Download GLB</button><button id="download-model-obj" class="outline-link" disabled>OBJ</button></div></div>
+<div class="sculpture-actions"><button id="workspace-inhabit-model" class="outline-link">进入雕塑建筑</button><button id="save-model" class="primary-link" disabled>Save model</button><button id="download-model-glb" class="outline-link" disabled>Download GLB</button><button id="download-model-obj" class="outline-link" disabled>OBJ</button></div></div>
 </section>
 
 </section>

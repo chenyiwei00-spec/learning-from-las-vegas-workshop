@@ -1,0 +1,20 @@
+.inhabitable-panel{position:absolute;inset:0;z-index:90;background:#f7f6f2;display:flex;flex-direction:column;color:#343930;text-align:left}
+.inhabitable-panel[hidden]{display:none!important}
+.inhabitable-header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;border-bottom:1px solid #d4d5cd;background:#eeeae0;flex-wrap:wrap}
+.inhabitable-header strong{display:block;font-size:13px;letter-spacing:.07em}
+.inhabitable-header small{display:block;margin-top:4px;color:#77786f;font-size:11px}
+.inhabitable-actions{display:flex;gap:8px;flex-wrap:wrap}
+.inhabitable-panel button,.inhabitable-entry{background:#fff;border:1px solid #a5aba0;color:#343930;padding:8px 12px;font:inherit;font-size:12px;cursor:pointer}
+.inhabitable-panel button:disabled{opacity:.5;cursor:wait}
+.inhabitable-panel button:focus-visible,.inhabitable-entry:focus-visible{outline:2px solid #b76e49;outline-offset:2px}
+.inhabitable-status{margin:0;padding:8px 18px;font-size:12px;border-bottom:1px solid #d4d5cd;min-height:32px;background:#f4f1e8}
+.inhabitable-status[data-error=true]{color:#953f29}
+.inhabitable-picker{padding:20px;overflow:auto;flex:1}
+.inhabitable-picker p{font-size:13px;color:#6c7068;max-width:760px;line-height:1.8}
+.inhabitable-models{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin:16px 0}
+.inhabitable-models button{text-align:left;min-height:86px;overflow-wrap:anywhere}
+.inhabitable-models strong,.inhabitable-models small{display:block}
+.inhabitable-models small{color:#7d8176;margin-top:8px;font-size:11px}
+.inhabitable-panel iframe{border:0;width:100%;flex:1;min-height:0;background:#f7f6f2}
+.walk-surface[data-inhabitable=true]>.walk-toolbar,.walk-surface[data-inhabitable=true]>.workspace-previews,.walk-surface[data-inhabitable=true]>.walk-fullscreen{visibility:hidden}
+@media(max-width:700px){.inhabitable-header{padding:10px}.inhabitable-header small{display:none}.inhabitable-actions{gap:5px}.inhabitable-actions button{padding:7px}.inhabitable-models{grid-template-columns:repeat(2,minmax(0,1fr))}}
