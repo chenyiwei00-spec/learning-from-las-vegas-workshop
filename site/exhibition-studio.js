@@ -17,6 +17,10 @@ const bitmaps=new Map();
 function bitmap(layer){const im=images.get(layer.sourceId);if(!im)return null;if(!layer.strokes?.length)return im;const key=layer.sourceId+JSON.stringify(layer.strokes),cached=bitmaps.get(layer.id);if(cached?.key===key)return cached.canvas;const c=document.createElement('canvas');c.width=im.naturalWidth;c.height=im.naturalHeight;const g=c.getContext('2d');g.drawImage(im,0,0);g.globalCompositeOperation='destination-out';g.lineCap=g.lineJoin='round';for(const stroke of layer.strokes){g.lineWidth=stroke.radius*c.width;g.beginPath();stroke.points.forEach((p,i)=>i?g.lineTo(p.x*c.width,p.y*c.height):g.moveTo(p.x*c.width,p.y*c.height));if(stroke.points.length===1){const p=stroke.points[0];g.lineTo(p.x*c.width+.01,p.y*c.height);}g.stroke();}bitmaps.set(layer.id,{key,canvas:c});return c;}
 function drawLayer(g,l){const im=bitmap(l);if(!im)return;g.save();g.translate(l.x,l.y);g.rotate((l.rotation||0)*Math.PI/180);g.scale(l.flipX?-1:1,l.flipY?-1:1);g.drawImage(im,-l.w/2,-l.h/2,l.w,l.h);g.restore();}
 function drawModel(g,doc){g.clearRect(0,0,doc.width,doc.height);for(const l of doc.layers)drawLayer(g,l);}
+function renderPreview(target){
+ const g=target.getContext('2d');g.save();g.setTransform(target.width/W,0,0,target.height/H,0,0);
+ drawModel(g,documentValue());g.globalCompositeOperation='destination-over';g.fillStyle='white';g.fillRect(0,0,W,H);g.restore();
+}
 function bounds(items=layers.filter(l=>selection.has(l.id))){if(!items.length)return null;const points=[];for(const l of items){const r=(l.rotation||0)*Math.PI/180,c=Math.cos(r),s=Math.sin(r);for(const x of [-l.w/2,l.w/2])for(const y of [-l.h/2,l.h/2])points.push({x:l.x+x*c-y*s,y:l.y+x*s+y*c});}const x=Math.min(...points.map(p=>p.x)),y=Math.min(...points.map(p=>p.y)),right=Math.max(...points.map(p=>p.x)),bottom=Math.max(...points.map(p=>p.y));return{x,y,w:right-x,h:bottom-y,cx:(x+right)/2,cy:(y+bottom)/2};}
 function controlSize(){return Math.max(12,canvas.width/Math.max(100,canvas.getBoundingClientRect().width)*5);}
 function render(){ctx.clearRect(0,0,W,H);ctx.fillStyle='white';ctx.fillRect(0,0,W,H);for(const l of layers)drawLayer(ctx,l);const b=bounds(),h=controlSize();if(b&&!preview){ctx.save();ctx.strokeStyle='#c3492c';ctx.lineWidth=h/5;ctx.strokeRect(b.x,b.y,b.w,b.h);ctx.fillStyle='white';ctx.fillRect(b.x+b.w-h,b.y+b.h-h,h*2,h*2);ctx.strokeRect(b.x+b.w-h,b.y+b.h-h,h*2,h*2);ctx.beginPath();ctx.moveTo(b.cx,b.y);ctx.lineTo(b.cx,b.y-h*3);ctx.stroke();ctx.beginPath();ctx.arc(b.cx,b.y-h*3,h,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.restore();}if(drag?.mode==='marquee'){ctx.save();ctx.strokeStyle='#c3492c';ctx.fillStyle='#c3492c15';ctx.setLineDash([8,5]);const dx=drag.at.x-drag.start.x,dy=drag.at.y-drag.start.y;ctx.fillRect(drag.start.x,drag.start.y,dx,dy);ctx.strokeRect(drag.start.x,drag.start.y,dx,dy);ctx.restore();}
@@ -25,6 +29,7 @@ function render(){ctx.clearRect(0,0,W,H);ctx.fillStyle='white';ctx.fillRect(0,0,
  $('exhibition-rotation').value=selection.size===1?Math.round(layers.find(l=>selection.has(l.id))?.rotation||0):0;
  $('exhibition-move').setAttribute('aria-pressed',String(tool==='move'));$('exhibition-erase').setAttribute('aria-pressed',String(tool==='erase'));paper.dataset.preview=String(preview);
  $('exhibition-layer-list').innerHTML=[...layers].reverse().map(l=>'<button data-layer="'+l.id+'" aria-pressed="'+selection.has(l.id)+'">'+text(assets.get(l.sourceId)?.title||'Photo')+'</button>').join('');
+ window.dispatchEvent(new CustomEvent('exhibition-collage-change'));
 }
 function changed(){revision++;render();persist();controller?.changed(documentValue());}
 function localPoint(p,l){const r=-(l.rotation||0)*Math.PI/180,dx=p.x-l.x,dy=p.y-l.y;return{x:(dx*Math.cos(r)-dy*Math.sin(r))*(l.flipX?-1:1),y:(dx*Math.sin(r)+dy*Math.cos(r))*(l.flipY?-1:1)};}
@@ -93,11 +98,12 @@ $('return-exhibition-work').onclick=leavePreview;
 window.addEventListener('saved-sculpture-open',async e=>{if(!controller)return;try{const entry=await SavedSculptures.get(e.detail.id);if(!entry)return;if(!preview)working={layers:copy(layers),selection:[...selection],model:controller.capture()};preview=true;$('return-exhibition-work').hidden=false;const direction=e.detail.direction||0;
  if(direction){await controller.prepareSaved(entry,direction);await controller.transitionOut(direction);}
  const restored=await restoreDoc(entry.composition);if(!restored)message('This saved model comes from the original Collage Studio. Return to work to resume your photo collage.');
- await controller.openSaved(entry,direction);render();$('model-stage').scrollIntoView({behavior:'smooth',block:'center'});}catch(err){message(err.message);}});
+ await controller.openSaved(entry,direction);render();window.ExhibitionWorkspace?.openPanel('model');}catch(err){message(err.message);}});
 window.addEventListener('saved-sculpture-next',async e=>{if(!preview)return;try{const entry=await SavedSculptures.get(e.detail.id);if(!entry)return;await controller.prepareSaved(entry,e.detail.direction);await controller.transitionOut(e.detail.direction);await restoreDoc(entry.composition);await controller.openSaved(entry,e.detail.direction);}catch(err){message(err.message);}});
 async function start(){let stored=null;try{stored=await storage('readonly');await restoreDoc(stored);}catch(err){message('The previous draft could not load: '+err.message);}
  controller=await Sculpture3D.create({store:'learning-vegas-exhibition-model-v1',directCollage:true,getDocument:documentValue,getComposition:documentValue,drawModel,isPreview:()=>preview,message});if(stored?.generatedModel)await controller.restore(stored.generatedModel);render();
- window.ExhibitionStudio=Object.freeze({getDocument:documentValue,addImage,addFiles,select:ids=>{selection.clear();ids.forEach(id=>selection.add(id));render();},restore:async doc=>{prepareEdit();remember();await restoreDoc(doc);changed();},state:()=>({layers:layers.length,selected:[...selection],preview,model:controller.state()}),generate:()=>controller.generate(),clear:()=>$('exhibition-clear').click(),returnToWork:leavePreview});
+ window.ExhibitionStudio=Object.freeze({getDocument:documentValue,renderPreview,addImage,addFiles,select:ids=>{selection.clear();ids.forEach(id=>selection.add(id));render();},restore:async doc=>{prepareEdit();remember();await restoreDoc(doc);changed();},state:()=>({layers:layers.length,selected:[...selection],preview,model:controller.state()}),generate:()=>controller.generate(),clear:()=>$('exhibition-clear').click(),returnToWork:leavePreview});
+ window.dispatchEvent(new CustomEvent('exhibition-studio-ready'));
 }
 start().catch(err=>{message('The workspace could not start: '+err.message);console.error(err);});
 })();

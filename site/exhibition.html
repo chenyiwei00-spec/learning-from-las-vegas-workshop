@@ -5,7 +5,7 @@
 <meta name="theme-color" content="#ffffff"><title>Learning from Las Vegas / Exhibition Walk</title>
 <link rel="icon" href="favicon.svg"><link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="collage.css"><link rel="stylesheet" href="studio-modes.css"><link rel="stylesheet" href="exhibition.css">
-<script src="exhibition-walk.js" defer></script><script src="team-live.js" defer></script>
+<script src="vendor/model-viewer.js" defer></script><script src="model-colour.js" defer></script><script src="saved-models.js" defer></script><script src="model-interaction.js" defer></script><script src="model-gallery.js" defer></script><script src="sculpture-3d.js" defer></script><script src="exhibition-walk.js" defer></script><script src="exhibition-studio.js" defer></script><script src="exhibition-workspace.js" defer></script><script src="team-live.js" defer></script>
 </head>
 <body class="collage-page exhibition-page">
 <a class="skip-link" href="#walk-surface">Skip to exhibition</a>
@@ -20,15 +20,63 @@
 <div id="walk-surface" class="walk-surface" tabindex="0" role="application" aria-label="Walk through a twenty by twenty metre enclosed white exhibition room" aria-describedby="walk-caption" aria-busy="true">
 <div id="walk-canvas-host" class="walk-canvas-host"></div>
 <div class="walk-toolbar" id="walk-toolbar">
-<div class="walk-controls"><button id="walk-mode" aria-pressed="false">Walk mode</button><button id="walk-reset">Reset view</button><button id="walk-two-point" aria-pressed="false" title="Keep vertical wall edges parallel">Two-point off</button><button id="walk-axonometric" aria-pressed="false" title="View just the floor in orthographic projection">Axonometric</button><button id="walk-help-toggle" aria-expanded="false" aria-controls="walk-help-panel">Controls</button></div>
+<div class="walk-controls"><button id="walk-mode" aria-pressed="false">Walk mode</button><button id="walk-reset">Reset view</button><button id="walk-two-point" aria-pressed="false" title="Keep vertical wall edges parallel">Two-point off</button><button id="walk-help-toggle" aria-expanded="false" aria-controls="walk-help-panel">Controls</button></div>
+<div class="walk-view-switch" role="group" aria-label="Space view"><button id="walk-eye-view" aria-pressed="true">Eye level</button><button id="walk-axonometric" aria-pressed="false">Axonometric</button></div>
 <button id="walk-fullscreen" aria-label="Toggle exhibition fullscreen" aria-pressed="false">Fullscreen</button>
 </div>
 <div id="walk-help-panel" class="walk-help-panel" hidden>
 <p class="eyebrow">MOVE THROUGH THE ROOM</p>
 <div id="walk-room-help"><dl><dt>W A S D / arrows</dt><dd>Walk forward, back and sideways</dd><dt>Left mouse drag</dt><dd>Look around</dd><dt>Right mouse drag</dt><dd>Orbit around the cursor position</dd><dt>Middle mouse drag</dt><dd>Pan; vertical movement in Fly mode</dd><dt>Mouse wheel</dt><dd>Move forward / backward</dd><dt>Double-click the floor</dt><dd>Move to that position</dd><dt>Shift / Ctrl</dt><dd>Move faster / faster still</dd><dt>Space</dt><dd>Switch Walk / Fly</dd><dt>Q / E</dt><dd>Move down / up in Fly mode</dd><dt>Esc</dt><dd>Exit fullscreen</dd></dl>
 <p>Click the room to activate navigation. Two-point keeps vertical wall edges upright.</p></div>
-<div id="walk-axon-help" hidden><dl><dt>Left mouse drag</dt><dd>Rotate the floor view</dd><dt>Mouse wheel</dt><dd>Zoom in / out</dd><dt>Right / middle drag</dt><dd>Pan the floor view</dd><dt>Reset view</dt><dd>Restore the initial axonometric view</dd><dt>Return to room</dt><dd>Restore your walking position</dd></dl><p>20 × 20 cells. Each square measures 1 × 1 metre.</p></div>
+<div id="walk-axon-help" hidden><dl><dt>Left mouse drag</dt><dd>Rotate the floor view</dd><dt>Mouse wheel</dt><dd>Zoom in / out</dd><dt>Right / middle drag</dt><dd>Pan the floor view</dd><dt>Reset view</dt><dd>Restore the initial axonometric view</dd><dt>Eye level</dt><dd>Restore your walking position</dd></dl><p>20 × 20 cells. Each square measures 1 × 1 metre.</p></div>
 </div>
+
+<aside class="workspace-previews" aria-label="Making workspace previews">
+<button id="open-collage-preview" class="workspace-preview-card" aria-controls="workspace-expanded" aria-expanded="false">
+<span class="workspace-preview-heading"><b>01 / COLLAGE</b><span aria-hidden="true">↗</span></span>
+<span class="workspace-preview-image"><canvas id="workspace-collage-preview" width="240" height="336" aria-hidden="true"></canvas><span id="workspace-collage-placeholder" class="workspace-preview-empty">+<small>Select photographs</small></span></span>
+<span class="workspace-preview-caption" id="workspace-collage-caption">PHOTO COMPOSITION</span>
+</button>
+<button id="open-model-preview" class="workspace-preview-card" aria-controls="workspace-expanded" aria-expanded="false">
+<span class="workspace-preview-heading"><b>02 / 3D MODEL</b><span aria-hidden="true">↗</span></span>
+<span class="workspace-preview-image"><model-viewer id="workspace-model-thumbnail" interaction-prompt="none" loading="eager" disable-zoom exposure="1" shadow-intensity=".25" camera-orbit="0deg 85deg auto" field-of-view="30deg" alt="Generated model thumbnail" aria-hidden="true" tabindex="-1" hidden></model-viewer><span id="workspace-model-placeholder" class="workspace-preview-empty"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="m24 4 17 10v20L24 44 7 34V14Z M7 14l17 10 17-10M24 24v20" fill="none" stroke="currentColor" stroke-width="1"/></svg><small>Generate from the collage</small></span></span>
+<span class="workspace-preview-caption" id="workspace-model-caption">IMAGE TO VOLUME</span>
+</button>
+</aside>
+<section id="workspace-expanded" class="workspace-expanded" aria-label="Expanded making workspace" hidden>
+<header class="workspace-expanded-heading"><div><p class="eyebrow">MAKING WORKSPACE</p><h2 id="workspace-expanded-title">PHOTO COLLAGE</h2></div><button id="workspace-close" class="workspace-close" aria-label="Close expanded workspace">Close ×</button></header>
+<nav class="workspace-tabs" aria-label="Making tools"><button id="workspace-tab-collage" aria-pressed="true">Photo collage</button><button id="workspace-tab-model" aria-pressed="false">3D model</button></nav>
+<div class="workspace-expanded-body">
+<section id="workspace-collage-pane" class="workspace-pane" aria-label="Photo collage editor">
+<div class="workspace-photo-actions"><label class="outline-link" for="exhibition-files">+ Add photos<input type="file" id="exhibition-files" multiple accept="image/png,image/jpeg,image/webp"></label><button id="exhibition-choose" class="outline-link">Archive images</button><button id="exhibition-clear" class="text-button">Clear</button><button id="return-exhibition-work" class="outline-link" hidden>Return to work</button></div>
+<div id="exhibition-paper" class="exhibition-paper"><canvas id="exhibition-canvas" width="1000" height="1400" tabindex="0" role="application" aria-label="Photo collage. Drag photos to move; use handles to resize and rotate. Ctrl C and Ctrl V copy and paste."></canvas><div id="exhibition-drop-note" class="exhibition-drop-note"><b>MAKE A COMPOSITION.</b><span>Choose photographs<br>from your computer or the archive.</span></div></div>
+<div class="exhibition-tool-row"><button id="exhibition-move" class="outline-link" aria-pressed="true">Move</button><button id="exhibition-erase" class="outline-link" aria-pressed="false">Erase</button><label class="exhibition-brush-label">Brush <input id="exhibition-brush" type="range" min="8" max="140" value="35"></label><button id="exhibition-undo" class="text-button">Undo</button><button id="exhibition-redo" class="text-button">Redo</button></div>
+<div class="exhibition-transforms"><label>Rotation <input id="exhibition-rotation" type="number" value="0" step="5"></label><button id="exhibition-flip-x" class="outline-link">Mirror X</button><button id="exhibition-flip-y" class="outline-link">Mirror Y</button><button id="exhibition-smaller" class="outline-link" aria-label="Scale down">−</button><button id="exhibition-larger" class="outline-link" aria-label="Scale up">+</button><button id="exhibition-delete" class="text-button">Remove</button></div>
+<details class="exhibition-layer-details"><summary>LAYERS <span id="exhibition-layer-count">0</span></summary><div id="exhibition-layer-list" class="exhibition-layer-list"></div></details>
+<p id="exhibition-message" class="workspace-message" role="status">Add photos, then compose your image.</p>
+
+</section>
+<section id="workspace-model-pane" class="workspace-pane" aria-label="Generated 3D model tools" hidden>
+<section id="model-panel" class="model-panel" aria-label="Generated model">
+<div class="workspace-model-meta"><p id="model-direction" class="eyebrow">PHOTO COLLAGE / 3D</p><span id="model-stats">AI INFERRED VOLUME</span></div>
+<div class="model-layout" id="model-stage">
+<div class="model-stage-controls"><button id="model-zoom-toggle" aria-pressed="false">Scroll page</button><button id="clear-model">Clear model</button><button id="model-fullscreen" aria-pressed="false">Fullscreen</button></div>
+<div id="model-frame" class="model-frame" aria-busy="false"><model-viewer id="generated-sculpture-viewer" camera-controls disable-zoom interaction-prompt="none" loading="eager" exposure="1" shadow-intensity=".6" shadow-softness="1" environment-image="neutral" camera-orbit="0deg 85deg auto" field-of-view="30deg" alt="Generated model. Drag to rotate; click to activate wheel zoom." hidden></model-viewer>
+<div id="model-empty" class="board-empty"><h3 id="model-empty-title">FROM COLLAGE TO VOLUME.</h3><p id="model-empty-text">Compose an image, then generate a model.</p></div>
+<div id="model-stale" class="model-stale" hidden>Composition changed · Generate updated 3D</div><button id="reset-model-view" class="model-reset" disabled>Reset view</button></div>
+<p id="model-wheel-note" class="model-wheel-note">Click the grey area to zoom · drag to rotate</p>
+</div>
+<div class="model-info"><p id="model-status" role="status">Checking the local 3D generator…</p><p id="model-saved-name" hidden></p><p id="model-description">Generate a volume from the photo collage.</p>
+<details class="model-naming"><summary>Name &amp; group</summary><div class="model-save-fields"><label>Model name<input id="model-name" maxlength="120" placeholder="Name your model"></label><label>Group<input id="model-group" maxlength="80" list="model-group-options" placeholder="Ungrouped"></label></div></details>
+<div class="sculpture-actions"><button id="save-model" class="primary-link" disabled>Save model</button><button id="download-model-glb" class="outline-link" disabled>Download GLB</button><button id="download-model-obj" class="outline-link" disabled>OBJ</button></div></div>
+</section>
+<details id="model-history" class="model-history"><summary><span>SAVED MODELS</span><span id="saved-model-count">0 models</span></summary><div class="history-content"><label class="history-filter">Group <select id="history-group-filter"><option value="">All groups</option></select><button id="delete-model-group" class="outline-link" disabled>Delete group</button></label><datalist id="model-group-options"></datalist><p id="history-status" class="history-status" role="status"></p><p id="history-empty">Your saved models will appear here.</p><div id="saved-model-grid" class="saved-model-grid"></div></div></details>
+</section>
+</div><div class="workspace-generate-actions"><button id="generate-model" class="primary-link" disabled>Generate 3D</button><button id="exhibition-export" class="outline-link">Export PNG</button></div></section>
+<dialog id="exhibition-materials"><div class="drawer-heading"><div><p class="eyebrow">THE ARCHIVE AS MATERIAL</p><h2>CHOOSE A PHOTO.</h2></div><button id="exhibition-close-materials">Close ×</button></div><div class="exhibition-photo-controls"><input type="search" id="exhibition-photo-query" placeholder="Search photographs and tags" aria-label="Search photographs"><select id="exhibition-photo-archive" aria-label="Archive"><option value="">All images</option><option value="las-vegas">Las Vegas</option><option value="va">V&amp;A</option></select></div><div id="exhibition-photo-grid" class="exhibition-photo-grid"></div><div class="exhibition-photo-pages"><button id="exhibition-photo-prev">Previous</button><span id="exhibition-photo-page"></span><button id="exhibition-photo-next">Next</button></div></dialog>
+<dialog id="saved-model-edit" class="model-edit-dialog"><form id="saved-model-edit-form"><p class="eyebrow">SAVED MODEL</p><h2>NAME &amp; GROUP</h2><label>Name<input id="saved-edit-name" maxlength="120" required></label><label>Group<input id="saved-edit-group" maxlength="80" list="model-group-options" placeholder="Ungrouped"></label><div><button type="button" id="saved-edit-cancel">Cancel</button><button type="submit" class="primary-link">Save changes</button></div></form></dialog>
+
+
 <div class="walk-room-label" aria-hidden="true"><span id="walk-view-label">WHITE ROOM</span><span>20 × 20 M</span></div>
 <span id="walk-status" class="walk-status" aria-hidden="true">WALK / EYE 1.65 M</span>
 <p id="walk-error" class="walk-error" role="alert" hidden></p>

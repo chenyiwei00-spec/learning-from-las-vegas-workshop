@@ -52,7 +52,8 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
     $('walk-two-point').disabled = axon;
     $('walk-two-point').textContent = 'Two-point ' + (twoPoint ? 'on' : 'off');
     $('walk-two-point').setAttribute('aria-pressed',String(twoPoint));
-    $('walk-axonometric').textContent = axon ? 'Return to room' : 'Axonometric';
+    $('walk-axonometric').textContent = 'Axonometric';
+    $('walk-eye-view').setAttribute('aria-pressed',String(!axon));
     $('walk-axonometric').setAttribute('aria-pressed',String(axon));
     $('walk-status').textContent = axon ? 'AXONOMETRIC / 1 M GRID' : (fly ? 'FLY' : 'WALK') + ' / EYE ' + eye.y.toFixed(2) + ' M';
     $('walk-view-label').textContent = axon ? 'FLOOR PLAN' : 'WHITE ROOM';
@@ -71,6 +72,12 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
     drag = null;
     surface.classList.remove('is-dragging');
     lastTime = 0;
+  }
+  function suspendNavigation() {
+    active=false;
+    if(axonControls)axonControls.enabled=false;
+    clearInput();teleport=null;
+    if(document.activeElement===surface)surface.blur();
   }
   function focusView() {
     active = true;
@@ -327,6 +334,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
     eye.addScaledVector(forward,-distance); constrain(eye); requestFrame();
   },{passive:false});
   document.addEventListener('keydown',event => {
+    if (event.code === 'Escape' && document.querySelector('#exhibition-materials[open],#saved-model-edit[open]'))return;
     if (event.code === 'Escape' && document.fullscreenElement === surface) {
       clearInput();teleport=null;
       document.exitFullscreen().catch(() => {});
@@ -358,7 +366,8 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
   });
   $('walk-mode').addEventListener('click',() => {fly=!fly;constrain(eye);ui();focusView();requestFrame();});
   $('walk-two-point').addEventListener('click',() => {setTwoPoint(!twoPoint);focusView();});
-  $('walk-axonometric').addEventListener('click',() => {setViewMode(viewMode==='room'?'axonometric':'room');focusView();});
+  $('walk-axonometric').addEventListener('click',() => {setViewMode('axonometric');focusView();});
+  $('walk-eye-view').addEventListener('click',() => {setViewMode('room');focusView();});
   $('walk-reset').addEventListener('click',() => {reset();focusView();});
   $('walk-help-toggle').addEventListener('click',() => {
     const open = $('walk-help-panel').hidden;
@@ -378,7 +387,9 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
     const fullscreen = document.fullscreenElement === surface;
     $('walk-fullscreen').textContent = fullscreen ? 'Exit fullscreen' : 'Fullscreen';
     $('walk-fullscreen').setAttribute('aria-pressed',String(fullscreen));
-    clearInput(); resize(); focusView();
+    clearInput(); resize();
+    if((document.fullscreenElement&&document.fullscreenElement!==surface)||(surface.dataset.workspaceOpen&&surface.dataset.workspaceOpen!=='none'))suspendNavigation();
+    else focusView();
   });
   canvas.addEventListener('webglcontextlost',event => {
     event.preventDefault();ready=false;clearInput();
@@ -415,7 +426,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
       performance:{triangles:renderer.info.render.triangles,drawCalls:renderer.info.render.calls,pixelRatio:renderer.getPixelRatio(),continuousRendering:!!raf,frameCount},
       moving:!!teleport || movingByKeys()
     }),
-    reset,setViewMode,setTwoPoint,
+    reset,setViewMode,setTwoPoint,suspendNavigation,
     gridSegments:()=>Array.from(floorGrid.geometry.attributes.position.array),
     setCamera:value => {
       clearInput();teleport=null;
