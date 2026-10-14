@@ -2,6 +2,8 @@
 
 Exhibition Walk is a single 3D viewport of a 40 m × 40 m enclosed white studio hall, initially 30 m high. Walking eye height is 1.65 m. A steel-grid glass skylight casts cached sunlight shadows in eye-level view. Nearby associated exhibit audio fades in after the first click; axis/editing views fade it out. A fine perimeter seam and soft contact shading distinguish the walls from the floor. Open exhibition.html in the local collaboration preview.
 
+The page has no extra Exhibition Walk introduction/title block above the viewport. Click the room canvas to expand it across the browser page and activate navigation. This does not hide the browser address bar. Move the pointer to the top edge to reveal a small close button; closing restores the previous page scroll position and disables room navigation and wheel zoom. Esc also exits when no editor or dialog is open. Editors suspend room shortcuts while active. The existing Fullscreen button remains available for browser fullscreen.
+
 ## Views and navigation
 
 Eye level and Axonometric are separate prominent buttons. Two-point perspective uses a level perspective camera and vertical lens shift, keeping vertical edges parallel when looking up or down.

@@ -23,6 +23,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
   let space=null,skylight=null,factoryRoom=null;
   let roomMeshes = [], ready = false, disposed = false, viewMode = 'room', twoPoint = false;
   let yaw = 0, pitch = 0, fly = false, active = false, drag = null;
+  let immersive=false, pageScroll=0;
   let raf = 0, lastTime = 0, frameCount = 0, teleport = null;
   const clamp = (value,min,max) => Math.max(min,Math.min(max,value));
   const navigationKeys = new Set(['KeyW','KeyA','KeyS','KeyD','KeyQ','KeyE','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','ShiftLeft','ShiftRight','ControlLeft','ControlRight']);
@@ -87,9 +88,29 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
     if(document.activeElement===surface)surface.blur();
   }
   function focusView() {
+    if(!immersive){suspendNavigation();return;}
     active = true;
     if (axonControls) axonControls.enabled = viewMode === 'axonometric';
     surface.focus({preventScroll:true});
+  }
+  function enterImmersive() {
+    if(immersive)return;
+    pageScroll=window.scrollY;immersive=true;
+    document.documentElement.classList.add('exhibition-immersive');
+    surface.classList.add('is-immersive');surface.dataset.immersive='true';
+    $('walk-exit-bar').hidden=false;
+    resize();focusView();
+  }
+  function leaveImmersive() {
+    if(!immersive)return;
+    immersive=false;surface.dataset.immersive='false';
+    surface.classList.remove('is-immersive','show-exit');
+    $('walk-exit-bar').hidden=true;
+    document.documentElement.classList.remove('exhibition-immersive');
+    window.ExhibitionWorkspace?.closePanel();window.ExhibitionBrowse?.close();
+    placement.endDragPreview();suspendNavigation();
+    if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});
+    resize();window.scrollTo({top:pageScroll,behavior:'instant'});
   }
   function movingByKeys() {
     return viewMode === 'room' && active && (walkingKeys.some(key => keys.has(key)) || (fly && held('KeyQ','KeyE')));
@@ -255,6 +276,17 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
   const canvas = renderer.domElement;
   const placement=createExhibitionPlacement({scene,canvas,getCamera:()=>camera,getRoomMeshes:()=>roomMeshes,isRoom:()=>viewMode==='room',orient,invalidate:invalidateScene,previewInvalidate:requestFrame,suspend:suspendNavigation,getMaxHeight:()=>23});
   space=createCanopy({scene,renderer,placement,onSpaceLight:(result,active)=>skylight.updateCanopy(result,active),onSpaceBounds:frameSpace,getView:()=>viewMode,setView:setViewMode,navigate:value=>{clearInput();teleport=null;fly=false;eye.set(value.x,value.y,value.z);yaw=value.yaw;pitch=value.pitch||0;constrain(eye);ui();requestFrame();focusView();},invalidate:invalidateScene});
+  // Enter at the parent capture phase; the entry click must not also edit an exhibit.
+  surface.addEventListener('pointerdown',event=>{
+    if(event.target===canvas&&!immersive&&event.button===0){
+      event.preventDefault();event.stopPropagation();enterImmersive();
+    }
+  },true);
+  surface.addEventListener('pointermove',event=>{
+    if(immersive)surface.classList.toggle('show-exit',event.clientY-surface.getBoundingClientRect().top<54);
+  });
+  surface.addEventListener('pointerleave',()=>surface.classList.remove('show-exit'));
+  $('walk-exit').addEventListener('click',leaveImmersive);
   // Capture focus before OrbitControls receives the pointer-down event.
   canvas.addEventListener('pointerdown',() => {if(viewMode==='axonometric')focusView();},true);
   axonControls = new OrbitControls(axonCamera,canvas);
@@ -286,7 +318,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
   ui();resize();
   canvas.addEventListener('contextmenu',event => event.preventDefault());
   canvas.addEventListener('pointerdown',event => {
-    if (viewMode === 'axonometric' || event.button > 2) return;
+    if (!immersive || viewMode === 'axonometric' || event.button > 2) return;
     event.preventDefault(); focusView(); teleport = null;
     const hit = event.button === 2 ? hitAt(event) : null;
     const pivot = hit?.point.clone() || eye.clone().add(camera.getWorldDirection(new THREE.Vector3()).multiplyScalar(5));
@@ -349,8 +381,11 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
     if (event.code === 'Escape' && document.querySelector('#exhibition-materials[open],#saved-model-edit[open]'))return;
     if (event.code === 'Escape' && document.fullscreenElement === surface) {
       clearInput();teleport=null;
-      document.exitFullscreen().catch(() => {});
+      leaveImmersive();
       return;
+    }
+    if(event.code==='Escape'&&immersive&&!document.querySelector('dialog[open]')&&surface.dataset.workspaceOpen!=='collage'&&surface.dataset.workspaceOpen!=='sculpture'&&surface.dataset.workspaceOpen!=='model'&&surface.dataset.modelBrowse!=='true'){
+      event.preventDefault();leaveImmersive();return;
     }
     if (!active || document.activeElement !== surface || viewMode === 'axonometric') return;
     if (event.code === 'Escape') {clearInput();teleport=null;return;}
@@ -366,7 +401,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
   document.addEventListener('keyup',event => {
     if (keys.delete(event.code)) requestFrame();
   });
-  surface.addEventListener('focus',() => {active=true;if(axonControls)axonControls.enabled=viewMode==='axonometric';});
+  surface.addEventListener('focus',() => {active=immersive;if(axonControls)axonControls.enabled=immersive&&viewMode==='axonometric';});
   surface.addEventListener('blur',() => {active=false;axonControls.enabled=false;clearInput();teleport=null;});
   document.addEventListener('pointerdown',event => {
     if (!surface.contains(event.target)) {active=false;axonControls.enabled=false;clearInput();teleport=null;surface.blur();}
@@ -388,7 +423,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
   $('walk-fullscreen').addEventListener('click',async () => {
     try {
       if (document.fullscreenElement === surface) await document.exitFullscreen();
-      else await surface.requestFullscreen();
+      else {enterImmersive();await surface.requestFullscreen();}
       focusView();
     } catch {
       $('walk-notice').textContent = 'Fullscreen is unavailable in this browser. You can still explore the room here.';
@@ -428,7 +463,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
       space:space.state(),skylight:skylight.state(),ready,environment:'white-enclosed-gallery',room:{...ROOM,closed:true,wallCount:4,floor:true,ceiling:true},
       camera:viewMode==='room'?{x:eye.x,y:eye.y,z:eye.z,yaw,pitch}:{x:axonCamera.position.x,y:axonCamera.position.y,z:axonCamera.position.z},
       viewMode,twoPoint,projection:camera.isOrthographicCamera?'orthographic':'perspective',
-      walkingCamera:{x:eye.x,y:eye.y,z:eye.z,yaw,pitch},fly,active,fullscreen:document.fullscreenElement===surface,
+      walkingCamera:{x:eye.x,y:eye.y,z:eye.z,yaw,pitch},fly,active,immersive,fullscreen:document.fullscreenElement===surface,
       axonometric:{zoom:axonCamera.zoom,target:axonControls.target.toArray(),wallsVisible:roomMeshes.filter(mesh=>mesh.name.includes('wall')&&mesh.visible).length,ceilingVisible:roomMeshes.find(mesh=>mesh.name==='ceiling').visible},
       factory:factoryRoom.state(),grid:{visible:axonGroup.visible,size:40,divisions:20,cellSize:2,cells:400,lines:floorGrid.geometry.attributes.position.count/2,opacity:floorGrid.material.opacity},
       floorJunctions:{visible:roomDetailGroup.visible,seam:true,softContactShading:true},
@@ -437,7 +472,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
       performance:{triangles:renderer.info.render.triangles,drawCalls:renderer.info.render.calls,pixelRatio:renderer.getPixelRatio(),shadows:renderer.shadowMap.enabled,shadowAutoUpdate:renderer.shadowMap.autoUpdate,continuousRendering:!!raf,frameCount},
       moving:!!teleport || movingByKeys()
     }),
-    reset,setViewMode,setTwoPoint,setRoomHeight,suspendNavigation,placement,space,
+    reset,setViewMode,setTwoPoint,setRoomHeight,suspendNavigation,enterImmersive,leaveImmersive,placement,space,
     gridSegments:()=>Array.from(floorGrid.geometry.attributes.position.array),
     setCamera:value => {
       clearInput();teleport=null;

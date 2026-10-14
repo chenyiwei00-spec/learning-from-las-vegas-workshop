@@ -316,3 +316,15 @@ body[data-archive-agent-busy=true] #workspace-collage-pane{opacity:.65}
 .exhibition-placement-tools select{font:10px/1.5 Arial,sans-serif;padding:7px;border:1px solid #ccc;background:#ffffffdf}
 
 .workspace-draft-card{min-width:0}.workspace-draft-card>.workspace-library-item{width:100%}.workspace-draft-card>.text-button{font:9px Arial,sans-serif;padding:4px}.workspace-draft-card img{aspect-ratio:3/4}.exhibition-drag-ghost{width:180px;height:240px;border:0!important;background:transparent;box-shadow:none;display:block;pointer-events:none}.exhibition-drag-ghost img,.exhibition-drag-ghost span{display:none}.exhibition-drag-ghost canvas{width:100%;height:100%;display:block;background:transparent}
+
+/* Click-to-enter room mode fills the browser page, retaining its address bar. */
+html.exhibition-immersive,html.exhibition-immersive body{overflow:hidden;overscroll-behavior:none}
+.walk-surface{touch-action:pan-y}
+.walk-surface.is-immersive{position:fixed;inset:0;z-index:1000;width:100%;height:100dvh;min-height:0;max-height:none;border:0;outline:none;touch-action:none;overscroll-behavior:none}
+.walk-exit-bar{position:absolute;top:0;left:50%;transform:translateX(-50%);width:72px;height:54px;z-index:200;display:flex;align-items:flex-start;justify-content:center;pointer-events:none}
+.walk-exit-bar[hidden]{display:none}
+#walk-exit{margin-top:8px;width:30px;height:30px;min-height:0;padding:0;border:1px solid #d8d8d8;border-radius:50%;background:#fffffff0;color:#333;font:22px/1 Arial,sans-serif;cursor:pointer;opacity:0;pointer-events:none;transition:opacity .15s}
+.show-exit #walk-exit,.walk-exit-bar:focus-within #walk-exit{opacity:1;pointer-events:auto}
+#walk-exit:hover{background:#fff;border-color:#999}
+#walk-exit:focus-visible{outline:2px solid #555;outline-offset:3px}
+.walk-surface.is-immersive .workspace-preview-image{max-height:clamp(55px,calc((100dvh - 270px)/2),148px)}
