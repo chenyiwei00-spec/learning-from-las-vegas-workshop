@@ -16,7 +16,7 @@ In Axonometric mode, left drag rotates the view, the wheel zooms, and right/midd
 
 The space viewport fills the full page width and is taller. Archive headings and navigation retain their existing gutters. Eye level and Axonometric are separate, prominent view buttons, including in fullscreen.
 
-Two passive preview cards float at the upper right: Photo collage and 3D model. Clicking either opens its larger tool panel at the upper left. The panel can be closed without losing the composition or current model. A fixed Generate 3D footer is visible in either tool tab.
+Two passive preview cards float at the upper right, aligned with the top of the navigation controls: Photo collage and 3D model. Fullscreen sits at the lower right of the viewport, with the navigation status above it. On narrow screens, the navigation toolbar reserves space for the cards and the view buttons stack where needed. Clicking either card opens its larger tool panel at the upper left. The panel can be closed without losing the composition or current model. A fixed Generate 3D footer is visible in either tool tab.
 
 Photo collage accepts local PNG/JPEG/WebP uploads and archive images. The archive picker loads the catalog on demand, showing twelve images per page with text search and archive filtering. The existing editor supports moving, resizing, rotating, mirroring, erasing, group selection, Ctrl C/Ctrl V, layer ordering, undo/redo and PNG export. The small preview renders the composition without selection handles.
 
