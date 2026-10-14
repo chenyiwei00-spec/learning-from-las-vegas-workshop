@@ -43,7 +43,8 @@ async function create(){
   }
   if(!best)throw Error('No Las Vegas counterpart is available.');return best;
  }
- return Object.freeze({parts,recommendCity,part:id=>byId.get(id)||null,prepare,load,raster,drawLayer,drawDocument,hit,records:layers=>[...new Set(layers.map(l=>l.vaPartId))].map(id=>byId.get(id)).filter(Boolean),state:()=>({available:parts.length,loaded:images.size})});
+ function prune(layers){const used=new Set(layers.map(l=>l.vaPartId)),ids=new Set(layers.map(l=>l.id));for(const id of images.keys())if(!used.has(id))images.delete(id);for(const id of rasters.keys())if(!ids.has(id))rasters.delete(id);}
+ return Object.freeze({prune,parts,recommendCity,part:id=>byId.get(id)||null,prepare,load,raster,drawLayer,drawDocument,hit,records:layers=>[...new Set(layers.map(l=>l.vaPartId))].map(id=>byId.get(id)).filter(Boolean),state:()=>({available:parts.length,loaded:images.size})});
 }
 window.ExhibitionCounterparts=Object.freeze({create});
 })();

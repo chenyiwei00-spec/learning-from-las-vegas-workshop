@@ -1,0 +1,10 @@
+import * as THREE from 'three';
+/* One transparent live renderer follows the pointer until a real floor-cell preview takes over. */
+export function createDragPreview(host){let renderer=null,object=null,scene=null,camera=null;
+ function begin(source,view){if(!renderer){renderer=new THREE.WebGLRenderer({alpha:true,antialias:true,powerPreference:'low-power'});renderer.setSize(180,240);renderer.setPixelRatio(1);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.setClearColor(0,0);host.append(renderer.domElement);}scene=new THREE.Scene();object=source.clone(true);object.visible=true;object.updateMatrixWorld(true);const box=new THREE.Box3().setFromObject(object),centre=box.getCenter(new THREE.Vector3()),size=box.getSize(new THREE.Vector3()),root=new THREE.Group();object.position.sub(centre);root.add(object);scene.add(root,new THREE.HemisphereLight(0xffffff,0xc8cbd0,2));const light=new THREE.DirectionalLight(0xffffff,2);light.position.set(2,4,6);scene.add(light);
+  const fov=view?.fov||35;camera=view?.orthographic?new THREE.OrthographicCamera(-1,1,1,-1,.01,1000):new THREE.PerspectiveCamera(fov,180/240,.01,1000);if(view?.quaternion)camera.quaternion.fromArray(view.quaternion);else if(view?.orbit){camera.position.setFromSpherical(new THREE.Spherical(1,view.orbit.phi,view.orbit.theta));camera.lookAt(0,0,0);}const direction=new THREE.Vector3(0,0,1).applyQuaternion(camera.quaternion),diameter=size.length();camera.position.copy(direction.multiplyScalar(Math.max(1,diameter/(2*Math.tan(fov*Math.PI/360)))*1.08));if(camera.isOrthographicCamera){camera.top=diameter*.57;camera.bottom=-camera.top;camera.right=camera.top*180/240;camera.left=-camera.right;camera.updateProjectionMatrix();}renderer.render(scene,camera);
+ }
+ function update(e){host.style.transform='translate('+(e.clientX-90)+'px,'+(e.clientY-120)+'px)';if(scene)renderer.render(scene,camera);}
+ function end(){host.hidden=true;scene=null;object=null;camera=null;}
+ return {begin,update,end,dispose:()=>{renderer?.dispose();renderer?.domElement.remove();}};
+}

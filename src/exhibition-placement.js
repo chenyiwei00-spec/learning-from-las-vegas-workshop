@@ -2,11 +2,13 @@ import * as THREE from 'three';
 import {CELL_SIZE,FLOOR_HALF,worldCell} from './exhibition-dimensions.js';
 import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js';
 import {clone} from 'three/examples/jsm/utils/SkeletonUtils.js';
+import {createDragPreview} from './exhibition-drag-preview.js';
 import {exhibitionMaterials} from './exhibition-material.js';
 
 /* One shared model layer for both room cameras, stored as independent local GLBs. */
-export function createExhibitionPlacement({scene,canvas,getCamera,getRoomMeshes,isRoom,orient,invalidate,suspend,getMaxHeight=()=>4.65}) {
+export function createExhibitionPlacement({scene,canvas,getCamera,getRoomMeshes,isRoom,orient,invalidate,previewInvalidate=invalidate,suspend,getMaxHeight=()=>4.65}) {
  const $=id=>document.getElementById(id),group=new THREE.Group(),loader=new GLTFLoader(),models=new Map(),entries=new Map(),pending=new Map();
+ const livePreview=createDragPreview(document.getElementById('exhibition-drag-ghost'));let previewObject=null,previewOriginal=null,previewEpoch=0,previewSourceView=null;
  const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2(),plane=new THREE.Plane(new THREE.Vector3(0,1,0),0),point=new THREE.Vector3();
  const marker=new THREE.Mesh(new THREE.PlaneGeometry(1,1),new THREE.MeshBasicMaterial({color:0x82a18a,transparent:true,opacity:.32,depthWrite:false,side:THREE.DoubleSide,toneMapped:false}));
  marker.rotation.x=-Math.PI/2;marker.position.y=.012;marker.visible=false;scene.add(marker);
@@ -74,9 +76,9 @@ export function createExhibitionPlacement({scene,canvas,getCamera,getRoomMeshes,
  function hover(x,y,ignore=null){
   const cell=cellAt(x,y,ignore);marker.visible=!!cell;
   if(cell){marker.scale.set(cell.span*CELL_SIZE,cell.span*CELL_SIZE,1);marker.position.set(cell.x,.015,cell.z);marker.material.color.setHex(cell.valid?0x82a18a:0xb37060);}
-  invalidate();return cell;
+  previewInvalidate();return cell;
  }
- function stopHover(){marker.visible=false;invalidate();}
+ function stopHover(){marker.visible=false;previewInvalidate();}
  function updateOutline(){
   if(outline){scene.remove(outline);outline.geometry.dispose();outline.material.dispose();outline=null;}
   const entry=entries.get(selected);if(entry){scene.updateMatrixWorld(true);outline=new THREE.BoxHelper(entry.object,0x87877c);scene.add(outline);}
@@ -147,13 +149,11 @@ export function createExhibitionPlacement({scene,canvas,getCamera,getRoomMeshes,
   for(const [x,y]of [[1,0],[-1,0],[0,1],[0,-1],[2,0],[-2,0],[0,2],[0,-2]]){const id=pickExact({clientX:event.clientX+x,clientY:event.clientY+y});if(id)return id;}
   return null;
  }
- function hideGhost(){const g=$('exhibition-drag-ghost');g.hidden=true;if(ghostUrl)URL.revokeObjectURL(ghostUrl);ghostUrl='';}
- function showGhost(e,entry){
-  const g=$('exhibition-drag-ghost'),preview=models.get(entry.record.modelId)?.preview;
-  if(preview&&!ghostUrl){ghostUrl=URL.createObjectURL(preview);g.querySelector('img').src=ghostUrl;}
-  g.hidden=false;g.style.transform='translate('+(e.clientX+16)+'px,'+(e.clientY+16)+'px)';
-  const cell=hover(e.clientX,e.clientY,entry.record.id);g.dataset.valid=String(!!cell?.valid);g.querySelector('span').textContent=cell?.valid?'CELL '+(cell.row*20+cell.col+1):cell?'Cell occupied':'Move over the floor';
- }
+ function hideGhost(keepTemplate=false){previewEpoch++;if(previewObject){scene.remove(previewObject);previewObject=null;}if(previewOriginal){previewOriginal.visible=true;previewOriginal=null;}livePreview.end();stopHover();previewInvalidate();if(!keepTemplate)prune();}
+ function startPreview(object,view,original=null){if(previewObject)scene.remove(previewObject);previewSourceView=view;livePreview.begin(object,view);previewObject=clone(object);previewObject.visible=false;previewObject.traverse(o=>o.castShadow=false);scene.add(previewObject);previewOriginal=original;if(original)original.visible=false;invalidate();}
+ async function beginExternal(desc,view){const ticket=++previewEpoch,m=await template(desc);if(ticket!==previewEpoch)return;const object=clone(m.template),factor=Math.min(.98*CELL_SIZE/Math.max(m.width,m.depth),getMaxHeight()/m.height);object.scale.copy(m.template.scale).multiplyScalar(factor);startPreview(object,view);}
+ function updatePreview(e,ignore=null){if(!previewObject)return;const cell=hover(e.clientX,e.clientY,ignore),host=$('exhibition-drag-ghost');if(cell?.valid){host.hidden=true;previewObject.position.set(cell.x,.015,cell.z);previewObject.visible=true;}else{previewObject.visible=false;host.hidden=false;livePreview.update(e);}previewInvalidate();return cell;}
+ function showGhost(e,entry){if(!previewObject){const camera=getCamera();startPreview(entry.object,{orthographic:camera.isOrthographicCamera,fov:camera.fov||35,quaternion:camera.quaternion.toArray()},entry.object);}updatePreview(e,entry.record.id);}
  canvas.addEventListener('pointerdown',event=>{
   if(event.button!==0)return;
   const id=pick(event);
@@ -196,6 +196,6 @@ export function createExhibitionPlacement({scene,canvas,getCamera,getRoomMeshes,
  document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(scaleDrag||rotateDrag){scaleDrag=null;rotateDrag=null;save();}moving=false;stopHover();hideGhost();if(drag){try{canvas.releasePointerCapture(drag.pointerId);}catch{}drag=null;} }});
  function textureCount(){const textures=new Set();for(const m of models.values())m.template.traverse(o=>{for(const material of o.material?(Array.isArray(o.material)?o.material:[o.material]):[])for(const value of Object.values(material))if(value?.isTexture)textures.add(value);});return textures.size;}
  const ready=(async()=>{try{const data=await read(),byId=new Map(data.models.map(m=>[m.id,m]));for(const record of data.layout){if(!Number.isInteger(record.col)||record.col<0||record.col+(record.span||1)>20||!Number.isInteger(record.row)||record.row<0||record.row+(record.span||1)>20)continue;const desc=byId.get(record.modelId);if(desc){try{const m=await template(desc);insert(record,m);}catch(error){notice('Some stored models could not reopen: '+error.message);}}}}catch(error){notice('Previous room layout could not load: '+error.message);}finally{restored=true;}})();
- return Object.freeze({ready,updateHandles,audioSources:()=>[...entries.values()].map(e=>{const m=models.get(e.record.modelId);return {id:e.record.id,modelId:e.record.modelId,name:e.record.name,x:e.object.position.x,z:e.object.position.z,width:e.footprint,audio:m?.record?.linkedMedia?.audio||null,composition:m?.composition||null};}),spaceSources:()=>[...entries.values()].map(e=>({id:e.record.id,modelId:e.record.modelId,name:e.record.name,object:e.object,layout:{col:e.record.col,row:e.record.row,span:e.record.span,scale:e.record.scale||1,rotation:e.record.rotation||0}})),showSources:(value,options={})=>{group.visible=!!value;keepFootprints=!!options.keepFootprints;if(!value)select(null);cells.visible=!isRoom()&&(group.visible||keepFootprints);cells.material.depthTest=true;cells.renderOrder=0;invalidate();},setViewMode:mode=>{cells.visible=mode==='axonometric'&&(group.visible||keepFootprints);updateHandles();invalidate();},cellAt,hitModelAt:(x,y)=>pickExact({clientX:x,clientY:y}),hover,stopHover,place,select,move,resize,rotate,applyLayout,browseEntries,openModel,clearSelection:()=>select(null),state:()=>({restored,sourcesVisible:group.visible,footprintsVisible:cells.visible,footprintsThroughSpace:false,footprintsPreserved:keepFootprints,selected,models:[...entries.values()].map(e=>({...e.record,x:e.object.position.x,z:e.object.position.z,height:e.height,footprint:e.footprint,colour:models.get(e.record.modelId)?.colour})),modelCount:entries.size,uniqueMeshes:models.size,textureCount:textureCount(),occupiedCells:[...cellCounts].map(([cell,count])=>({col:cell%20,row:Math.floor(cell/20),count})),occupiedColour:'#f2d86b',scaling:!!scaleDrag,rotating:!!rotateDrag,dragging:!!drag?.started,pendingDrag:!!drag}),dispose:()=>{handleLayer.remove();cells.geometry.dispose();cells.material.dispose();models.forEach(m=>release(m.template));marker.geometry.dispose();marker.material.dispose();if(outline){outline.geometry.dispose();outline.material.dispose();}}});
+ return Object.freeze({ready,beginDragPreview:beginExternal,updateDragPreview:updatePreview,endDragPreview:hideGhost,updateHandles,audioSources:()=>[...entries.values()].map(e=>{const m=models.get(e.record.modelId);return {id:e.record.id,modelId:e.record.modelId,name:e.record.name,x:e.object.position.x,z:e.object.position.z,width:e.footprint,audio:m?.record?.linkedMedia?.audio||null,composition:m?.composition||null};}),spaceSources:()=>[...entries.values()].map(e=>({id:e.record.id,modelId:e.record.modelId,name:e.record.name,object:e.object,layout:{col:e.record.col,row:e.record.row,span:e.record.span,scale:e.record.scale||1,rotation:e.record.rotation||0}})),showSources:(value,options={})=>{group.visible=!!value;keepFootprints=!!options.keepFootprints;if(!value)select(null);cells.visible=!isRoom()&&(group.visible||keepFootprints);cells.material.depthTest=true;cells.renderOrder=0;invalidate();},setViewMode:mode=>{cells.visible=mode==='axonometric'&&(group.visible||keepFootprints);updateHandles();invalidate();},cellAt,hitModelAt:(x,y)=>pickExact({clientX:x,clientY:y}),hover,stopHover,place,select,move,resize,rotate,applyLayout,browseEntries,openModel,clearSelection:()=>select(null),state:()=>({liveDrag:{active:!!previewObject,floorVisible:!!previewObject?.visible,sourceView:previewSourceView},restored,sourcesVisible:group.visible,footprintsVisible:cells.visible,footprintsThroughSpace:false,footprintsPreserved:keepFootprints,selected,models:[...entries.values()].map(e=>({...e.record,x:e.object.position.x,z:e.object.position.z,height:e.height,footprint:e.footprint,colour:models.get(e.record.modelId)?.colour})),modelCount:entries.size,uniqueMeshes:models.size,textureCount:textureCount(),occupiedCells:[...cellCounts].map(([cell,count])=>({col:cell%20,row:Math.floor(cell/20),count})),occupiedColour:'#f2d86b',scaling:!!scaleDrag,rotating:!!rotateDrag,dragging:!!drag?.started,pendingDrag:!!drag}),dispose:()=>{livePreview.dispose();handleLayer.remove();cells.geometry.dispose();cells.material.dispose();models.forEach(m=>release(m.template));marker.geometry.dispose();marker.material.dispose();if(outline){outline.geometry.dispose();outline.material.dispose();}}});
 }
 
