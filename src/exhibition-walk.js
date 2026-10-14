@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import {createExhibitionPlacement} from './exhibition-placement.js';
 import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
 
 (() => {
@@ -247,6 +248,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
   }
 
   const canvas = renderer.domElement;
+  const placement=createExhibitionPlacement({scene,canvas,getCamera:()=>camera,getRoomMeshes:()=>roomMeshes,isRoom:()=>viewMode==='room',orient,invalidate:requestFrame,suspend:suspendNavigation});
   // Capture focus before OrbitControls receives the pointer-down event.
   canvas.addEventListener('pointerdown',() => {if(viewMode==='axonometric')focusView();},true);
   axonControls = new OrbitControls(axonCamera,canvas);
@@ -422,11 +424,11 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
       grid:{visible:axonGroup.visible,size:20,divisions:20,cellSize:1,cells:400,lines:floorGrid.geometry.attributes.position.count/2,opacity:floorGrid.material.opacity},
       floorJunctions:{visible:roomDetailGroup.visible,seam:true,softContactShading:true},
       walkingBounds:{x:[-LIMIT,LIMIT],z:[-LIMIT,LIMIT],y:[RADIUS,ROOM.height-RADIUS]},
-      displayCount:0,modelsLoaded:0,textureCount:0,
+      displayCount:placement.state().modelCount,modelsLoaded:placement.state().modelCount,textureCount:placement.state().textureCount,placements:placement.state(),
       performance:{triangles:renderer.info.render.triangles,drawCalls:renderer.info.render.calls,pixelRatio:renderer.getPixelRatio(),continuousRendering:!!raf,frameCount},
       moving:!!teleport || movingByKeys()
     }),
-    reset,setViewMode,setTwoPoint,suspendNavigation,
+    reset,setViewMode,setTwoPoint,suspendNavigation,placement,
     gridSegments:()=>Array.from(floorGrid.geometry.attributes.position.array),
     setCamera:value => {
       clearInput();teleport=null;

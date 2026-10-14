@@ -1,10 +1,10 @@
-/* Floating making tools. Preview cards remain passive; editors live in the left panel. */
+/* Floating making tools. Preview cards remain passive; editors overlap the cards at the upper right. */
 (() => {
 'use strict';
 const $=id=>document.getElementById(id),surface=$('walk-surface'),panel=$('workspace-expanded');
 if(!surface||!panel)return;
 const thumbnail=$('workspace-model-thumbnail'),viewer=$('generated-sculpture-viewer');
-let currentPanel=null,previewFrame=0,modelPreviewSrc='',catalogPromise=null;
+let currentPanel=null,previewFrame=0,modelPreviewSrc='';
 function suspendScene(){window.ExhibitionWalk?.suspendNavigation();}
 function syncCollagePreview(){
  previewFrame=0;
@@ -14,7 +14,7 @@ function syncCollagePreview(){
  const count=studio.state().layers;
  $('workspace-collage-placeholder').hidden=count>0;
  $('workspace-collage-preview').hidden=count===0;
- $('workspace-collage-caption').textContent=count?count+' PHOTO'+(count===1?'':'S')+' / COMPOSITION':'PHOTO COMPOSITION';
+ $('workspace-collage-caption').textContent=count?count+' OBJECT'+(count===1?'':'S')+' / COMPOSITION':'OBJECT COMPOSITION';
 }
 function queueCollagePreview(){if(!previewFrame)previewFrame=requestAnimationFrame(syncCollagePreview);}
 function syncModelPreview(){
@@ -25,11 +25,11 @@ function syncModelPreview(){
    modelPreviewSrc=viewer.src;thumbnail.src=modelPreviewSrc;
    thumbnail.cameraOrbit='0deg 85deg auto';
   }
-  thumbnail.hidden=false;
+  thumbnail.hidden=false;$('workspace-drag-model').disabled=!state.loaded;
   $('workspace-model-placeholder').hidden=true;
-  $('workspace-model-caption').textContent=state.loaded?'MODEL READY / 3D':'OPENING MODEL';
+  $('workspace-model-caption').textContent=state.loaded?'MODEL READY / DRAG TO ROOM':'OPENING MODEL';
  }else{
-  modelPreviewSrc='';
+  modelPreviewSrc='';$('workspace-drag-model').disabled=true;
   if(thumbnail.hasAttribute('src')){thumbnail.src=null;thumbnail.removeAttribute('src');}
   thumbnail.hidden=true;$('workspace-model-placeholder').hidden=false;
   $('workspace-model-caption').textContent=state?.busy?'GENERATING 3D':state?.stale?'COMPOSITION CHANGED':'IMAGE TO VOLUME';
@@ -37,7 +37,7 @@ function syncModelPreview(){
 }
 function openPanel(kind){
  if(!['collage','model'].includes(kind))return;
- suspendScene();currentPanel=kind;panel.hidden=false;surface.dataset.workspaceOpen=kind;
+ suspendScene();currentPanel=kind;panel.hidden=false;surface.dataset.workspaceOpen=kind;$('workspace-shade').hidden=false;
  $('workspace-collage-pane').hidden=kind!=='collage';$('workspace-model-pane').hidden=kind!=='model';
  $('workspace-expanded-title').textContent=kind==='collage'?'PHOTO COLLAGE':'GENERATED MODEL';
  $('exhibition-export').hidden=kind==='model';
@@ -54,7 +54,7 @@ function openPanel(kind){
  });
 }
 function closePanel(){
- const previous=currentPanel;panel.hidden=true;currentPanel=null;surface.dataset.workspaceOpen='none';
+ const previous=currentPanel;panel.hidden=true;$('workspace-shade').hidden=true;currentPanel=null;surface.dataset.workspaceOpen='none';
  $('open-collage-preview').setAttribute('aria-expanded','false');$('open-model-preview').setAttribute('aria-expanded','false');
  queueCollagePreview();syncModelPreview();
  if(previous)$(previous==='collage'?'open-collage-preview':'open-model-preview').focus({preventScroll:true});
@@ -80,21 +80,6 @@ viewer.addEventListener('camera-change',event=>{
  thumbnail.cameraOrbit=orbit.theta*180/Math.PI+'deg '+orbit.phi*180/Math.PI+'deg auto';
 });
 new MutationObserver(syncModelPreview).observe($('model-panel'),{subtree:true,childList:true,attributes:true,attributeFilter:['src','hidden','aria-busy']});
-const originalChoose=$('exhibition-choose').onclick;
-$('exhibition-choose').onclick=async()=>{
- try{
-  if(!window.ARCHIVE_DATA){
-   if(!catalogPromise)catalogPromise=new Promise((resolve,reject)=>{
-    const script=document.createElement('script');script.src='catalog.js';
-    script.onload=resolve;script.onerror=()=>{catalogPromise=null;script.remove();reject(Error('The archive could not load. Try again.'));};
-    document.head.append(script);
-   });
-   $('exhibition-message').textContent='Opening archive images…';
-   await catalogPromise;
-  }
-  originalChoose();
- }catch(error){$('exhibition-message').textContent=error.message;}
-};
 surface.dataset.workspaceOpen='none';queueCollagePreview();syncModelPreview();
 window.ExhibitionWorkspace=Object.freeze({openPanel,closePanel,state:()=>({panel:currentPanel,collagePreviewLayers:window.ExhibitionStudio?.state().layers||0,modelPreview:!!modelPreviewSrc})});
 })();
