@@ -94,6 +94,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
     document.documentElement.classList.add('exhibition-immersive');
     surface.classList.add('is-immersive');surface.dataset.immersive='true';
     $('walk-exit-bar').hidden=false;
+    surface.requestFullscreen({navigationUI:'hide'}).then(()=>{resize();focusView();}).catch(()=>{$('walk-notice').textContent='Fullscreen was blocked by the browser. The expanded view remains available.';});
     resize();focusView();
   }
   function leaveImmersive() {
@@ -409,19 +410,9 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
   $('walk-two-point').addEventListener('click',() => {setTwoPoint(!twoPoint);focusView();});
   $('walk-view-toggle').addEventListener('click',() => {setViewMode(viewMode==='room'?'axonometric':'room');focusView();});
   $('walk-reset').addEventListener('click',() => {reset();focusView();});
-  $('walk-fullscreen').addEventListener('click',async () => {
-    try {
-      if (document.fullscreenElement === surface) await document.exitFullscreen();
-      else {enterImmersive();await surface.requestFullscreen();}
-      focusView();
-    } catch {
-      $('walk-notice').textContent = 'Fullscreen is unavailable in this browser. You can still explore the room here.';
-    }
-  });
   document.addEventListener('fullscreenchange',() => {
     const fullscreen = document.fullscreenElement === surface;
-    $('walk-fullscreen').textContent = fullscreen ? 'Exit fullscreen' : 'Fullscreen';
-    $('walk-fullscreen').setAttribute('aria-pressed',String(fullscreen));
+    if(!document.fullscreenElement&&immersive){leaveImmersive();return;}
     clearInput(); resize();
     if(surface.dataset.modelBrowse==='true'||(document.fullscreenElement&&document.fullscreenElement!==surface)||(surface.dataset.workspaceOpen&&surface.dataset.workspaceOpen!=='none'))suspendNavigation();
     else focusView();

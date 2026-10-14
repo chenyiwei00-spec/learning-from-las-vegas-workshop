@@ -13,9 +13,9 @@ const random=()=>crypto.getRandomValues(new Uint32Array(1))[0]/4294967296;
 function setPhase(value,text){phase=value;status.textContent=text;render();}
 function render(){
  const studio=window.ExhibitionStudio,state=studio?.state().model;
- runButton.disabled=!studio||busy||!!state?.busy||Number($('exhibition-agent-count').value)===0;$('exhibition-agent-count').disabled=busy;$('exhibition-agent-stop').hidden=!busy;$('exhibition-layout-run').disabled=busy||!!window.ExhibitionLibrary?.state().placing||(!Number($('workspace-library-count').textContent)&&!window.ExhibitionWalk?.placement.state().modelCount);runButton.textContent=busy?'...':'+';runButton.title=status.textContent||'Compose editable collages first';$('exhibition-agent-keyword').textContent=phase==='error'?'ERROR':phase==='generating'?'BUILD':phase==='matching'?'MATCH':phase==='selecting'?'SELECT':phase==='ready'?'READY':phase==='collage-ready'?'EDIT':'AGENT';runButton.setAttribute('aria-busy',String(busy));
- $('exhibition-agent-edit').hidden=!plan;$('exhibition-agent-edit').disabled=busy;
- $('exhibition-agent-previous').hidden=!previous;$('exhibition-agent-previous').disabled=busy;
+ runButton.disabled=!studio||busy||!!window.ExhibitionAgentDrafts?.state().busy||!!state?.busy||Number($('exhibition-agent-count').value)===0;$('exhibition-agent-count').disabled=busy||!!window.ExhibitionAgentDrafts?.state().busy;$('exhibition-agent-stop').hidden=!busy;$('exhibition-layout-run').disabled=busy||!!window.ExhibitionAgentDrafts?.state().busy||!!window.ExhibitionLibrary?.state().placing||(!Number($('workspace-library-count').textContent)&&!window.ExhibitionWalk?.placement.state().modelCount);runButton.textContent=busy?'...':'+';runButton.title=status.textContent||'Compose editable collages first';$('exhibition-agent-keyword').textContent=phase==='error'?'ERROR':phase==='generating'?'BUILD':phase==='matching'?'MATCH':phase==='selecting'?'SELECT':phase==='ready'?'READY':phase==='collage-ready'?'EDIT':'AGENT';runButton.setAttribute('aria-busy',String(busy));
+ $('exhibition-agent-edit').hidden=!plan;$('exhibition-agent-edit').disabled=busy||!!window.ExhibitionAgentDrafts?.state().busy;
+ $('exhibition-agent-previous').hidden=!previous;$('exhibition-agent-previous').disabled=busy||!!window.ExhibitionAgentDrafts?.state().busy;
 }
 function lock(value){
  document.body.dataset.archiveAgentBusy=String(value);
@@ -66,7 +66,7 @@ function makeSculpturePlan(excluded){
  return {id:crypto.randomUUID(),title:'Borrowed body',theme:'sculpture-to-city',themeIndex:-1,sourceSurface:'sculpture',planner:'dense-portrait-collage-v2',createdAt:Date.now(),pieces};
 }
 async function run(){
- if(busy||!window.ExhibitionStudio||ExhibitionStudio.state().model.busy||ExhibitionLibrary.state().placing)return;
+ if(busy||window.ExhibitionAgentDrafts?.state().busy||!window.ExhibitionStudio||ExhibitionStudio.state().model.busy||ExhibitionLibrary.state().placing)return;
  total=Math.max(0,Math.min(50,Math.round(Number($('exhibition-agent-count').value)||0)));if(!total)return;completed=0;stopRequested=false;$('exhibition-agent-stop').disabled=false;busy=true;error='';lock(true);let applied=false;
  try{
   await ExhibitionBrowse.close();await ExhibitionStudio.prepareAgent();previous=ExhibitionStudio.captureDraft();ExhibitionWorkspace.closePanel();
@@ -77,21 +77,21 @@ async function run(){
    await ExhibitionAgentDrafts.save(number);ExhibitionStudio.releaseUnused();completed++;setPhase('collage-ready',completed+' / '+total+' collages ready');
 
   }
-  setPhase('collage-ready',completed+' / '+total+' collages ready'+(stopRequested?' / stopped':''));if(completed){$('workspace-collage-library').open=true;ExhibitionWorkspace.openPanel(ExhibitionStudio.state().sourceSurface==='sculpture'?'sculpture':'collage');}
+  setPhase('collage-ready',completed+' / '+total+' collages ready'+(stopRequested?' / stopped':''));if(completed){$('workspace-collage-library').open=true;await ExhibitionAgentDrafts.render();}
  }catch(e){error=e.message;setPhase('error',completed+' / '+total+' collages ready. '+(applied?'Current collage kept. ':'')+error);}
  finally{busy=false;lock(false);render();}
 }
 $('exhibition-agent-count').oninput=()=>{$('exhibition-agent-count-value').textContent=$('exhibition-agent-count').value;render();};
 $('exhibition-agent-stop').onclick=()=>{stopRequested=true;status.textContent='Stopping after the current collage is saved...';$('exhibition-agent-stop').disabled=true;};
 runButton.onclick=run;
-$('exhibition-agent-edit').onclick=()=>{if(busy)return;ExhibitionWorkspace.openPanel(ExhibitionStudio.state().sourceSurface==='sculpture'?'sculpture':'collage');$('exhibition-message').textContent='Every object is editable. Adjust the collage, then click Generate updated 3D.';};
+$('exhibition-agent-edit').onclick=()=>{if(busy||window.ExhibitionAgentDrafts?.state().busy)return;ExhibitionWorkspace.openPanel(ExhibitionStudio.state().sourceSurface==='sculpture'?'sculpture':'collage');$('exhibition-message').textContent='Every object is editable. Adjust the collage, then click Generate updated 3D.';};
 $('exhibition-agent-previous').onclick=async()=>{
- if(busy||!previous)return;busy=true;lock(true);setPhase('restoring','Restoring your previous collage...');
+ if(busy||window.ExhibitionAgentDrafts?.state().busy||!previous)return;busy=true;lock(true);setPhase('restoring','Restoring your previous collage...');
  try{const old=previous;await ExhibitionBrowse.close();await ExhibitionStudio.restoreDraft(old);previous=null;plan=old.document.agentPlan||null;setPhase('idle','Previous collage restored.');ExhibitionWorkspace.openPanel('collage');}
  catch(e){error=e.message;setPhase('error',error);}finally{busy=false;lock(false);render();}
 };
 window.addEventListener('exhibition-counterparts-preparing',()=>{if(busy)setPhase('matching','Matching city silhouettes to V&A sculpture fragments...');});
-window.addEventListener('exhibition-studio-ready',render);
+window.addEventListener('exhibition-studio-ready',render);window.addEventListener('exhibition-draft-queue-change',render);
 new MutationObserver(render).observe($('model-frame'),{attributes:true,attributeFilter:['aria-busy']});
 window.ExhibitionAgent=Object.freeze({run,makePlan,state:()=>({busy,phase,error,completed,total,stopRequested,plan:plan?structuredClone(plan):null,canRestore:!!previous})});render();
 })();
