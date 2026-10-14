@@ -5,7 +5,7 @@ export function abstractModelPattern(pixels,width,height,{seed=1,size=512}={}){
  if(!foreground.length)throw Error('The model has no visible colour pixels.');if(!ink.length)for(const i of foreground)valid[i]=1;
  const pool=ink.length?ink:foreground,integral=new Uint32Array((width+1)*(height+1));for(let y=0;y<height;y++){let sum=0;for(let x=0;x<width;x++){sum+=valid[y*width+x];integral[(y+1)*(width+1)+x+1]=integral[y*(width+1)+x+1]+sum;}}
  const count=(x,y,n)=>integral[(y+n)*(width+1)+x+n]-integral[y*(width+1)+x+n]-integral[(y+n)*(width+1)+x]+integral[y*(width+1)+x];
- let patch=Math.max(2,Math.min(12,Math.floor(Math.min(width,height)/36))),positions=[];
+ let patch=Math.max(2,Math.min(6,Math.floor(Math.min(width,height)/64))),positions=[];
  while(patch>=2){positions=[];for(let y=0;y<=height-patch;y++)for(let x=0;x<=width-patch;x++)if(count(x,y,patch)===patch*patch)positions.push([x,y]);if(positions.length>=8||patch===2)break;patch=Math.max(2,Math.floor(patch*.65));}
  const output=new Uint8Array(size*size*4),palette=new Map();const take=(x,y,candidate)=>{let xx=x,yy=y;for(let i=0;i<candidate.turn;i++){const a=xx;xx=patch-1-yy;yy=a;}return ((candidate.y+yy)*width+candidate.x+xx)*4;};
  if(!positions.length){for(let i=0;i<size*size;i++){const src=pool[Math.floor(random()*pool.length)]*4;output.set(pixels.subarray(src,src+3),i*4);output[i*4+3]=255;}}else{

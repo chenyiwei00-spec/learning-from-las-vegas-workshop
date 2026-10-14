@@ -1,12 +1,12 @@
 # Exhibition Walk
 
-Exhibition Walk is a single 3D viewport of a 20 m × 20 m with an initial 12 m height enclosed white gallery. Walking eye height is 1.65 m. A steel-grid glass skylight casts cached sunlight shadows in eye-level view. Nearby associated exhibit audio fades in after the first click; axis/editing views fade it out. A fine perimeter seam and soft contact shading distinguish the walls from the floor. Open exhibition.html in the local collaboration preview.
+Exhibition Walk is a single 3D viewport of a 40 m × 40 m enclosed white studio hall, initially 30 m high. Walking eye height is 1.65 m. A steel-grid glass skylight casts cached sunlight shadows in eye-level view. Nearby associated exhibit audio fades in after the first click; axis/editing views fade it out. A fine perimeter seam and soft contact shading distinguish the walls from the floor. Open exhibition.html in the local collaboration preview.
 
 ## Views and navigation
 
 Eye level and Axonometric are separate prominent buttons. Two-point perspective uses a level perspective camera and vertical lens shift, keeping vertical edges parallel when looking up or down.
 
-Axonometric is a true orthographic view of only the 20 × 20 m floor and the exhibited models. Walls and ceiling are hidden. Twenty-one faint grid lines in each direction make 400 cells measuring 1 × 1 m. Left drag rotates, wheel zooms, and right/middle drag pans. Returning to Eye level restores the walking camera and Two-point setting.
+Axonometric is a true orthographic view of only the 40 × 40 m floor and the exhibited models. Walls and ceiling are hidden. Twenty-one faint grid lines in each direction make 400 cells measuring 2 × 2 m. Left drag rotates, wheel zooms, and right/middle drag pans. Returning to Eye level restores the walking camera and Two-point setting.
 
 In Eye level, click the room to activate navigation. WASD/arrows walk; Shift/Ctrl increase speed; left drag looks around, right drag orbits around the cursor, middle drag pans, wheel moves forward/back, double-clicking the floor moves there smoothly. Space switches Walk/Fly; Q/E change height in Fly. Room bounds prevent leaving through the floor, ceiling or walls. Fullscreen and Esc work in both views. Navigation follows [Enscape's control bindings](https://docs-chaos.atlassian.net/wiki/spaces/enscape/pages/842203139/Control%2Band%2BInput), subject to browser-reserved shortcuts.
 
@@ -26,7 +26,7 @@ Generate 3D uses the existing local TripoSR client/backend and the actual collag
 
 Drag from the second small preview card, or from Drag model into room in the expanded model tools. A snapshot of that exact model follows the pointer. A coloured floor square and cell number indicate the destination. Release over a free cell to place the textured GLB. Materials retain the texture and vertex colours, bypass the room tone mapping and use gentle directional shading with a modest saturation boost, making the exhibits stand out against the white room. Drops outside the floor, behind room walls, over interface panels or onto occupied cells leave the layout unchanged.
 
-The model origin snaps to the cell centre. Its footprint fills 98% of its allocated area. Choose 1, 4 or 9 cells (1 × 1, 2 × 2 or 3 × 3) using the size buttons or minus/plus. Resizing, moving and restoring check the full occupied rectangle, including room boundaries. Proportions are preserved; very tall models stop below the ceiling at 11.5 m. Both cameras use one shared scene group, so placement, movement and rotation appear immediately in either view.
+The model origin snaps to the cell centre. Its footprint fills 98% of its allocated area. Choose 1, 4 or 9 cells (1 × 1, 2 × 2 or 3 × 3) using the size buttons or minus/plus. Resizing, moving and restoring check the full occupied rectangle, including room boundaries. Proportions are preserved; very tall models stop below the ceiling at 23 m. Both cameras use one shared scene group, so placement, movement and rotation appear immediately in either view.
 
 Click an exhibited model in either view to open the shared large 3D model browser. Dragging instead of clicking still moves the instance. Drag it to move it to another free cell, or use Move and click a destination. Rotate changes its orientation by 45 degrees. Remove deletes that instance; Done clears selection. Fine mesh edges have a two-pixel click tolerance. Camera gestures remain available on empty space.
 

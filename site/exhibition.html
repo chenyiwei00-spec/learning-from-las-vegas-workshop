@@ -15,7 +15,7 @@
 </nav>
 <main class="studio-main">
 <nav class="studio-mode-nav" aria-label="Collage workspaces"><a href="collage.html">COLLAGE STUDIO</a><a href="exhibition.html" aria-current="page">EXHIBITION WALK</a></nav>
-<section class="studio-intro"><div><p class="eyebrow">05 / EXHIBITION SPACE</p><h1>EXHIBITION WALK</h1></div><p>A room before the exhibition.<br>20 × 20 metres. An empty, enclosed white space.</p></section>
+<section class="studio-intro"><div><p class="eyebrow">05 / EXHIBITION SPACE</p><h1>EXHIBITION WALK</h1></div><p>A room before the exhibition.<br>40 &times; 40 metres. A white studio hall filled with light.</p></section>
 <section class="walk-panel" aria-label="White exhibition room">
 <div id="walk-surface" class="walk-surface" tabindex="0" role="application" aria-label="Walk through a twenty by twenty metre enclosed white exhibition room" aria-describedby="walk-caption" aria-busy="true">
 <div id="walk-canvas-host" class="walk-canvas-host"></div><div id="exhibition-drag-ghost" class="exhibition-drag-ghost" hidden><img alt=""><span>Drop on a free cell</span></div><div id="exhibition-placement-tools" class="exhibition-placement-tools" hidden><span id="exhibition-placement-name"></span><button id="exhibition-open-model">View 3D</button><button id="exhibition-model-smaller" aria-label="Use fewer grid cells">−</button><button id="exhibition-model-larger" aria-label="Use more grid cells">+</button><button id="exhibition-move-model">Move</button><select id="exhibition-model-angle" aria-label="Model rotation"><option value="90">90&#176;</option><option value="180">180&#176;</option><option value="270">270&#176;</option><option value="360">360&#176;</option></select><button id="exhibition-turn-model">Rotate 90°</button><button id="exhibition-remove-model">Remove</button><button id="exhibition-deselect-model">Done</button></div><p id="exhibition-placement-status" class="exhibition-placement-status" role="status"></p>
@@ -28,7 +28,7 @@
 <p class="eyebrow">MOVE THROUGH THE ROOM</p>
 <div id="walk-room-help"><dl><dt>W A S D / arrows</dt><dd>Walk forward, back and sideways</dd><dt>Left mouse drag</dt><dd>Look around</dd><dt>Right mouse drag</dt><dd>Orbit around the cursor position</dd><dt>Middle mouse drag</dt><dd>Pan; vertical movement in Fly mode</dd><dt>Mouse wheel</dt><dd>Move forward / backward</dd><dt>Double-click the floor</dt><dd>Move to that position</dd><dt>Shift / Ctrl</dt><dd>Move faster / faster still</dd><dt>Space</dt><dd>Switch Walk / Fly</dd><dt>Q / E</dt><dd>Move down / up in Fly mode</dd><dt>Esc</dt><dd>Exit fullscreen</dd></dl>
 <p>Click the room to activate navigation. Two-point keeps vertical wall edges upright.</p></div>
-<div id="walk-axon-help" hidden><dl><dt>Left mouse drag</dt><dd>Rotate the floor view</dd><dt>Mouse wheel</dt><dd>Zoom in / out</dd><dt>Right / middle drag</dt><dd>Pan the floor view</dd><dt>Reset view</dt><dd>Restore the initial axonometric view</dd><dt>Eye level</dt><dd>Restore your walking position</dd></dl><p>20 × 20 cells. Each square measures 1 × 1 metre.</p></div>
+<div id="walk-axon-help" hidden><dl><dt>Left mouse drag</dt><dd>Rotate the floor view</dd><dt>Mouse wheel</dt><dd>Zoom in / out</dd><dt>Right / middle drag</dt><dd>Pan the floor view</dd><dt>Reset view</dt><dd>Restore the initial axonometric view</dd><dt>Eye level</dt><dd>Restore your walking position</dd></dl><p>20 &times; 20 cells. Each square measures 2 &times; 2 metres.</p></div>
 </div>
 
 <section id="exhibition-model-browser" class="exhibition-model-browser" tabindex="0" aria-label="3D model browser" hidden><header class="exhibition-browser-header"><button id="exhibition-browser-back">← Back to exhibition</button><span>MODEL GALLERY / LEARNING FROM LAS VEGAS</span></header><div id="exhibition-browser-body"></div></section>
@@ -85,12 +85,12 @@
 <dialog id="saved-model-edit" class="model-edit-dialog"><form id="saved-model-edit-form"><p class="eyebrow">SAVED MODEL</p><h2>NAME &amp; GROUP</h2><label>Name<input id="saved-edit-name" maxlength="120" required></label><label>Group<input id="saved-edit-group" maxlength="80" list="model-group-options" placeholder="Ungrouped"></label><div><button type="button" id="saved-edit-cancel">Cancel</button><button type="submit" class="primary-link">Save changes</button></div></form></dialog>
 
 
-<div class="walk-room-label" aria-hidden="true"><span id="walk-view-label">WHITE ROOM</span><span>20 × 20 M</span></div>
+<div class="walk-room-label" aria-hidden="true"><span id="walk-view-label">WHITE ROOM</span><span>40 &times; 40 M</span></div>
 <span id="walk-status" class="walk-status" aria-hidden="true">WALK / EYE 1.65 M</span>
 <button id="walk-fullscreen" class="walk-fullscreen" aria-label="Toggle exhibition fullscreen" aria-pressed="false">Fullscreen</button>
 <p id="walk-error" class="walk-error" role="alert" hidden></p>
 </div>
-<div class="walk-caption" id="walk-caption"><p id="walk-caption-text">Click to explore · Drag to look · WASD to walk · Shift to move faster</p><span id="walk-dimensions">20 × 20 × 5 M</span></div>
+<div class="walk-caption" id="walk-caption"><p id="walk-caption-text">Click to explore · Drag to look · WASD to walk · Shift to move faster</p><span id="walk-dimensions">40 &times; 40 &times; 30 M</span></div>
 <p id="walk-notice" class="walk-notice" role="status"></p>
 </section>
 <section class="exhibition-model-library" aria-label="Saved model library"><details id="model-history" class="model-history"><summary><span>SAVED MODELS</span><span id="saved-model-count">0 models</span></summary><div class="history-content"><label class="history-filter">Group <select id="history-group-filter"><option value="">All groups</option></select><button id="delete-model-group" class="outline-link" disabled>Delete group</button></label><datalist id="model-group-options"></datalist><p id="history-status" class="history-status" role="status"></p><p id="history-empty">Your saved models will appear here.</p><div id="saved-model-grid" class="saved-model-grid"></div></div></details></section>
