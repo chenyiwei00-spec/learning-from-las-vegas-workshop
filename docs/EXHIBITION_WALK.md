@@ -1,8 +1,16 @@
 # Exhibition Walk: white room
 
-The current Exhibition Walk is a single 3D viewport of an empty, enclosed gallery. Interior dimensions are 20 m wide × 20 m deep × 5 m high. Walking eye height is 1.65 m. The four walls, ceiling and floor use white materials with soft lighting.
+The current Exhibition Walk is a single 3D viewport of an empty, enclosed gallery. Interior dimensions are 20 m wide × 20 m deep × 5 m high. Walking eye height is 1.65 m. The four walls, ceiling and floor use light neutral materials with soft lighting. A fine perimeter seam and soft contact shading make the wall/floor junctions visible.
 
 Open exhibition.html from the local collaboration preview. Click the room to activate navigation. The viewport can be expanded to fullscreen; Esc returns to the page.
+
+## View modes
+
+The Two-point button keeps vertical wall edges parallel when looking up or down. It uses a level perspective camera with a shifted projection, and can be switched on/off independently.
+
+The Axonometric button switches the same viewport to a true orthographic floor view. Only the exact 20 × 20 m floor is visible: the four walls, ceiling and room contact shadows are hidden. A faint grid has 21 lines in each direction, making 20 × 20 = 400 cells of 1 × 1 m each.
+
+In Axonometric mode, left drag rotates the view, the wheel zooms, and right/middle drag pans on the ground plane. Reset view resets only that floor view. Walk/Fly and Two-point controls are disabled in this mode. Return to room restores the previous position, view direction, Walk/Fly mode and Two-point setting. Both views support fullscreen and Esc, with the same responsive viewport and toolbar.
 
 ## Navigation
 
@@ -35,4 +43,4 @@ The earlier collage studio remains at collage.html. Existing media and saved bro
 
 ## Verification
 
-A local browser check verified the closed room geometry, single viewport, WASD/arrow walking, faster movement, left/right/middle mouse navigation, wheel movement, floor teleporting, Walk/Fly mode, wall/floor/ceiling bounds, idle rendering, fullscreen/Esc, focus release, and alignment at 1366, 760 and 390 px widths. No JavaScript errors were observed.
+A local browser check verified the closed room geometry, single viewport, WASD/arrow walking, faster movement, left/right/middle mouse navigation, wheel movement, floor teleporting, Walk/Fly mode, wall/floor/ceiling bounds, idle rendering, fullscreen/Esc, focus release, and alignment at 1366, 760 and 390 px widths. Ten additional browser checks validated wall/floor separation, parallel verticals, equal orthographic scale at different depths, exact grid geometry, floor-only visibility, rotation/zoom/pan, mode isolation and restoration, fullscreen/Esc, idle rendering, and responsive control/help placement. The room and axonometric screenshots were visually reviewed. No JavaScript errors were observed.

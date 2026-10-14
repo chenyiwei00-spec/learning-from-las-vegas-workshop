@@ -19,20 +19,21 @@
 <section class="walk-panel" aria-label="White exhibition room">
 <div id="walk-surface" class="walk-surface" tabindex="0" role="application" aria-label="Walk through a twenty by twenty metre enclosed white exhibition room" aria-describedby="walk-caption" aria-busy="true">
 <div id="walk-canvas-host" class="walk-canvas-host"></div>
-<div class="walk-toolbar">
-<div class="walk-controls"><button id="walk-mode" aria-pressed="false">Walk mode</button><button id="walk-reset">Reset view</button><button id="walk-help-toggle" aria-expanded="false" aria-controls="walk-help-panel">Controls</button></div>
+<div class="walk-toolbar" id="walk-toolbar">
+<div class="walk-controls"><button id="walk-mode" aria-pressed="false">Walk mode</button><button id="walk-reset">Reset view</button><button id="walk-two-point" aria-pressed="false" title="Keep vertical wall edges parallel">Two-point off</button><button id="walk-axonometric" aria-pressed="false" title="View just the floor in orthographic projection">Axonometric</button><button id="walk-help-toggle" aria-expanded="false" aria-controls="walk-help-panel">Controls</button></div>
 <button id="walk-fullscreen" aria-label="Toggle exhibition fullscreen" aria-pressed="false">Fullscreen</button>
 </div>
 <div id="walk-help-panel" class="walk-help-panel" hidden>
 <p class="eyebrow">MOVE THROUGH THE ROOM</p>
-<dl><dt>W A S D / arrows</dt><dd>Walk forward, back and sideways</dd><dt>Left mouse drag</dt><dd>Look around</dd><dt>Right mouse drag</dt><dd>Orbit around the cursor position</dd><dt>Middle mouse drag</dt><dd>Pan; vertical movement in Fly mode</dd><dt>Mouse wheel</dt><dd>Move forward / backward</dd><dt>Double-click the floor</dt><dd>Move to that position</dd><dt>Shift / Ctrl</dt><dd>Move faster / faster still</dd><dt>Space</dt><dd>Switch Walk / Fly</dd><dt>Q / E</dt><dd>Move down / up in Fly mode</dd><dt>Esc</dt><dd>Exit fullscreen</dd></dl>
-<p>Click the room to activate navigation.</p>
+<div id="walk-room-help"><dl><dt>W A S D / arrows</dt><dd>Walk forward, back and sideways</dd><dt>Left mouse drag</dt><dd>Look around</dd><dt>Right mouse drag</dt><dd>Orbit around the cursor position</dd><dt>Middle mouse drag</dt><dd>Pan; vertical movement in Fly mode</dd><dt>Mouse wheel</dt><dd>Move forward / backward</dd><dt>Double-click the floor</dt><dd>Move to that position</dd><dt>Shift / Ctrl</dt><dd>Move faster / faster still</dd><dt>Space</dt><dd>Switch Walk / Fly</dd><dt>Q / E</dt><dd>Move down / up in Fly mode</dd><dt>Esc</dt><dd>Exit fullscreen</dd></dl>
+<p>Click the room to activate navigation. Two-point keeps vertical wall edges upright.</p></div>
+<div id="walk-axon-help" hidden><dl><dt>Left mouse drag</dt><dd>Rotate the floor view</dd><dt>Mouse wheel</dt><dd>Zoom in / out</dd><dt>Right / middle drag</dt><dd>Pan the floor view</dd><dt>Reset view</dt><dd>Restore the initial axonometric view</dd><dt>Return to room</dt><dd>Restore your walking position</dd></dl><p>20 × 20 cells. Each square measures 1 × 1 metre.</p></div>
 </div>
-<div class="walk-room-label" aria-hidden="true"><span>WHITE ROOM</span><span>20 × 20 M</span></div>
+<div class="walk-room-label" aria-hidden="true"><span id="walk-view-label">WHITE ROOM</span><span>20 × 20 M</span></div>
 <span id="walk-status" class="walk-status" aria-hidden="true">WALK / EYE 1.65 M</span>
 <p id="walk-error" class="walk-error" role="alert" hidden></p>
 </div>
-<div class="walk-caption" id="walk-caption"><p>Click to explore · Drag to look · WASD to walk · Shift to move faster</p><span>20 × 20 × 5 M</span></div>
+<div class="walk-caption" id="walk-caption"><p id="walk-caption-text">Click to explore · Drag to look · WASD to walk · Shift to move faster</p><span id="walk-dimensions">20 × 20 × 5 M</span></div>
 <p id="walk-notice" class="walk-notice" role="status"></p>
 </section>
 <footer class="exhibition-footer"><span>LEARNING FROM LAS VEGAS</span><a href="collage.html">Back to collage studio</a></footer>

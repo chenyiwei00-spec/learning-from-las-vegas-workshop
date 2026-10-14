@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
 
 (() => {
   'use strict';
@@ -12,7 +13,8 @@ import * as THREE from 'three';
   const keys = new Set(), raycaster = new THREE.Raycaster(), pointer = new THREE.Vector2();
   const eye = new THREE.Vector3(0, EYE_HEIGHT, 7);
   const forward = new THREE.Vector3(), right = new THREE.Vector3(), direction = new THREE.Vector3();
-  let renderer, scene, camera, roomMeshes = [], ready = false, disposed = false;
+  let renderer, scene, camera, roomCamera, axonCamera, axonControls, axonGroup, roomDetailGroup, floorGrid;
+  let roomMeshes = [], ready = false, disposed = false, viewMode = 'room', twoPoint = false;
   let yaw = 0, pitch = 0, fly = false, active = false, drag = null;
   let raf = 0, lastTime = 0, frameCount = 0, teleport = null;
   const clamp = (value,min,max) => Math.max(min,Math.min(max,value));
@@ -27,15 +29,39 @@ import * as THREE from 'three';
     return position;
   }
   function orient() {
+    if (viewMode === 'axonometric') {
+      camera.updateMatrixWorld();
+      return;
+    }
     camera.position.copy(eye);
-    camera.rotation.set(pitch,yaw,0,'YXZ');
+    camera.rotation.set(twoPoint ? 0 : pitch,yaw,0,'YXZ');
+    camera.updateProjectionMatrix();
+    if (twoPoint) {
+      // Level the camera and shift the projection instead of tilting verticals.
+      camera.projectionMatrix.elements[9] = Math.tan(clamp(pitch,-0.8,0.8))*camera.projectionMatrix.elements[5];
+      camera.projectionMatrixInverse.copy(camera.projectionMatrix).invert();
+    }
     camera.updateMatrixWorld();
   }
   function ui() {
     $('walk-mode').textContent = fly ? 'Fly mode' : 'Walk mode';
     $('walk-mode').setAttribute('aria-pressed',String(fly));
     $('walk-mode').title = 'Space: switch between walking and flying';
-    $('walk-status').textContent = (fly ? 'FLY' : 'WALK') + ' / EYE ' + eye.y.toFixed(2) + ' M';
+    const axon = viewMode === 'axonometric';
+    $('walk-mode').disabled = axon;
+    $('walk-two-point').disabled = axon;
+    $('walk-two-point').textContent = 'Two-point ' + (twoPoint ? 'on' : 'off');
+    $('walk-two-point').setAttribute('aria-pressed',String(twoPoint));
+    $('walk-axonometric').textContent = axon ? 'Return to room' : 'Axonometric';
+    $('walk-axonometric').setAttribute('aria-pressed',String(axon));
+    $('walk-status').textContent = axon ? 'AXONOMETRIC / 1 M GRID' : (fly ? 'FLY' : 'WALK') + ' / EYE ' + eye.y.toFixed(2) + ' M';
+    $('walk-view-label').textContent = axon ? 'FLOOR PLAN' : 'WHITE ROOM';
+    $('walk-caption-text').textContent = axon ? 'Drag to rotate · Wheel to zoom · Right / middle drag to pan' : 'Click to explore · Drag to look · WASD to walk · Shift to move faster';
+    $('walk-dimensions').textContent = axon ? '20 × 20 M / 400 CELLS' : '20 × 20 × 5 M';
+    $('walk-room-help').hidden = axon;
+    $('walk-axon-help').hidden = !axon;
+    surface.setAttribute('aria-label',axon ? 'Orthographic floor view with four hundred one metre grid cells. Drag to rotate; wheel to zoom; right or middle drag to pan.' : 'Walk through a twenty by twenty metre enclosed white exhibition room');
+    surface.dataset.view = viewMode;
   }
   function clearInput() {
     keys.clear();
@@ -48,10 +74,11 @@ import * as THREE from 'three';
   }
   function focusView() {
     active = true;
+    if (axonControls) axonControls.enabled = viewMode === 'axonometric';
     surface.focus({preventScroll:true});
   }
   function movingByKeys() {
-    return active && (walkingKeys.some(key => keys.has(key)) || (fly && held('KeyQ','KeyE')));
+    return viewMode === 'room' && active && (walkingKeys.some(key => keys.has(key)) || (fly && held('KeyQ','KeyE')));
   }
   function requestFrame() {
     if (!ready || disposed || document.hidden || raf) return;
@@ -93,8 +120,13 @@ import * as THREE from 'three';
     else lastTime = 0;
   }
   function reset() {
-    clearInput(); teleport = null; fly = false;
-    eye.set(0,EYE_HEIGHT,7); yaw = 0; pitch = 0;
+    clearInput(); teleport = null;
+    if (viewMode === 'axonometric') {
+      axonCamera.position.set(24,24,24); axonCamera.zoom = 1;
+      axonControls.target.set(0,0,0); axonCamera.updateProjectionMatrix(); axonControls.update();
+    } else {
+      fly = false; eye.set(0,EYE_HEIGHT,7); yaw = 0; pitch = 0;
+    }
     ui(); requestFrame();
   }
   function resize() {
@@ -103,8 +135,13 @@ import * as THREE from 'three';
     if (!rect.width || !rect.height) return;
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1,1.5));
     renderer.setSize(rect.width,rect.height,false);
-    camera.aspect = rect.width / rect.height;
-    camera.updateProjectionMatrix();
+    const aspect = rect.width / rect.height;
+    roomCamera.aspect = aspect; roomCamera.updateProjectionMatrix();
+    const halfHeight = Math.max(22,32/aspect)/2;
+    axonCamera.left = -halfHeight*aspect; axonCamera.right = halfHeight*aspect;
+    axonCamera.top = halfHeight; axonCamera.bottom = -halfHeight;
+    axonCamera.updateProjectionMatrix();
+    surface.style.setProperty('--walk-toolbar-height',$('walk-toolbar').offsetHeight+'px');
     requestFrame();
   }
   function hitAt(event) {
@@ -112,7 +149,7 @@ import * as THREE from 'three';
     const rect = renderer.domElement.getBoundingClientRect();
     pointer.set((event.clientX-rect.left)/rect.width*2-1,-(event.clientY-rect.top)/rect.height*2+1);
     raycaster.setFromCamera(pointer,camera);
-    return raycaster.intersectObjects(roomMeshes,false)[0] || null;
+    return raycaster.intersectObjects(viewMode === 'room' ? roomMeshes : [axonGroup.getObjectByName('axonometric-floor')],false)[0] || null;
   }
   function showError(message) {
     $('walk-error').textContent = message;
@@ -122,7 +159,11 @@ import * as THREE from 'three';
   try {
     scene = new THREE.Scene();
     scene.background = new THREE.Color('#ffffff');
-    camera = new THREE.PerspectiveCamera(62,1,0.05,80);
+    roomCamera = new THREE.PerspectiveCamera(62,1,0.05,80);
+    axonCamera = new THREE.OrthographicCamera(-20,20,11,-11,0.05,200);
+    axonCamera.position.set(24,24,24);
+    axonCamera.lookAt(0,0,0);
+    camera = roomCamera;
     renderer = new THREE.WebGLRenderer({antialias:true,powerPreference:'low-power'});
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -132,7 +173,7 @@ import * as THREE from 'three';
     renderer.domElement.setAttribute('aria-hidden','true');
 
     const wall = new THREE.MeshStandardMaterial({color:0xffffff,roughness:0.94,metalness:0});
-    const floor = new THREE.MeshStandardMaterial({color:0xffffff,roughness:0.88,metalness:0});
+    const floor = new THREE.MeshStandardMaterial({color:0xe8e8e3,roughness:0.96,metalness:0});
     const t = ROOM.wallThickness, half = ROOM.width/2;
     function box(name,width,height,depth,x,y,z,material=wall) {
       const mesh = new THREE.Mesh(new THREE.BoxGeometry(width,height,depth),material);
@@ -145,6 +186,44 @@ import * as THREE from 'three';
     box('east-wall',t,ROOM.height,20+2*t,half+t/2,ROOM.height/2,0);
     box('north-wall',20,ROOM.height,t,0,ROOM.height/2,-half-t/2);
     box('south-wall',20,ROOM.height,t,0,ROOM.height/2,half+t/2);
+    // Gentle contact shading and a fine perimeter seam clarify wall/floor junctions.
+    roomDetailGroup = new THREE.Group(); roomDetailGroup.name = 'room-floor-junctions'; scene.add(roomDetailGroup);
+    const seamGeometry = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(-9.996,0.009,-9.996),new THREE.Vector3(9.996,0.009,-9.996),
+      new THREE.Vector3(9.996,0.009,9.996),new THREE.Vector3(-9.996,0.009,9.996)
+    ]);
+    roomDetailGroup.add(new THREE.LineLoop(seamGeometry,new THREE.LineBasicMaterial({color:0xbcbcb5,transparent:true,opacity:0.7,toneMapped:false})));
+    const contactGeometry = new THREE.PlaneGeometry(20,0.22,1,12);
+    const coordinates = contactGeometry.attributes.position, colors = [];
+    for (let i=0;i<coordinates.count;i++) {
+      const distance = clamp((coordinates.getY(i)+0.11)/0.22,0,1);
+      colors.push(1,1,1,0.16*Math.pow(distance,2));
+    }
+    contactGeometry.setAttribute('color',new THREE.Float32BufferAttribute(colors,4));
+    const contactMaterial = new THREE.MeshBasicMaterial({color:0x999992,vertexColors:true,transparent:true,depthWrite:false,toneMapped:false,side:THREE.DoubleSide});
+    for (const [x,z,rotation] of [[0,-9.89,0],[0,9.89,Math.PI],[-9.89,0,Math.PI/2],[9.89,0,-Math.PI/2]]) {
+      const contact = new THREE.Mesh(contactGeometry,contactMaterial);
+      contact.rotation.set(-Math.PI/2,0,rotation);contact.position.set(x,0.005,z);
+      roomDetailGroup.add(contact);
+    }
+
+    // A separate exact 20m floor avoids exposing the room's wall thickness in plan.
+    axonGroup = new THREE.Group();axonGroup.name='axonometric-floor-view';axonGroup.visible=false;scene.add(axonGroup);
+    const planFloor = new THREE.Mesh(new THREE.PlaneGeometry(20,20),new THREE.MeshBasicMaterial({color:0xf7f7f4,side:THREE.DoubleSide,toneMapped:false}));
+    planFloor.name='axonometric-floor';planFloor.rotation.x=-Math.PI/2;axonGroup.add(planFloor);
+    floorGrid = new THREE.GridHelper(20,20,0xbdbdb7,0xbdbdb7);
+    floorGrid.name='one-metre-grid';floorGrid.position.y=0.004;
+    floorGrid.material.transparent=true;floorGrid.material.opacity=0.48;
+    floorGrid.material.depthWrite=false;floorGrid.material.toneMapped=false;
+    axonGroup.add(floorGrid);
+    const planBorder = new THREE.LineLoop(
+      new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(-10,0.006,-10),new THREE.Vector3(10,0.006,-10),
+        new THREE.Vector3(10,0.006,10),new THREE.Vector3(-10,0.006,10)
+      ]),new THREE.LineBasicMaterial({color:0xb4b4ae,transparent:true,opacity:0.6,toneMapped:false})
+    );
+    axonGroup.add(planBorder);
+
     // White materials with gentle lighting retain the depth of the empty room.
     scene.add(new THREE.HemisphereLight(0xffffff,0xf3f3f3,3.8));
     for (const x of [-5,5]) for (const z of [-5,5]) {
@@ -153,7 +232,7 @@ import * as THREE from 'three';
     }
     ready = true;
     surface.setAttribute('aria-busy','false');
-    ui(); resize();
+    ui();
   } catch (error) {
     console.error('White exhibition room:',error);
     showError('The 3D room could not start. Enable WebGL in your browser and reload this page.');
@@ -161,9 +240,34 @@ import * as THREE from 'three';
   }
 
   const canvas = renderer.domElement;
+  // Capture focus before OrbitControls receives the pointer-down event.
+  canvas.addEventListener('pointerdown',() => {if(viewMode==='axonometric')focusView();},true);
+  axonControls = new OrbitControls(axonCamera,canvas);
+  axonControls.enabled=false;axonControls.enableDamping=false;
+  axonControls.minPolarAngle=0.12;axonControls.maxPolarAngle=Math.PI/2-0.10;
+  axonControls.minZoom=0.35;axonControls.maxZoom=12;
+  axonControls.screenSpacePanning=false;
+  axonControls.mouseButtons={LEFT:THREE.MOUSE.ROTATE,MIDDLE:THREE.MOUSE.PAN,RIGHT:THREE.MOUSE.PAN};
+  axonControls.addEventListener('change',requestFrame);
+  function setViewMode(mode) {
+    if(!['room','axonometric'].includes(mode))throw new TypeError('Unknown gallery view.');
+    clearInput();teleport=null;viewMode=mode;
+    const axon=mode==='axonometric';
+    roomMeshes.forEach(mesh=>mesh.visible=!axon);
+    roomDetailGroup.visible=!axon;axonGroup.visible=axon;
+    camera=axon?axonCamera:roomCamera;
+    axonControls.enabled=axon&&active;
+    ui();resize();requestFrame();
+  }
+  function setTwoPoint(value) {
+    twoPoint=!!value;
+    if(twoPoint)pitch=clamp(pitch,-0.8,0.8);
+    ui();requestFrame();
+  }
+  ui();resize();
   canvas.addEventListener('contextmenu',event => event.preventDefault());
   canvas.addEventListener('pointerdown',event => {
-    if (event.button > 2) return;
+    if (viewMode === 'axonometric' || event.button > 2) return;
     event.preventDefault(); focusView(); teleport = null;
     const hit = event.button === 2 ? hitAt(event) : null;
     const pivot = hit?.point.clone() || eye.clone().add(camera.getWorldDirection(new THREE.Vector3()).multiplyScalar(5));
@@ -176,7 +280,7 @@ import * as THREE from 'three';
     const dx = event.clientX-drag.x, dy = event.clientY-drag.y;
     drag.x = event.clientX; drag.y = event.clientY;
     if (drag.button === 0) {
-      yaw -= dx*0.0035; pitch = clamp(pitch-dy*0.0035,-1.45,1.45);
+      yaw -= dx*0.0035; pitch = clamp(pitch-dy*0.0035,twoPoint ? -0.8 : -1.45,twoPoint ? 0.8 : 1.45);
     } else if (drag.button === 1) {
       right.set(Math.cos(yaw),0,-Math.sin(yaw));
       eye.addScaledVector(right,-dx*0.008);
@@ -191,7 +295,7 @@ import * as THREE from 'three';
       constrain(eye);
       camera.position.copy(eye); camera.lookAt(drag.pivot);
       const euler = new THREE.Euler().setFromQuaternion(camera.quaternion,'YXZ');
-      yaw = euler.y; pitch = clamp(euler.x-(fly ? 0 : dy*0.0035),-1.45,1.45);
+      yaw = euler.y; pitch = clamp(euler.x-(fly ? 0 : dy*0.0035),twoPoint ? -0.8 : -1.45,twoPoint ? 0.8 : 1.45);
     }
     requestFrame();
   });
@@ -204,7 +308,7 @@ import * as THREE from 'three';
   canvas.addEventListener('pointercancel',endDrag);
   canvas.addEventListener('lostpointercapture',() => {drag=null;surface.classList.remove('is-dragging');});
   canvas.addEventListener('dblclick',event => {
-    if (event.button !== 0) return;
+    if (viewMode === 'axonometric' || event.button !== 0) return;
     const hit = hitAt(event);
     if (!hit || hit.object.name !== 'floor') return;
     focusView();
@@ -214,7 +318,7 @@ import * as THREE from 'three';
     requestFrame();
   });
   canvas.addEventListener('wheel',event => {
-    if (!active) return;
+    if (viewMode === 'axonometric' || !active) return;
     event.preventDefault(); teleport = null;
     const multiplier = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? host.clientHeight : 1;
     const distance = clamp(event.deltaY*multiplier*0.006,-1.2,1.2);
@@ -228,7 +332,7 @@ import * as THREE from 'three';
       document.exitFullscreen().catch(() => {});
       return;
     }
-    if (!active || document.activeElement !== surface) return;
+    if (!active || document.activeElement !== surface || viewMode === 'axonometric') return;
     if (event.code === 'Escape') {clearInput();teleport=null;return;}
     if (event.code === 'Space') {
       event.preventDefault();
@@ -242,17 +346,19 @@ import * as THREE from 'three';
   document.addEventListener('keyup',event => {
     if (keys.delete(event.code)) requestFrame();
   });
-  surface.addEventListener('focus',() => {active=true;});
-  surface.addEventListener('blur',() => {active=false;clearInput();teleport=null;});
+  surface.addEventListener('focus',() => {active=true;if(axonControls)axonControls.enabled=viewMode==='axonometric';});
+  surface.addEventListener('blur',() => {active=false;axonControls.enabled=false;clearInput();teleport=null;});
   document.addEventListener('pointerdown',event => {
-    if (!surface.contains(event.target)) {active=false;clearInput();teleport=null;surface.blur();}
+    if (!surface.contains(event.target)) {active=false;axonControls.enabled=false;clearInput();teleport=null;surface.blur();}
   },true);
-  window.addEventListener('blur',() => {active=false;clearInput();teleport=null;});
+  window.addEventListener('blur',() => {active=false;axonControls.enabled=false;clearInput();teleport=null;});
   document.addEventListener('visibilitychange',() => {
     if (document.hidden) {clearInput();teleport=null;if(raf)cancelAnimationFrame(raf);raf=0;}
     else requestFrame();
   });
   $('walk-mode').addEventListener('click',() => {fly=!fly;constrain(eye);ui();focusView();requestFrame();});
+  $('walk-two-point').addEventListener('click',() => {setTwoPoint(!twoPoint);focusView();});
+  $('walk-axonometric').addEventListener('click',() => {setViewMode(viewMode==='room'?'axonometric':'room');focusView();});
   $('walk-reset').addEventListener('click',() => {reset();focusView();});
   $('walk-help-toggle').addEventListener('click',() => {
     const open = $('walk-help-panel').hidden;
@@ -278,14 +384,19 @@ import * as THREE from 'three';
     event.preventDefault();ready=false;clearInput();
     showError('The graphics connection was interrupted. Reload this page to reopen the room.');
   });
-  const observer = new ResizeObserver(resize); observer.observe(host);
+  const observer = new ResizeObserver(resize); observer.observe(host);observer.observe($('walk-toolbar'));
   window.addEventListener('resize',resize);
   window.addEventListener('pagehide',event => {
     clearInput(); if(raf)cancelAnimationFrame(raf);raf=0;
     if (!event.persisted) {
       disposed=true;observer.disconnect();
-      roomMeshes.forEach(mesh => mesh.geometry.dispose());
-      new Set(roomMeshes.map(mesh => mesh.material)).forEach(material => material.dispose());
+      axonControls.dispose();
+      const geometries=new Set(),materials=new Set();
+      scene.traverse(object=>{
+        if(object.geometry)geometries.add(object.geometry);
+        if(object.material)for(const material of (Array.isArray(object.material)?object.material:[object.material]))materials.add(material);
+      });
+      geometries.forEach(geometry=>geometry.dispose());materials.forEach(material=>material.dispose());
       renderer.dispose();
     }
   });
@@ -293,18 +404,24 @@ import * as THREE from 'three';
   window.ExhibitionWalk = Object.freeze({
     state:() => ({
       ready,environment:'white-enclosed-gallery',room:{...ROOM,closed:true,wallCount:4,floor:true,ceiling:true},
-      camera:{x:eye.x,y:eye.y,z:eye.z,yaw,pitch},fly,active,fullscreen:document.fullscreenElement===surface,
+      camera:viewMode==='room'?{x:eye.x,y:eye.y,z:eye.z,yaw,pitch}:{x:axonCamera.position.x,y:axonCamera.position.y,z:axonCamera.position.z},
+      viewMode,twoPoint,projection:camera.isOrthographicCamera?'orthographic':'perspective',
+      walkingCamera:{x:eye.x,y:eye.y,z:eye.z,yaw,pitch},fly,active,fullscreen:document.fullscreenElement===surface,
+      axonometric:{zoom:axonCamera.zoom,target:axonControls.target.toArray(),wallsVisible:roomMeshes.filter(mesh=>mesh.name.includes('wall')&&mesh.visible).length,ceilingVisible:roomMeshes.find(mesh=>mesh.name==='ceiling').visible},
+      grid:{visible:axonGroup.visible,size:20,divisions:20,cellSize:1,cells:400,lines:floorGrid.geometry.attributes.position.count/2,opacity:floorGrid.material.opacity},
+      floorJunctions:{visible:roomDetailGroup.visible,seam:true,softContactShading:true},
       walkingBounds:{x:[-LIMIT,LIMIT],z:[-LIMIT,LIMIT],y:[RADIUS,ROOM.height-RADIUS]},
       displayCount:0,modelsLoaded:0,textureCount:0,
       performance:{triangles:renderer.info.render.triangles,drawCalls:renderer.info.render.calls,pixelRatio:renderer.getPixelRatio(),continuousRendering:!!raf,frameCount},
       moving:!!teleport || movingByKeys()
     }),
-    reset,
+    reset,setViewMode,setTwoPoint,
+    gridSegments:()=>Array.from(floorGrid.geometry.attributes.position.array),
     setCamera:value => {
       clearInput();teleport=null;
       if(typeof value.fly==='boolean')fly=value.fly;
       eye.set(value.x??eye.x,value.y??eye.y,value.z??eye.z);constrain(eye);
-      yaw=value.yaw??yaw;pitch=clamp(value.pitch??pitch,-1.45,1.45);
+      yaw=value.yaw??yaw;pitch=clamp(value.pitch??pitch,twoPoint ? -0.8 : -1.45,twoPoint ? 0.8 : 1.45);
       ui();requestFrame();
     },
     projectWorld:points => {
