@@ -2,7 +2,7 @@
 (()=>{
 'use strict';
 const $=id=>document.getElementById(id),dialog=$('exhibition-materials'),source=$('exhibition-source-canvas'),ctx=source.getContext('2d'),cutout=$('exhibition-cutout-canvas');
-let index=null,loading=null,rows=[],page=0,photoId=null,selection=null,photo=null,ticket=0,copied=null;
+let purpose='add',targetLayer=null,index=null,loading=null,rows=[],page=0,photoId=null,selection=null,photo=null,ticket=0,copied=null;
 const rasters=new Map(),escape=v=>String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let objects=new Map();
 function hint(s){$('exhibition-source-hint').textContent=s;}
@@ -77,12 +77,13 @@ async function copyObject(){
  try{if(navigator.clipboard?.write&&window.ClipboardItem){const png=new Promise(resolve=>rasters.get(o.key).toBlob(resolve));await navigator.clipboard.write([new ClipboardItem({'image/png':png})]);}}catch{}
 }
 async function pasteObject(key=selection||copied){
- const o=objects.get(key);if(!o)return;try{await window.ExhibitionStudio.addCutout(o);dialog.close();$('exhibition-canvas').focus({preventScroll:true});}catch(error){hint(error.message);}
+ const o=objects.get(key);if(!o)return;try{if(purpose==='counterpart')await window.ExhibitionStudio.replaceCity(targetLayer,o.key);else await window.ExhibitionStudio.addCutout(o);dialog.close();$('exhibition-canvas').focus({preventScroll:true});}catch(error){hint(error.message);}
 }
-$('exhibition-choose').onclick=async()=>{
- try{await library();$('exhibition-source').hidden=true;$('exhibition-photo-browser').hidden=false;renderPhotos();dialog.showModal();}
+async function open(mode='add'){
+ purpose=mode;targetLayer=window.ExhibitionStudio?.state().selected.at(-1)||null;try{await library();$('exhibition-source').hidden=true;$('exhibition-photo-browser').hidden=false;renderPhotos();dialog.showModal();}
  catch(error){$('exhibition-message').textContent=error.message||'Could not load the archive.';}
-};
+}
+$('exhibition-choose').onclick=()=>window.ExhibitionStudio?.state().sourceSurface==='sculpture'?window.ExhibitionFragments?.open():open();
 $('exhibition-close-materials').onclick=()=>dialog.close();
 $('exhibition-source-back').onclick=()=>{ticket++;source.setAttribute('aria-busy','false');$('exhibition-source').hidden=true;$('exhibition-photo-browser').hidden=false;};
 $('exhibition-photo-query').oninput=()=>{page=0;renderPhotos();};
@@ -96,5 +97,5 @@ document.addEventListener('keydown',e=>{
  if(dialog.open&&mod&&e.key.toLowerCase()==='c'&&selection){e.preventDefault();copyObject();}
  else if(mod&&e.key.toLowerCase()==='v'&&copied&&(dialog.open||$('exhibition-paper').contains(document.activeElement))){e.preventDefault();e.stopImmediatePropagation();pasteObject(copied);}
 },true);
-window.ExhibitionPicker=Object.freeze({load:library,photo:id=>index?.[id]||null,objects:()=>[...objects.values()],object:key=>objects.get(key)||null,openPhoto,select,hit,state:()=>({photoId,selection,ready:source.getAttribute('aria-busy')!=='true',photos:rows.length,cutouts:rasters.size})});
+window.ExhibitionPicker=Object.freeze({open,load:library,photo:id=>index?.[id]||null,objects:()=>[...objects.values()],object:key=>objects.get(key)||null,openPhoto,select,hit,state:()=>({photoId,selection,ready:source.getAttribute('aria-busy')!=='true',photos:rows.length,cutouts:rasters.size})});
 })();

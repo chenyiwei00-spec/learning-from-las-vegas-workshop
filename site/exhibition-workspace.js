@@ -11,7 +11,7 @@ function syncCollagePreview(){
  const studio=window.ExhibitionStudio;
  if(!studio)return;
  studio.renderPreview($('workspace-collage-preview'),'city');studio.renderPreview($('workspace-sculpture-preview'),'sculpture');
- const count=studio.state().layers;
+ const count=studio.state().layers,reverse=studio.state().sourceSurface==='sculpture';$('mini-city').style.order=reverse?'2':'1';$('mini-sculpture').style.order=reverse?'1':'2';$('mini-model').style.order='3';$('mini-city-title').textContent=(reverse?'02':'01')+' / LAS VEGAS';$('mini-sculpture-title').textContent=(reverse?'01':'02')+' / V&A';
  $('workspace-collage-placeholder').hidden=count>0;
  $('workspace-collage-preview').hidden=count===0;$('workspace-sculpture-preview').hidden=count===0;$('workspace-sculpture-placeholder').hidden=count>0;$('workspace-sculpture-caption').textContent=count?count+' LINKED V&A FRAGMENTS':'CITY / SCULPTURE COUNTERPARTS';
  $('workspace-collage-caption').textContent=count?count+' OBJECT'+(count===1?'':'S')+' / COMPOSITION':'OBJECT COMPOSITION';
@@ -70,7 +70,7 @@ $('workspace-close').addEventListener('click',closePanel);
 panel.addEventListener('pointerdown',suspendScene,true);
 panel.addEventListener('wheel',event=>event.stopPropagation(),{passive:true});
 document.addEventListener('keydown',event=>{
- if(event.key==='Escape'&&currentPanel&&!document.fullscreenElement&&!$('exhibition-materials').open&&!$('saved-model-edit').open){closePanel();event.preventDefault();}
+ if(event.key==='Escape'&&currentPanel&&!document.fullscreenElement&&!$('exhibition-materials').open&&!$('saved-model-edit').open&&!$('exhibition-va-picker').open){closePanel();event.preventDefault();}
 });
 $('generate-model').addEventListener('click',()=>openPanel('model'));
 
@@ -84,5 +84,8 @@ viewer.addEventListener('camera-change',event=>{
 });
 new MutationObserver(syncModelPreview).observe($('model-panel'),{subtree:true,childList:true,attributes:true,attributeFilter:['src','hidden','aria-busy']});
 surface.dataset.workspaceOpen='none';queueCollagePreview();syncModelPreview();
+const MINI_KEY='learning-vegas-mini-panels-v1';
+try{const saved=JSON.parse(localStorage.getItem(MINI_KEY)||'null');if(saved)for(const detail of document.querySelectorAll('[data-mini]'))if(typeof saved[detail.dataset.mini]==='boolean')detail.open=saved[detail.dataset.mini];}catch{}
+for(const detail of document.querySelectorAll('[data-mini]'))detail.addEventListener('toggle',()=>{try{localStorage.setItem(MINI_KEY,JSON.stringify(Object.fromEntries([...document.querySelectorAll('[data-mini]')].map(d=>[d.dataset.mini,d.open]))));}catch{}});
 window.ExhibitionWorkspace=Object.freeze({openPanel,closePanel,state:()=>({panel:currentPanel,collagePreviewLayers:window.ExhibitionStudio?.state().layers||0,modelPreview:!!modelPreviewSrc})});
 })();

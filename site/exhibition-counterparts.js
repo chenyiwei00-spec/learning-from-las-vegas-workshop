@@ -34,7 +34,16 @@ async function create(){
  function drawLayer(g,l){const image=raster(l);if(!image)return;const s=Math.min(l.w/image.width,l.h/image.height),w=image.width*s,h=image.height*s;g.save();g.translate(l.x,l.y);g.rotate((l.rotation||0)*Math.PI/180);g.scale(l.flipX?-1:1,l.flipY?-1:1);g.drawImage(image,-w/2,-h/2,w,h);g.restore();}
  function drawDocument(g,doc){g.clearRect(0,0,doc.width,doc.height);for(const l of doc.layers)drawLayer(g,l);}
  function hit(layer,q){const c=raster(layer);if(!c)return false;const s=Math.min(layer.w/c.width,layer.h/c.height),u=q.x/(c.width*s)+.5,v=q.y/(c.height*s)+.5;return u>=0&&v>=0&&u<1&&v<1&&c.getContext('2d').getImageData(Math.floor(u*c.width),Math.floor(v*c.height),1,1).data[3]>32;}
- return Object.freeze({parts,part:id=>byId.get(id)||null,prepare,load,raster,drawLayer,drawDocument,hit,records:layers=>[...new Set(layers.map(l=>l.vaPartId))].map(id=>byId.get(id)).filter(Boolean),state:()=>({available:parts.length,loaded:images.size})});
+ function recommendCity(partId,objects,layers=[],excludeId=null,excluded=new Set()){
+  const part=byId.get(partId);if(!part)throw Error('Choose a V&A fragment first.');const layer=layers.find(l=>l.id===excludeId),m=metrics.get(partId)||part.shape||{aspectRatio:part.width/part.height,fillRatio:.6},aspect=layer?.vaRotation===90?1/m.aspectRatio:m.aspectRatio;
+  const usage=new Map();for(const l of layers)if(l.id!==excludeId)usage.set(l.sourceId,(usage.get(l.sourceId)||0)+1);
+  const eligible=objects.filter(o=>!excluded.has(o.key)&&o.bbox&&(o.bbox[2]-o.bbox[0])*(o.bbox[3]-o.bbox[1])>=5000),photographed=eligible.filter(o=>/^\/collage-objects\/(architecture|advertisement)\//.test(o.url));let best=null;
+  for(const o of photographed.length>50?photographed:eligible){const w=o.bbox[2]-o.bbox[0],h=o.bbox[3]-o.bbox[1],a=w/h,fill=Math.min(1,(o.pixels||w*h*.6)/(w*h)),compact=['head','hand','foot'].includes(part.kind),long=['arm','leg','neck'].includes(part.kind),penalty=(compact?(o.kind==='signs'?0:.2):part.kind==='torso'?(o.kind==='buildings'?0:.14):0)+(long&&/tower|pole|bottle|cowboy|spire|column|obelisk/i.test(o.name)?-.18:0);
+   for(const turn of [0,90]){const fit=turn?1/a:a,score=Math.abs(Math.log(fit/aspect))*.9+Math.abs(fill-m.fillRatio)*.35+penalty+(turn?.07:0)+(usage.get(o.key)||0)*.28+Math.max(0,Math.log(360/Math.sqrt(w*h)))*.22-(o.primary?.04:0);if(!best||score<best.score)best={key:o.key,cityRotation:turn,score};}
+  }
+  if(!best)throw Error('No Las Vegas counterpart is available.');return best;
+ }
+ return Object.freeze({parts,recommendCity,part:id=>byId.get(id)||null,prepare,load,raster,drawLayer,drawDocument,hit,records:layers=>[...new Set(layers.map(l=>l.vaPartId))].map(id=>byId.get(id)).filter(Boolean),state:()=>({available:parts.length,loaded:images.size})});
 }
 window.ExhibitionCounterparts=Object.freeze({create});
 })();

@@ -12,7 +12,7 @@ const random=()=>crypto.getRandomValues(new Uint32Array(1))[0]/4294967296;
 function setPhase(value,text){phase=value;status.textContent=text;render();}
 function render(){
  const studio=window.ExhibitionStudio,state=studio?.state().model;
- runButton.disabled=!studio||busy||!!state?.busy;runButton.textContent=busy?'Working...':plan?'Compose another':'Compose + generate';runButton.setAttribute('aria-busy',String(busy));
+ runButton.disabled=!studio||busy||!!state?.busy;runButton.textContent=busy?'...':'+';runButton.title=status.textContent||'Automatically compose and generate';$('exhibition-agent-keyword').textContent=phase==='error'?'ERROR':phase==='generating'?'BUILD':phase==='matching'?'MATCH':phase==='selecting'?'SELECT':phase==='ready'?'READY':phase==='collage-ready'?'EDIT':'AGENT';runButton.setAttribute('aria-busy',String(busy));
  $('exhibition-agent-edit').hidden=!plan;$('exhibition-agent-edit').disabled=busy;
  $('exhibition-agent-previous').hidden=!previous;$('exhibition-agent-previous').disabled=busy;
 }
@@ -27,7 +27,7 @@ function eligible(o,photo){
  return w>=65&&h>=65&&(o.pixels||w*h*.4)>=2400&&x0>=0&&y0>=0&&x1<=photo.width+1&&y1<=photo.height+1;
 }
 async function makePlan(excluded=new Set()){
- await ExhibitionPicker.load();const items=new Map(ARCHIVE_DATA.items.filter(i=>i.type==='image'&&i.archiveKey==='las-vegas').map(i=>[i.id,i]));
+ await ExhibitionPicker.load();if(ExhibitionStudio.state().sourceSurface==='sculpture')return makeSculpturePlan(excluded);const items=new Map(ARCHIVE_DATA.items.filter(i=>i.type==='image'&&i.archiveKey==='las-vegas').map(i=>[i.id,i]));
  const candidates=ExhibitionPicker.objects().filter(o=>items.has(o.sourceId)&&!excluded.has(o.key)&&eligible(o,ExhibitionPicker.photo(o.sourceId))).map(o=>{
   const item=items.get(o.sourceId),w=o.bbox[2]-o.bbox[0],h=o.bbox[3]-o.bbox[1],fill=(o.pixels||w*h*.4)/(w*h);
   return{o,item,ratio:w/h,quality:Math.min(3,Math.log2(Math.max(1,(o.pixels||2400)/2400)))+(o.primary?1.1:0)+Math.min(1,fill*2),text:[o.name,item.title,item.description,...(item.tags||[])].join(' ')};
@@ -51,7 +51,12 @@ async function makePlan(excluded=new Set()){
   selected.push({...slot,key:c.o.key,sourceId:c.o.sourceId,name:c.o.name,rotation:slot.role==='base'?0:Math.round((random()-.5)*12),flipX:false});usedPhotos.add(c.o.sourceId);usedNames.add(c.o.name.toLowerCase());
  }
  if(selected.length<3)throw Error('Choose a collection with more distinct cutout photographs.');
- return {id:crypto.randomUUID(),title:theme.title,theme:theme.id,themeIndex:chosen.i,planner:'archive-tags-and-shape-v1',createdAt:Date.now(),pieces:selected};
+ return {id:crypto.randomUUID(),title:theme.title,theme:theme.id,themeIndex:chosen.i,sourceSurface:'city',planner:'archive-tags-and-shape-v1',createdAt:Date.now(),pieces:selected};
+}
+function makeSculpturePlan(excluded){
+ const parts=ExhibitionStudio.sculptureParts(),used=new Set(),pieces=[],slots=[{kind:'torso',role:'base',x:500,y:830,boxW:560,boxH:650},{kind:'head',role:'crown',x:500,y:445,boxW:290,boxH:300},{kind:'arm',role:'accent',x:330,y:780,boxW:280,boxH:630},{kind:'leg',role:'sign',x:555,y:1110,boxW:310,boxH:510}];
+ for(const slot of slots){const candidates=parts.filter(p=>p.kind===slot.kind&&!used.has(p.id)).map(p=>({p,rank:(recent.has(p.id)?-5:0)+Math.min(2,Math.log2(Math.max(1,(p.maskPixels||5000)/5000)))+random()*4})).sort((a,b)=>b.rank-a.rank);const p=candidates[0]?.p;if(!p)throw Error('Not enough V&A fragments for this composition.');const match=ExhibitionStudio.recommendCity(p.id,null,new Set([...excluded,...pieces.map(p=>p.key)]));pieces.push({...slot,key:match.key,cityRotation:match.cityRotation,partId:p.id,vaPartId:p.id,name:p.name,rotation:Math.round((random()-.5)*8),flipX:false});used.add(p.id);}
+ return {id:crypto.randomUUID(),title:'Borrowed body',theme:'sculpture-to-city',themeIndex:-1,sourceSurface:'sculpture',planner:'archive-tags-and-shape-v1',createdAt:Date.now(),pieces};
 }
 async function waitForPreview(){
  const until=Date.now()+60000;
@@ -70,15 +75,15 @@ async function run(){
    try{const old=await ExhibitionStudio.applyAgentPlan(proposed);previous=old;plan=proposed;applied=true;plan=ExhibitionStudio.getDocument().agentPlan;break;}
    catch(e){proposed.pieces.forEach(p=>excluded.add(p.key));if(attempt===2)throw e;setPhase('selecting','Trying other available cutouts...');}
   }
-  lastTheme=plan.themeIndex;plan.pieces.forEach(p=>recent.add(p.key));while(recent.size>24)recent.delete(recent.values().next().value);render();
+  lastTheme=plan.themeIndex;plan.pieces.forEach(p=>{recent.add(p.key);if(p.partId)recent.add(p.partId);});while(recent.size>24)recent.delete(recent.values().next().value);render();
   if(!ExhibitionStudio.state().model.ready){setPhase('collage-ready',plan.title+' is ready to edit. 3D generation is unavailable on this computer.');return;}
-  setPhase('generating','Generating a V&A sculpture from '+plan.title.toLowerCase()+'.');await ExhibitionStudio.generate();await waitForPreview();
+  setPhase('generating','Generating '+(ExhibitionStudio.state().sourceSurface==='sculpture'?'a Las Vegas model':'a V&A sculpture')+' from '+plan.title.toLowerCase()+'.');await ExhibitionStudio.generate();await waitForPreview();
   setPhase('ready',plan.title+' sculpture is ready. Drag the model into the exhibition, or edit its collage.');
  }catch(e){error=e.message;setPhase('error',applied?'The collage is kept. '+error:error);}
  finally{busy=false;lock(false);render();}
 }
 runButton.onclick=run;
-$('exhibition-agent-edit').onclick=()=>{if(busy)return;ExhibitionWorkspace.openPanel('collage');$('exhibition-message').textContent='Every object is editable. Adjust the collage, then click Generate updated 3D.';};
+$('exhibition-agent-edit').onclick=()=>{if(busy)return;ExhibitionWorkspace.openPanel(ExhibitionStudio.state().sourceSurface==='sculpture'?'sculpture':'collage');$('exhibition-message').textContent='Every object is editable. Adjust the collage, then click Generate updated 3D.';};
 $('exhibition-agent-previous').onclick=async()=>{
  if(busy||!previous)return;busy=true;lock(true);setPhase('restoring','Restoring your previous collage...');
  try{const old=previous;await ExhibitionBrowse.close();await ExhibitionStudio.restoreDraft(old);previous=null;plan=old.document.agentPlan||null;setPhase('idle','Previous collage restored.');ExhibitionWorkspace.openPanel('collage');}
