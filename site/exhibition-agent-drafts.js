@@ -2,8 +2,7 @@
 (()=>{
 'use strict';
 const $=id=>document.getElementById(id),urls=new Map(),selected=new Set();
-let epoch=0,rows=[],anchor=null,page=0,busy=false,stop=false,completed=0,failures=[];
-const PAGE=4;
+let epoch=0,rows=[],anchor=null,busy=false,stop=false,completed=0,failures=[];
 function db(){return new Promise((resolve,reject)=>{const r=indexedDB.open('learning-vegas-agent-collages-v1',1);r.onupgradeneeded=()=>r.result.createObjectStore('drafts',{keyPath:'id'});r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});}
 async function transact(mode,action){const d=await db();try{return await new Promise((resolve,reject)=>{const tx=d.transaction('drafts',mode),r=action(tx.objectStore('drafts'));tx.oncomplete=()=>resolve(r?.result);tx.onerror=()=>reject(tx.error);tx.onabort=()=>reject(tx.error||Error('Storage was interrupted.'));});}finally{d.close();}}
 const list=async()=>((await transact('readonly',s=>s.getAll()))||[]).sort((a,b)=>b.createdAt-a.createdAt);
@@ -32,11 +31,7 @@ function thumbnail(row,compact){
  return button;
 }
 function renderSmall(){
- const count=Math.max(1,Math.ceil(rows.length/PAGE));page=Math.min(page,count-1);
- const grid=$('agent-draft-grid');grid.replaceChildren(...rows.slice(page*PAGE,(page+1)*PAGE).map(r=>thumbnail(r,true)));
- $('agent-draft-page').textContent=(page+1)+' / '+count;
- $('agent-draft-prev').disabled=busy||page===0;$('agent-draft-next').disabled=busy||page===count-1;
- updateSelection();
+ const grid=$('agent-draft-grid');grid.replaceChildren(...rows.map(r=>thumbnail(r,false)));updateSelection();
 }
 async function render(){
  const ticket=++epoch,next=await list();if(ticket!==epoch)return;
@@ -48,11 +43,11 @@ async function render(){
 }
 async function save(number=1){const document=ExhibitionStudio.getDocument(),preview=await ExhibitionStudio.exportAgentPreview(),row={id:crypto.randomUUID(),title:(document.modelTarget==='sculpture'?'Sculpture':'City')+' / '+new Date().toLocaleTimeString('en-GB')+' / '+number,createdAt:Date.now(),document,preview};await transact('readwrite',s=>s.put(row));await render();return row;}
 async function restoreRow(row){await ExhibitionBrowse.close();await ExhibitionStudio.prepareAgent();ExhibitionStudio.clear();await ExhibitionStudio.restore(row.document);}
-async function load(id){if(busy||ExhibitionAgent.state().busy||ExhibitionStudio.state().model.busy)return;const row=await transact('readonly',s=>s.get(id));if(!row)return;await restoreRow(row);$('agent-draft-toggle').open=false;ExhibitionWorkspace.openPanel(row.document.sourceSurface==='sculpture'?'sculpture':'collage');$('exhibition-message').textContent='Edit this collage, then click Generate 3D when ready.';}
+async function load(id){if(busy||ExhibitionAgent.state().busy||ExhibitionStudio.state().model.busy)return;const row=await transact('readonly',s=>s.get(id));if(!row)return;await restoreRow(row);ExhibitionWorkspace.openPanel(row.document.sourceSurface==='sculpture'?'sculpture':'collage');$('exhibition-message').textContent='Edit this collage, then click Generate 3D when ready.';}
 function report(e){$('agent-draft-status').textContent=e.message;$('workspace-collage-status').textContent=e.message;}
 function signal(){document.body.dataset.collageQueueBusy=String(busy);window.dispatchEvent(new Event('exhibition-draft-queue-change'));updateSelection();}
 function lock(value){
- if(value){lock.previous=[];for(const el of document.querySelectorAll('#workspace-collage-pane,#model-panel,#saved-model-grid,#workspace-library-grid,.workspace-tabs,.workspace-generate-actions')){lock.previous.push([el,el.inert]);el.inert=true;}}
+ if(value){lock.previous=[];for(const el of document.querySelectorAll('#workspace-collage-pane,#model-panel,#saved-model-grid,#workspace-library-grid,.workspace-tabs,.workspace-generate-actions:not(#agent-draft-footer)')){lock.previous.push([el,el.inert]);el.inert=true;}}
  else{for(const [el,old]of lock.previous||[])el.inert=old;lock.previous=[];}
 }
 async function waitForPreview(jobId){
@@ -66,7 +61,7 @@ async function generateSelected(){
  if(!ExhibitionStudio.state().model.ready){report(Error('The local 3D generator is unavailable. Your collages remain saved.'));return;}
  busy=true;stop=false;completed=0;failures=[];signal();lock(true);
  try{
-  ExhibitionWorkspace.closePanel();
+  ExhibitionWorkspace.openPanel('drafts');
   for(const row of queue){
    if(stop)break;
    $('agent-draft-status').textContent=completed+' / '+queue.length+' models / '+row.title;
@@ -85,7 +80,7 @@ async function generateSelected(){
 }
 $('agent-draft-generate').onclick=generateSelected;
 $('agent-draft-stop').onclick=()=>{stop=true;$('agent-draft-status').textContent='Finishing and saving the current model, then stopping...';};
-$('agent-draft-prev').onclick=()=>{page--;renderSmall();};$('agent-draft-next').onclick=()=>{page++;renderSmall();};
+$('agent-draft-toggle').onclick=()=>{if(ExhibitionWorkspace.state().panel==='drafts')ExhibitionWorkspace.closePanel();else ExhibitionWorkspace.openPanel('drafts');};
 window.addEventListener('exhibition-draft-queue-change',updateSelection);window.addEventListener('exhibition-studio-ready',updateSelection);
 new MutationObserver(updateSelection).observe($('model-frame'),{attributes:true,attributeFilter:['aria-busy']});
 window.ExhibitionAgentDrafts=Object.freeze({list,save,load,render,generateSelected,state:()=>({busy,completed,failures:structuredClone(failures),selected:[...selected],count:rows.length,stopRequested:stop})});

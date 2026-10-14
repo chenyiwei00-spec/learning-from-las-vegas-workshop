@@ -20,17 +20,18 @@ export function createExhibitionPlacement({scene,canvas,getCamera,getRoomMeshes,
  const handleLayer=document.createElement('div');handleLayer.className='exhibition-scale-handles';canvas.parentElement.append(handleLayer);
  const handles=Array.from({length:8},(_,i)=>{const b=document.createElement('button');b.className='exhibition-scale-handle';b.type='button';b.dataset.corner=i;b.setAttribute('aria-label','Drag to scale selected model');b.title='Drag to scale';b.hidden=true;handleLayer.append(b);return b;});
  const rotateHandle=document.createElement('button');rotateHandle.className='exhibition-rotate-handle';rotateHandle.type='button';rotateHandle.textContent='\u21bb';rotateHandle.title='Drag to rotate in 90 degree steps';rotateHandle.setAttribute('aria-label','Drag to rotate selected model');rotateHandle.hidden=true;handleLayer.append(rotateHandle);
+ const moveHandle=document.createElement('button');moveHandle.className='exhibition-move-handle';moveHandle.type='button';moveHandle.textContent='\u2194';moveHandle.title='Drag to move selected model';moveHandle.setAttribute('aria-label','Drag to move selected model');moveHandle.hidden=true;handleLayer.append(moveHandle);
  function updateCells(){
   cellCounts.clear();for(const e of entries.values())for(let row=e.record.row;row<e.record.row+e.record.span;row++)for(let col=e.record.col;col<e.record.col+e.record.span;col++){const k=row*20+col;cellCounts.set(k,(cellCounts.get(k)||0)+1);}
   let i=0;for(const k of cellCounts.keys()){cellMatrix.compose(new THREE.Vector3(worldCell(k%20),.002,worldCell(Math.floor(k/20))),cellRotation,new THREE.Vector3(1,1,1));cells.setMatrixAt(i++,cellMatrix);}cells.count=i;cells.instanceMatrix.needsUpdate=true;invalidate();
  }
  function updateHandles(){
   const e=entries.get(selected),r=canvas.getBoundingClientRect(),parent=handleLayer.getBoundingClientRect();
-  if(!group.visible||!e||canvas.closest('[hidden]')||$('walk-surface').dataset.modelBrowse==='true'){handles.forEach(b=>b.hidden=true);rotateHandle.hidden=true;return;}
+  if(!group.visible||!e||canvas.closest('[hidden]')||$('walk-surface').dataset.modelBrowse==='true'){handles.forEach(b=>b.hidden=true);rotateHandle.hidden=true;moveHandle.hidden=true;return;}
   scene.updateMatrixWorld(true);const box=new THREE.Box3().setFromObject(e.object);
   handles.forEach((b,i)=>{const v=new THREE.Vector3(i&1?box.max.x:box.min.x,i&2?box.max.y:box.min.y,i&4?box.max.z:box.min.z).project(getCamera());const x=r.left+(v.x+1)*r.width/2,y=r.top+(1-v.y)*r.height/2;b.hidden=v.z< -1||v.z>1||x<r.left||x>r.right||y<r.top||y>r.bottom;b.style.left=(x-parent.left)+'px';b.style.top=(y-parent.top)+'px';});
-  const visible=handles.filter(b=>!b.hidden).map(b=>({x:parseFloat(b.style.left),y:parseFloat(b.style.top)}));rotateHandle.hidden=!visible.length;
-  if(visible.length){const x=(Math.min(...visible.map(p=>p.x))+Math.max(...visible.map(p=>p.x)))/2,y=Math.max(16,Math.min(...visible.map(p=>p.y))-26);rotateHandle.style.left=x+'px';rotateHandle.style.top=y+'px';}
+  const visible=handles.filter(b=>!b.hidden).map(b=>({x:parseFloat(b.style.left),y:parseFloat(b.style.top)}));rotateHandle.hidden=!visible.length;moveHandle.hidden=!visible.length;
+  if(visible.length){const x=(Math.min(...visible.map(p=>p.x))+Math.max(...visible.map(p=>p.x)))/2,y=Math.max(16,Math.min(...visible.map(p=>p.y))-26);rotateHandle.style.left=x+'px';rotateHandle.style.top=y+'px';moveHandle.style.left=x+'px';moveHandle.style.top=Math.min(r.height-16,Math.max(...visible.map(p=>p.y))+26)+'px';}
  }
  const snapAngle=a=>(((Math.round(a/(Math.PI/2))%4+4)%4)||4)*Math.PI/2;
  const notice=s=>{$('exhibition-placement-status').textContent=s;};
@@ -158,7 +159,7 @@ export function createExhibitionPlacement({scene,canvas,getCamera,getRoomMeshes,
   if(event.button!==0)return;
   const id=pick(event);
   if(moving&&selected&&!id){event.preventDefault();event.stopImmediatePropagation();const cell=hover(event.clientX,event.clientY,selected);if(move(selected,cell))stopHover();return;}
-  if(!id)return;
+  if(!id){if(selected){select(null);stopHover();notice('');}return;}
   event.preventDefault();event.stopImmediatePropagation();suspend();select(id);drag={id,pointerId:event.pointerId,x:event.clientX,y:event.clientY,started:false};canvas.setPointerCapture(event.pointerId);
  },true);
  canvas.addEventListener('pointermove',event=>{
@@ -169,8 +170,15 @@ export function createExhibitionPlacement({scene,canvas,getCamera,getRoomMeshes,
  function end(event){
   if(!drag||drag.pointerId!==event.pointerId)return;event.preventDefault();event.stopImmediatePropagation();
   if(drag.started&&event.type!=='pointercancel'){const cell=cellAt(event.clientX,event.clientY,drag.id);if(!move(drag.id,cell))notice('Choose a floor cell. The model stays in its previous position.');}
-  try{canvas.releasePointerCapture(event.pointerId);}catch{}drag=null;hideGhost();stopHover();
+  try{(drag.handle?moveHandle:canvas).releasePointerCapture(event.pointerId);}catch{}drag=null;hideGhost();stopHover();
  }
+ moveHandle.addEventListener('pointerdown',event=>{if(event.button!==0||!selected)return;event.preventDefault();event.stopPropagation();suspend();drag={id:selected,pointerId:event.pointerId,x:event.clientX,y:event.clientY,started:false,handle:true};moveHandle.setPointerCapture(event.pointerId);});
+ moveHandle.addEventListener('pointermove',event=>{if(!drag?.handle||drag.pointerId!==event.pointerId)return;event.preventDefault();event.stopPropagation();if(!drag.started&&Math.hypot(event.clientX-drag.x,event.clientY-drag.y)<6)return;drag.started=true;showGhost(event,entries.get(drag.id));});
+ moveHandle.addEventListener('pointerup',end);moveHandle.addEventListener('pointercancel',end);
+ moveHandle.addEventListener('lostpointercapture',()=>{if(drag?.handle){drag=null;hideGhost();stopHover();}});
+ document.addEventListener('pointerdown',event=>{if(selected&&event.target!==canvas&&!handleLayer.contains(event.target)){select(null);stopHover();notice('');}},true);
+ function removeSelected(){const e=entries.get(selected);if(!e)return;scaleDrag=null;rotateDrag=null;if(drag){try{(drag.handle?moveHandle:canvas).releasePointerCapture(drag.pointerId);}catch{}drag=null;}hideGhost();group.remove(e.object);entries.delete(selected);updateCells();select(null);prune();save();notice('Model removed from the room.');}
+ document.addEventListener('keydown',event=>{const surface=$('walk-surface'),target=document.activeElement;if(event.key!=='Delete'||!selected||surface.dataset.immersive!=='true'||surface.dataset.modelBrowse==='true'||(surface.dataset.workspaceOpen&&surface.dataset.workspaceOpen!=='none')||document.querySelector('dialog[open]')||target?.closest('input,textarea,select,[contenteditable=true]'))return;if(target!==document.body&&!surface.contains(target))return;event.preventDefault();event.stopImmediatePropagation();removeSelected();},true);
  canvas.addEventListener('dblclick',event=>{const id=pick(event);if(!id)return;event.preventDefault();event.stopImmediatePropagation();suspend();select(id);openModel(id);},true);
  for(const button of handles){button.addEventListener('pointerdown',e=>{if(e.button!==0||!selected)return;e.preventDefault();e.stopPropagation();suspend();const entry=entries.get(selected),box=new THREE.Box3().setFromObject(entry.object),c=box.getCenter(new THREE.Vector3()).project(getCamera()),r=canvas.getBoundingClientRect(),cx=r.left+(c.x+1)*r.width/2,cy=r.top+(1-c.y)*r.height/2;scaleDrag={id:selected,pointerId:e.pointerId,cx,cy,distance:Math.max(20,Math.hypot(e.clientX-cx,e.clientY-cy)),units:entry.record.span*(entry.record.scale||1)};button.setPointerCapture(e.pointerId);});
   button.addEventListener('keydown',e=>{if(e.key==='ArrowUp'||e.key==='ArrowRight'){e.preventDefault();resize(selected,Math.min(3,entries.get(selected).record.span+1));}if(e.key==='ArrowDown'||e.key==='ArrowLeft'){e.preventDefault();resize(selected,Math.max(1,entries.get(selected).record.span-1));}});
@@ -187,7 +195,7 @@ export function createExhibitionPlacement({scene,canvas,getCamera,getRoomMeshes,
  $('exhibition-move-model').onclick=()=>{moving=!moving;suspend();$('exhibition-move-model').setAttribute('aria-pressed',String(moving));if(!moving)stopHover();else notice('Click a floor cell, or drag the selected model.');};
  $('exhibition-turn-model').onclick=()=>rotate(selected,(entries.get(selected)?.record.rotation||0)+Math.PI/2);
  $('exhibition-model-angle').onchange=e=>rotate(selected,Number(e.target.value)*Math.PI/180);
- $('exhibition-remove-model').onclick=()=>{const e=entries.get(selected);if(!e)return;group.remove(e.object);entries.delete(selected);updateCells();select(null);prune();save();notice('Model removed from the room.');};
+ $('exhibition-remove-model').onclick=removeSelected;
   $('exhibition-model-smaller').onclick=()=>resize(selected,(entries.get(selected)?.record.span||1)-1);
  $('exhibition-model-larger').onclick=()=>resize(selected,(entries.get(selected)?.record.span||1)+1);
  $('exhibition-open-model').onclick=()=>openModel(selected);

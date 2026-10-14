@@ -402,3 +402,22 @@ body[data-collage-queue-busy=true] .workspace-preview-card{pointer-events:none}
 @media(max-width:760px){.workspace-previews{--mini-size:124px}.exhibition-space-card .space-secondary-actions{width:102px}.agent-draft-popover{right:calc(100% + 6px)}}
 
 .exhibition-agent-card .agent-draft-actions .primary-link{width:auto;height:auto;min-height:28px;padding:7px 10px;font:9px/1.4 Arial,sans-serif;white-space:nowrap}
+
+/* Native fullscreen supplies its own exit control: avoid a second close icon. */
+.walk-surface:fullscreen .walk-exit-bar{display:none!important}
+#exhibition-placement-tools{display:none!important}
+#exhibition-placement-status{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+.exhibition-agents>summary{height:30px;justify-content:space-between;padding:9px 10px;border:1px solid var(--exhibition-line);background:#fff;font:8px/1.5 Arial,sans-serif;letter-spacing:.6px}
+.exhibition-agents:not([open]) .mini-chevron{transform:rotate(-90deg)}
+.agent-heading>button.agent-draft-toggle{width:18px;height:26px;min-height:0;padding:0;font:8px/1.5 Arial,sans-serif;color:#6b747d;border:0;background:transparent}
+.agent-heading>button.agent-draft-toggle[aria-expanded=true]{background:var(--exhibition-grey)}
+.draft-library-heading{display:flex;justify-content:space-between;align-items:center;font:9px/1.5 Arial,sans-serif;letter-spacing:.7px;color:#6b747d;margin-bottom:14px}
+.workspace-drafts-pane .agent-draft-grid{height:auto;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:none;gap:12px;padding:0;background:transparent}
+.workspace-drafts-pane .agent-draft-grid .agent-draft-item{padding:0;min-width:0;border:1px solid var(--exhibition-line);background:var(--exhibition-grey)}
+.workspace-drafts-pane .agent-draft-grid img{height:auto;width:100%;aspect-ratio:3/4;object-fit:contain}
+.workspace-drafts-pane .agent-draft-grid .agent-draft-item.is-selected{border:2px solid #687f96;background:#e4edf5}
+.workspace-drafts-pane .agent-draft-grid .agent-draft-item span{font:9px/1.5 Arial,sans-serif;padding:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#agent-draft-footer #agent-draft-status{flex-basis:100%;margin:0;max-height:40px}
+.exhibition-move-handle{position:absolute;transform:translate(-50%,-50%);width:24px;height:24px;min-height:0;padding:0;border:1px solid #535f68;border-radius:50%;background:#fff;color:#535f68;font:16px/1 Arial,sans-serif;pointer-events:auto;cursor:move;touch-action:none}
+.exhibition-move-handle:active{background:#e4edf5}
+@media(max-width:480px){.workspace-drafts-pane .agent-draft-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}}
