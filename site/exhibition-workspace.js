@@ -54,7 +54,7 @@ function openPanel(kind){
  });
 }
 function closePanel(){
- const previous=currentPanel;panel.hidden=true;$('workspace-shade').hidden=true;currentPanel=null;surface.dataset.workspaceOpen='none';
+ window.ExhibitionMedia?.stop();const previous=currentPanel;panel.hidden=true;$('workspace-shade').hidden=true;currentPanel=null;surface.dataset.workspaceOpen='none';
  $('open-collage-preview').setAttribute('aria-expanded','false');$('open-model-preview').setAttribute('aria-expanded','false');
  queueCollagePreview();syncModelPreview();
  if(previous)$(previous==='collage'?'open-collage-preview':'open-model-preview').focus({preventScroll:true});

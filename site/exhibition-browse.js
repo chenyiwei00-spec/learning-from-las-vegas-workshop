@@ -31,7 +31,7 @@ function open(){
 }
 function dockPanel(resume=false){
  if(!active)return;
- active=false;browser.hidden=true;surface.dataset.modelBrowse='false';dock.append(panel);
+ window.ExhibitionMedia?.stop();active=false;browser.hidden=true;surface.dataset.modelBrowse='false';dock.append(panel);
  $('walk-canvas-host').hidden=false;
  if(resume)window.ExhibitionStudio?.returnToWork();
  window.dispatchEvent(new Event('resize'));
@@ -39,7 +39,7 @@ function dockPanel(resume=false){
 $('exhibition-browser-back').onclick=()=>dockPanel(true);
 window.addEventListener('saved-sculpture-open',open);
 window.addEventListener('exhibition-model-open',e=>{
- // A plain click opens the model; dragging continues to edit the layout.
+ // A double click opens the model; dragging continues to edit the layout.
  window.dispatchEvent(new CustomEvent('saved-sculpture-open',{detail:{id:e.detail.id}}));
 });
 document.addEventListener('keydown',e=>{

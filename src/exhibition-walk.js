@@ -121,7 +121,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
       constrain(eye);
     }
     orient();
-    renderer.render(scene,camera);
+    placement.updateHandles();renderer.render(scene,camera);
     frameCount++;
     ui();
     if (movingByKeys() || teleport) requestFrame();
@@ -264,7 +264,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
     const axon=mode==='axonometric';
     roomMeshes.forEach(mesh=>mesh.visible=!axon);
     roomDetailGroup.visible=!axon;axonGroup.visible=axon;
-    camera=axon?axonCamera:roomCamera;
+    camera=axon?axonCamera:roomCamera;placement.setViewMode(mode);
     axonControls.enabled=axon&&active;
     ui();resize();requestFrame();
   }

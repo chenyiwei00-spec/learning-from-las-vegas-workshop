@@ -55,7 +55,7 @@ function cameraView(viewer){
 async function overwrite(id,viewer,metadata={}){
  const old=await get(id);if(!old)throw Error('This saved model was removed.');
  const camera=cameraView(viewer),preview=await modelPreview(viewer,old.preview),db=await database();let result;
- await new Promise((resolve,reject)=>{const tx=db.transaction(STORE,'readwrite'),store=tx.objectStore(STORE),r=store.get(id);r.onsuccess=()=>{const entry=r.result;if(!entry){tx.abort();return;}if(metadata.title?.trim())entry.title=metadata.title.trim().slice(0,120);if(metadata.group!==undefined)entry.group=String(metadata.group).trim().slice(0,80);entry.camera=camera;entry.preview=preview;entry.updatedAt=Date.now();store.put(entry);result=entry;};tx.oncomplete=resolve;tx.onerror=tx.onabort=()=>reject(tx.error||Error('The saved model could not be updated.'));});
+ await new Promise((resolve,reject)=>{const tx=db.transaction(STORE,'readwrite'),store=tx.objectStore(STORE),r=store.get(id);r.onsuccess=()=>{const entry=r.result;if(!entry){tx.abort();return;}if(metadata.title?.trim())entry.title=metadata.title.trim().slice(0,120);if(metadata.group!==undefined)entry.group=String(metadata.group).trim().slice(0,80);if(metadata.linkedMedia)entry.record.linkedMedia=structuredClone(metadata.linkedMedia);entry.camera=camera;entry.preview=preview;entry.updatedAt=Date.now();store.put(entry);result=entry;};tx.oncomplete=resolve;tx.onerror=tx.onabort=()=>reject(tx.error||Error('The saved model could not be updated.'));});
  notify();return result;
 }
 async function save(record,viewer,metadata={}){
@@ -63,7 +63,7 @@ async function save(record,viewer,metadata={}){
  const root='assets/generated-sculptures/'+record.id+'/';
  if(record.modelUrl!==root+'sculpture.glb'||record.objUrl!==root+'sculpture.obj')throw Error('Invalid generated model paths.');
  const existing=(await list()).find(r=>r.record.id===record.id);
- if(existing)return {entry:await overwrite(existing.id,viewer,{title:metadata.title?.trim()||existing.title,group:metadata.group?.trim()||existing.group||''}),alreadySaved:true,updated:true};
+ if(existing)return {entry:await overwrite(existing.id,viewer,{title:metadata.title?.trim()||existing.title,group:metadata.group?.trim()||existing.group||'',...(record.linkedMedia?{linkedMedia:record.linkedMedia}:{})}),alreadySaved:true,updated:true};
  const camera=cameraView(viewer);let previewTask;
  try{previewTask=modelPreview(viewer,root+'source.png');}catch{previewTask=bytes(root+'source.png');}
  const [glb,obj,preview,composition]=await Promise.all([bytes(record.modelUrl),bytes(record.objUrl),previewTask,fetch(root+'composition.json').then(async r=>{if(!r.ok)throw Error('The original model composition is missing.');return r.json();})]);
@@ -78,7 +78,7 @@ async function save(record,viewer,metadata={}){
 async function importEntry(source,viewer,metadata={}){
  if(!(source?.glb instanceof Blob)||await source.glb.slice(0,4).text()!=='glTF'||!/^[a-f0-9]{64}$/.test(source.record?.id||''))throw Error('This exhibit does not contain a valid model.');
  const rows=await list(),old=rows.find(e=>e.record.id===source.record.id);
- if(old)return {entry:await overwrite(old.id,viewer,metadata),alreadySaved:true,updated:true};
+ if(old)return {entry:await overwrite(old.id,viewer,{...metadata,...(source.record.linkedMedia?{linkedMedia:source.record.linkedMedia}:{})}),alreadySaved:true,updated:true};
  let obj=source.obj||null;
  if(!obj&&!source.record.localOnly&&source.record.objUrl){try{obj=await bytes(source.record.objUrl);}catch{}}
  const glb=await ModelColour.enhance(source.glb);
@@ -123,13 +123,14 @@ async function gallery(){
 
  grid.addEventListener('click',async e=>{const card=e.target.closest('[data-saved]');if(!card)return;
   try{
-   if(e.target.closest('[data-open]')){const item=await get(card.dataset.saved);if((item?.composition?.workspace==='exhibition-model-loop-v1'||item?.composition?.format==='borrowed-worlds-exhibition-collage'||(!item?.composition&&item?.record?.localOnly))&&!document.body.classList.contains('exhibition-page')){location.href='exhibition.html?saved='+encodeURIComponent(card.dataset.saved);return;}window.dispatchEvent(new CustomEvent('saved-sculpture-open',{detail:{id:card.dataset.saved}}));return;}
+   if(e.target.closest('[data-open]')){if(document.body.classList.contains('exhibition-page')&&e.target.closest('.saved-model-image')){document.getElementById('history-status').textContent='Double-click the model to open the 3D view.';return;}const item=await get(card.dataset.saved);if((item?.composition?.workspace==='exhibition-model-loop-v1'||item?.composition?.format==='borrowed-worlds-exhibition-collage'||(!item?.composition&&item?.record?.localOnly))&&!document.body.classList.contains('exhibition-page')){location.href='exhibition.html?saved='+encodeURIComponent(card.dataset.saved);return;}window.dispatchEvent(new CustomEvent('saved-sculpture-open',{detail:{id:card.dataset.saved}}));return;}
    if(e.target.closest('[data-delete]')){await remove(card.dataset.saved);document.getElementById('history-status').textContent='Saved model removed from history.';return;}
    const entry=await get(card.dataset.saved);if(!entry)throw Error('This saved model was removed.');
    if(e.target.closest('[data-edit]')){editingId=entry.id;document.getElementById('saved-edit-name').value=entry.title;document.getElementById('saved-edit-group').value=entry.group||'';dialog.showModal();return;}
    const b=e.target.closest('[data-export]');if(b)download(entry[b.dataset.export],entry.title.replace(/[^a-z0-9_ .-]+/gi,'-')+'.'+b.dataset.export);
   }catch(error){document.getElementById('history-status').textContent=error.message;}
  });
+ grid.addEventListener('dblclick',e=>{const card=e.target.closest('[data-saved]');if(document.body.classList.contains('exhibition-page')&&card&&e.target.closest('.saved-model-image'))window.dispatchEvent(new CustomEvent('saved-sculpture-open',{detail:{id:card.dataset.saved}}));});
  document.getElementById('saved-edit-cancel')?.addEventListener('click',()=>dialog.close());
  document.getElementById('saved-model-edit-form')?.addEventListener('submit',async e=>{e.preventDefault();try{await update(editingId,{title:document.getElementById('saved-edit-name').value,group:document.getElementById('saved-edit-group').value});dialog.close();document.getElementById('history-status').textContent='Name and group updated.';window.dispatchEvent(new CustomEvent('saved-sculpture-renamed',{detail:{id:editingId}}));}catch(error){document.getElementById('history-status').textContent=error.message;}});
  listeners.add(render);window.addEventListener('focus',render);await render();

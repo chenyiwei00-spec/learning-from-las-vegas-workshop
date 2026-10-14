@@ -52,15 +52,17 @@ async function create(options){
   if(options.modelComposition&&record&&loaded&&!busy){viewer.hidden=false;empty.hidden=true;$('save-model').disabled=saving||!gallery.canSave();$('download-model-glb').disabled=false;$('download-model-obj').disabled=false;if(!same)status.textContent='Showing your last generation. Generate again to update it.';}
   $('download-model-obj').disabled ||= !!libraryEntry&&!libraryEntry.obj;
   status.hidden=(!!libraryEntry||gallery.state().switching)&&!loadingError;if(gallery.state().switching&&!loadingError)empty.hidden=true;
-  if(options.directCollage){
+  if(options.directCollage&&!options.archivePresentation){
    $('model-direction').textContent=options.modelComposition?'MODEL COMPOSITION / IMAGE TO 3D':'PHOTO COLLAGE / 3D';
    $('model-description').textContent=options.modelComposition?'Your visible composition is flattened into one image. The local generator infers a new volume from that image.':'The same local TripoSR generator turns this photo collage into a volume.';
    if(!has){$('model-empty-title').textContent='FROM COLLAGE TO VOLUME.';$('model-empty-text').textContent='Add photographs above, then generate their 3D interpretation.';}
    else if(busy){$('model-empty-title').textContent='BUILDING YOUR MODEL.';$('model-empty-text').textContent='The local generator is inferring depth and hidden surfaces.';}
    else if(!record){$('model-empty-title').textContent='YOUR COMPOSITION IN 3D.';$('model-empty-text').textContent='Click Generate 3D above to create a volume.';}
   }
+  if(options.archivePresentation&&!has&&!busy){$('model-empty-title').textContent='A CITY WAITING TO HAPPEN.';$('model-empty-text').textContent='Choose objects from the Las Vegas archive, then generate their assembled volume in 3D.';}
   if(record)$('model-stats').textContent=Number(record.triangles||0).toLocaleString('en-GB')+' triangles';
   else $('model-stats').textContent='AI INFERRED VOLUME';
+  options.onModelState?.({record,entry:libraryEntry,busy,loaded,stale:!same,switching:gallery.state().switching});
  }
  async function changed(doc){
   const ticket=++revision;const value=await digest(doc);if(ticket!==revision)return;
@@ -79,11 +81,11 @@ async function create(options){
   if(Number.isFinite(camera.fieldOfView)&&camera.fieldOfView>1&&camera.fieldOfView<179)target.fieldOfView=camera.fieldOfView+'deg';
   target.jumpCameraToGoal();
  }
- function use(jobValue,fingerprint,target='sculpture'){
+ function use(jobValue,fingerprint,target='sculpture',linkedMedia=null){
   if(options.modelComposition&&busy)pendingReveal=true;
   if(!hex(jobValue.id)||jobValue.status!=='complete')throw Error('The generation did not return a completed model.');
   const sameMesh=!libraryEntry&&loaded&&record?.modelUrl===jobValue.modelUrl;libraryEntry=null;$('model-name').value='';$('model-group').value='';
-  record={id:jobValue.id,fingerprint,modelUrl:jobValue.modelUrl,objUrl:jobValue.objUrl,reportUrl:jobValue.reportUrl,triangles:jobValue.triangles,vertices:jobValue.vertices,generator:'TripoSR',seconds:jobValue.seconds,target};
+  record={id:jobValue.id,fingerprint,modelUrl:jobValue.modelUrl,objUrl:jobValue.objUrl,reportUrl:jobValue.reportUrl,triangles:jobValue.triangles,vertices:jobValue.vertices,generator:'TripoSR',seconds:jobValue.seconds,target,...(linkedMedia?{linkedMedia}: {})};
   if(!valid(record))throw Error('Invalid local mesh path.');
   loaded=sameMesh;loadingError=false;lastError='';if(!sameMesh)loadMesh(record.modelUrl);persist();render();if(options.onGenerated){const recipe=activeRecipe||options.getComposition();Promise.resolve(options.onGenerated(structuredClone(record),structuredClone(recipe))).catch(e=>options.message(e.message));}if(sameMesh)requestAnimationFrame(()=>fitCamera());
  }
@@ -112,13 +114,14 @@ async function create(options){
    }
    if(ticket!==epoch)return;
    if(job.status==='failed')throw Error(job.message||'The local generator could not create a model. Try a more compact composition.');
-   use(job,fingerprint,snapshot.modelTarget||'sculpture');options.message(options.directCollage?'Photo collage generated as a real 3D model. Depth and hidden surfaces are inferred.':(snapshot.modelTarget==='city'?'Las Vegas':'V&A sculpture')+' 3D model generated. Depth and hidden connections are inferred from the collage.');
+   const linkedMedia=options.associateMedia?await options.associateMedia(snapshot):null;if(ticket!==epoch)return;
+   use(job,fingerprint,snapshot.modelTarget||'sculpture',linkedMedia);options.message(options.directCollage?'Photo collage generated as a real 3D model. Depth and hidden surfaces are inferred.':(snapshot.modelTarget==='city'?'Las Vegas':'V&A sculpture')+' 3D model generated. Depth and hidden connections are inferred from the collage.');
   }catch(e){if(ticket===epoch){lastError=e.message;status.textContent=e.message;options.message(e.message);}}
   finally{if(ticket===epoch){busy=false;render();}}
  }
  async function restore(value){
   if(!valid(value))return;const ticket=++restoreRevision,run=epoch;
-  try{const saved=await json('/api/sculpture3d/jobs/'+value.id);if(run===epoch&&ticket===restoreRevision&&saved.status==='complete')use(saved,value.fingerprint,value.target||'sculpture');}catch{ /* A project imported on another computer can regenerate its missing mesh. */ }
+  try{const saved=await json('/api/sculpture3d/jobs/'+value.id);const linkedMedia=value.linkedMedia||(options.associateMedia&&options.getComposition().layers.length?await options.associateMedia(options.getComposition()):null);if(run===epoch&&ticket===restoreRevision&&saved.status==='complete')use(saved,value.fingerprint,value.target||'sculpture',linkedMedia);}catch{ /* A project imported on another computer can regenerate its missing mesh. */ }
  }
  viewer.addEventListener('load',async e=>{if(!record||viewer.src!==meshUrl||e.detail?.url!==meshUrl||loaded)return;const source=meshUrl;fitCamera();if(pendingCamera){applyCamera(pendingCamera);pendingCamera=null;}await viewer.updateComplete;if(!record||meshUrl!==source||viewer.src!==source)return;viewer.jumpCameraToGoal();loaded=true;loadingError=false;render();if(pendingReveal){pendingReveal=false;$('model-stage').scrollIntoView({behavior:'smooth',block:'nearest'});}if(libraryEntry)gallery.ready(incomingDirection);});
  viewer.addEventListener('error',()=>{if(!record)return;loaded=false;loadingError=true;lastError='The generated mesh is available, but its 3D preview could not load.';status.textContent=lastError;render();});
@@ -138,7 +141,7 @@ async function create(options){
  $('download-model-obj').addEventListener('click',()=>download(record?.objUrl,record?.target==='city'?'borrowed-worlds-city.obj':'borrowed-worlds-sculpture.obj'));
  $('save-model').addEventListener('click',async()=>{
   if(!record||!loaded||busy||saving||!gallery.canSave())return;saving=true;const snapshot=structuredClone(record);render();
-  try{const metadata={title:$('model-name').value,group:$('model-group').value};let result;if(libraryEntry?.ephemeral){const imported=await SavedSculptures.importEntry(libraryEntry,viewer,metadata);libraryEntry=imported.entry;gallery.update(libraryEntry);result=imported;}else if(libraryEntry){libraryEntry=await SavedSculptures.overwrite(libraryEntry.id,viewer,{title:metadata.title||libraryEntry.title,group:metadata.group});gallery.update(libraryEntry);result={entry:libraryEntry,alreadySaved:true,updated:true};}else result=await SavedSculptures.save(snapshot,viewer,metadata);$('model-history').open=true;$('history-status').textContent=result.updated?result.entry.title+' updated with this view.':result.entry.title+' saved on this device.';options.message(result.updated?'Saved model updated: view and preview replaced.':'Model saved with its current view.');$('model-history').scrollIntoView({behavior:'smooth',block:'start'});}
+  try{const metadata={title:$('model-name').value,group:$('model-group').value,...(record.linkedMedia?{linkedMedia:structuredClone(record.linkedMedia)}:{})};let result;if(libraryEntry?.ephemeral){const imported=await SavedSculptures.importEntry(libraryEntry,viewer,metadata);libraryEntry=imported.entry;gallery.update(libraryEntry);result=imported;}else if(libraryEntry){libraryEntry=await SavedSculptures.overwrite(libraryEntry.id,viewer,{title:metadata.title||libraryEntry.title,group:metadata.group,...(metadata.linkedMedia?{linkedMedia:metadata.linkedMedia}:{})});gallery.update(libraryEntry);result={entry:libraryEntry,alreadySaved:true,updated:true};}else result=await SavedSculptures.save(snapshot,viewer,metadata);$('model-history').open=true;$('history-status').textContent=result.updated?result.entry.title+' updated with this view.':result.entry.title+' saved on this device.';options.message(result.updated?'Saved model updated: view and preview replaced.':'Model saved with its current view.');$('model-history').scrollIntoView({behavior:'smooth',block:'start'});}
   catch(e){options.message(e.message);$('history-status').textContent=e.message;}
   finally{saving=false;render();}
  });
@@ -147,6 +150,7 @@ async function create(options){
   const ticket=++epoch;restoreRevision++;busy=false;loaded=false;render();
   if(typeof entry==='string')entry=await SavedSculptures.get(entry);if(ticket!==epoch)return false;
   if(!valid(entry?.record)||!(entry.glb instanceof Blob))throw Error('This saved model is invalid.');
+  if(options.associateMedia&&!entry.record.linkedMedia&&entry.composition){const linkedMedia=await options.associateMedia(entry.composition);if(ticket!==epoch)return false;entry={...entry,record:{...entry.record,linkedMedia}};}
   busy=false;record=structuredClone(entry.record);libraryEntry=entry;loaded=false;loadingError=false;lastError='';
   $('model-name').value=entry.title;$('model-group').value=entry.group||'';pendingCamera=null;incomingDirection=direction;interaction.reset();await gallery.set(entry);if(ticket!==epoch)return false;render();await loadMesh(gallery.source(entry.id)||entry.glb);return ticket===epoch;
  }

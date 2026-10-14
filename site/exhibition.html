@@ -5,7 +5,7 @@
 <meta name="theme-color" content="#ffffff"><title>Learning from Las Vegas / Exhibition Walk</title>
 <link rel="icon" href="favicon.svg"><link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="collage.css"><link rel="stylesheet" href="studio-modes.css"><link rel="stylesheet" href="exhibition.css">
-<script src="vendor/model-viewer.js" defer></script><script src="model-colour.js" defer></script><script src="saved-models.js" defer></script><script src="model-interaction.js" defer></script><script src="model-gallery.js" defer></script><script src="sculpture-3d.js" defer></script><script src="exhibition-walk.js" defer></script><script src="exhibition-studio.js" defer></script><script src="exhibition-picker.js" defer></script><script src="exhibition-workspace.js" defer></script><script src="exhibition-browse.js" defer></script><script src="exhibition-transfer.js" defer></script><script src="team-live.js" defer></script>
+<script src="vendor/model-viewer.js" defer></script><script src="model-colour.js" defer></script><script src="saved-models.js" defer></script><script src="model-interaction.js" defer></script><script src="model-gallery.js" defer></script><script src="sculpture-3d.js" defer></script><script src="exhibition-walk.js" defer></script><script src="exhibition-media.js" defer></script><script src="exhibition-studio.js" defer></script><script src="exhibition-picker.js" defer></script><script src="exhibition-workspace.js" defer></script><script src="exhibition-browse.js" defer></script><script src="exhibition-transfer.js" defer></script><script src="team-live.js" defer></script>
 </head>
 <body class="collage-page exhibition-page">
 <a class="skip-link" href="#walk-surface">Skip to exhibition</a>
@@ -30,7 +30,7 @@
 <div id="walk-axon-help" hidden><dl><dt>Left mouse drag</dt><dd>Rotate the floor view</dd><dt>Mouse wheel</dt><dd>Zoom in / out</dd><dt>Right / middle drag</dt><dd>Pan the floor view</dd><dt>Reset view</dt><dd>Restore the initial axonometric view</dd><dt>Eye level</dt><dd>Restore your walking position</dd></dl><p>20 × 20 cells. Each square measures 1 × 1 metre.</p></div>
 </div>
 
-<section id="exhibition-model-browser" class="exhibition-model-browser" tabindex="0" aria-label="3D model browser" hidden><header class="exhibition-browser-header"><button id="exhibition-browser-back">← Back to exhibition</button><span>MODEL GALLERY / LEARNING FROM LAS VEGAS</span></header><div id="exhibition-browser-body"></div><div id="exhibition-browser-exhibit-tools" hidden><span>EXHIBIT SIZE</span><button data-exhibit-size="1">1 cell</button><button data-exhibit-size="2">4 cells</button><button data-exhibit-size="3">9 cells</button></div></section>
+<section id="exhibition-model-browser" class="exhibition-model-browser" tabindex="0" aria-label="3D model browser" hidden><header class="exhibition-browser-header"><button id="exhibition-browser-back">← Back to exhibition</button><span>MODEL GALLERY / LEARNING FROM LAS VEGAS</span></header><div id="exhibition-browser-body"></div></section>
 <div id="workspace-shade" class="workspace-shade" aria-hidden="true" hidden></div>
 <aside class="workspace-previews" aria-label="Making workspace previews">
 <button id="open-collage-preview" class="workspace-preview-card" aria-controls="workspace-expanded" aria-expanded="false">
@@ -59,17 +59,17 @@
 </section>
 <section id="workspace-model-pane" class="workspace-pane" aria-label="Generated 3D model tools" hidden>
 <section id="model-panel" class="model-panel" aria-label="Generated model">
-<div class="workspace-model-placement"><button id="workspace-drag-model" class="outline-link" disabled>Drag model into room</button><span>Drop on a free 1 m cell</span></div><div class="workspace-model-meta"><p id="model-direction" class="eyebrow">PHOTO COLLAGE / 3D</p><span id="model-stats">AI INFERRED VOLUME</span></div>
+<div class="workspace-model-placement"><button id="workspace-drag-model" class="outline-link" disabled>Drag model into room</button><span>Drop on any 1 m cell</span></div><div class="workspace-model-meta"><h2 class="exhibition-model-heading">03 / THREE-DIMENSIONAL INTERPRETATION</h2><span id="model-stats">AI INFERRED VOLUME</span></div>
 <div class="model-layout" id="model-stage">
 <div class="model-stage-controls"><button id="model-zoom-toggle" aria-pressed="false">Scroll page</button><button id="clear-model">Clear model</button><button id="model-fullscreen" aria-pressed="false">Fullscreen</button></div>
 <div id="model-frame" class="model-frame" aria-busy="false"><model-viewer id="generated-sculpture-viewer" camera-controls disable-zoom interaction-prompt="none" loading="eager" exposure="1" shadow-intensity=".6" shadow-softness="1" environment-image="neutral" camera-orbit="0deg 85deg auto" field-of-view="30deg" alt="Generated model. Drag to rotate; click to activate wheel zoom." hidden></model-viewer>
 <div id="model-empty" class="board-empty"><h3 id="model-empty-title">FROM COLLAGE TO VOLUME.</h3><p id="model-empty-text">Compose an image, then generate a model.</p></div>
 <div id="model-stale" class="model-stale" hidden>Composition changed · Generate updated 3D</div><button id="reset-model-view" class="model-reset" disabled>Reset view</button></div>
 <p id="model-wheel-note" class="model-wheel-note">Click the grey area to zoom · drag to rotate</p>
-</div>
-<div class="model-info"><h3 class="exhibition-browser-title">learning<br>from las vegas</h3><p id="model-status" role="status">Checking the local 3D generator…</p><p id="model-saved-name" hidden></p><p id="model-description">Generate a volume from the photo collage.</p>
+<div class="exhibition-media-actions"><button id="exhibition-play-video" class="outline-link" disabled>Play video</button><button id="exhibition-play-audio" class="outline-link" disabled>Play audio</button></div><p id="exhibition-media-summary" class="model-note"></p><section id="exhibition-media-player" class="exhibition-media-player" aria-label="Linked media" hidden><header><span id="exhibition-media-title"></span><button id="exhibition-media-close" type="button" aria-label="Close linked media">Close ×</button></header><video id="exhibition-linked-video" controls muted playsinline preload="none" hidden></video><audio id="exhibition-linked-audio" controls preload="none" hidden></audio><p id="exhibition-media-match"></p></section></div>
+<div class="model-info"><h3 class="model-subtitle exhibition-browser-title"><span>LEARNING</span><span>FROM LAS VEGAS</span></h3><p id="model-direction" class="eyebrow">LAS VEGAS / 3D</p><p id="model-status" role="status">Checking the local 3D generator…</p><p id="model-saved-name" class="model-saved-name" hidden></p><p id="model-description">Generate a volume from the photo collage.</p>
 <details class="model-naming"><summary>Name &amp; group</summary><div class="model-save-fields"><label>Model name<input id="model-name" maxlength="120" placeholder="Name your model"></label><label>Group<input id="model-group" maxlength="80" list="model-group-options" placeholder="Ungrouped"></label></div></details>
-<div class="sculpture-actions"><button id="save-model" class="primary-link" disabled>Save model</button><button id="download-model-glb" class="outline-link" disabled>Download GLB</button><button id="download-model-obj" class="outline-link" disabled>OBJ</button></div></div>
+<div class="sculpture-actions"><button id="save-model" class="primary-link" disabled>Save model +</button><button id="download-model-glb" class="outline-link" disabled>Download GLB ↗</button><button id="download-model-obj" class="outline-link" disabled>OBJ ↗</button></div></div>
 </section>
 
 </section>
