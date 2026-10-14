@@ -23,7 +23,7 @@ export function createExhibitionPlacement({scene,canvas,getCamera,getRoomMeshes,
  }
  function updateHandles(){
   const e=entries.get(selected),r=canvas.getBoundingClientRect(),parent=handleLayer.getBoundingClientRect();
-  if(!e||canvas.closest('[hidden]')||$('walk-surface').dataset.modelBrowse==='true'){handles.forEach(b=>b.hidden=true);rotateHandle.hidden=true;return;}
+  if(!group.visible||!e||canvas.closest('[hidden]')||$('walk-surface').dataset.modelBrowse==='true'){handles.forEach(b=>b.hidden=true);rotateHandle.hidden=true;return;}
   scene.updateMatrixWorld(true);const box=new THREE.Box3().setFromObject(e.object);
   handles.forEach((b,i)=>{const v=new THREE.Vector3(i&1?box.max.x:box.min.x,i&2?box.max.y:box.min.y,i&4?box.max.z:box.min.z).project(getCamera());const x=r.left+(v.x+1)*r.width/2,y=r.top+(1-v.y)*r.height/2;b.hidden=v.z< -1||v.z>1||x<r.left||x>r.right||y<r.top||y>r.bottom;b.style.left=(x-parent.left)+'px';b.style.top=(y-parent.top)+'px';});
   const visible=handles.filter(b=>!b.hidden).map(b=>({x:parseFloat(b.style.left),y:parseFloat(b.style.top)}));rotateHandle.hidden=!visible.length;
@@ -33,6 +33,7 @@ export function createExhibitionPlacement({scene,canvas,getCamera,getRoomMeshes,
  function db(){return new Promise((resolve,reject)=>{const r=indexedDB.open('learning-vegas-exhibition-floor-v1',1);r.onupgradeneeded=()=>{r.result.createObjectStore('models',{keyPath:'id'});r.result.createObjectStore('layout');};r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});}
  async function read(){const d=await db();try{return await new Promise((resolve,reject)=>{const tx=d.transaction(['models','layout'],'readonly');const m=tx.objectStore('models').getAll(),l=tx.objectStore('layout').get('current');tx.oncomplete=()=>resolve({models:m.result,layout:l.result||[]});tx.onerror=()=>reject(tx.error);});}finally{d.close();}}
  function save(){
+  window.dispatchEvent(new Event('exhibition-placement-change'));
   const snapshot=[...entries.values()].map(e=>({...e.record})),used=new Set(snapshot.map(e=>e.modelId)),files=[...models.values()].filter(m=>used.has(m.id)).map(m=>({id:m.id,blob:m.blob,name:m.name,preview:m.preview||null,record:m.record||null,composition:m.composition||null,camera:m.camera||null,libraryId:m.libraryId||null,obj:m.obj||null}));
   queue=queue.catch(()=>{}).then(async()=>{const d=await db();try{await new Promise((resolve,reject)=>{const tx=d.transaction(['models','layout'],'readwrite'),store=tx.objectStore('models');const keys=store.getAllKeys();keys.onsuccess=()=>{const existing=new Set(keys.result);files.forEach(m=>{if(!existing.has(m.id))store.put(m);else if(m.record){const previous=store.get(m.id);previous.onsuccess=()=>{if(previous.result?.record?.id!==m.record.id||(!previous.result?.composition&&m.composition)||previous.result?.libraryId!==m.libraryId||JSON.stringify(previous.result?.record?.linkedMedia)!==JSON.stringify(m.record.linkedMedia))store.put(m);};}});keys.result.forEach(id=>{if(!used.has(id))store.delete(id);});};tx.objectStore('layout').put(snapshot,'current');tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);tx.onabort=()=>reject(tx.error);});}finally{d.close();}}).catch(error=>notice('Layout is available this session, but could not save: '+error.message));
   return queue;
@@ -80,7 +81,7 @@ export function createExhibitionPlacement({scene,canvas,getCamera,getRoomMeshes,
   updateHandles();invalidate();
  }
  function select(id){
-  selected=entries.has(id)?id:null;moving=false;
+  selected=group.visible&&entries.has(id)?id:null;moving=false;
   const e=entries.get(selected);$('exhibition-placement-tools').hidden=!e;
   $('exhibition-placement-name').textContent=e?e.record.name+' / '+(e.record.span||1)**2+' CELL'+((e.record.span||1)>1?'S':''):'';
   $('exhibition-move-model').setAttribute('aria-pressed','false');
@@ -123,6 +124,7 @@ export function createExhibitionPlacement({scene,canvas,getCamera,getRoomMeshes,
  }
  function openModel(id){const e=entries.get(id);if(e)window.dispatchEvent(new CustomEvent('exhibition-model-open',{detail:{id:'exhibit:'+e.record.modelId,placementId:id}}));}
  function pickExact(event){
+  if(!group.visible)return null;
   orient();scene.updateMatrixWorld(true);const r=canvas.getBoundingClientRect();pointer.set((event.clientX-r.left)/r.width*2-1,-(event.clientY-r.top)/r.height*2+1);raycaster.setFromCamera(pointer,getCamera());
   const hit=raycaster.intersectObjects(group.children,true)[0];if(!hit)return null;
   // A model behind an opaque room wall must not intercept navigation.
@@ -183,6 +185,6 @@ export function createExhibitionPlacement({scene,canvas,getCamera,getRoomMeshes,
  document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(scaleDrag||rotateDrag){scaleDrag=null;rotateDrag=null;save();}moving=false;stopHover();hideGhost();if(drag){try{canvas.releasePointerCapture(drag.pointerId);}catch{}drag=null;} }});
  function textureCount(){const textures=new Set();for(const m of models.values())m.template.traverse(o=>{for(const material of o.material?(Array.isArray(o.material)?o.material:[o.material]):[])for(const value of Object.values(material))if(value?.isTexture)textures.add(value);});return textures.size;}
  const ready=(async()=>{try{const data=await read(),byId=new Map(data.models.map(m=>[m.id,m]));for(const record of data.layout){if(!Number.isInteger(record.col)||record.col<0||record.col+(record.span||1)>20||!Number.isInteger(record.row)||record.row<0||record.row+(record.span||1)>20)continue;const desc=byId.get(record.modelId);if(desc){try{const m=await template(desc);insert(record,m);}catch(error){notice('Some stored models could not reopen: '+error.message);}}}}catch(error){notice('Previous room layout could not load: '+error.message);}finally{restored=true;}})();
- return Object.freeze({ready,updateHandles,setViewMode:mode=>{cells.visible=mode==='axonometric';updateHandles();invalidate();},cellAt,hitModelAt:(x,y)=>pickExact({clientX:x,clientY:y}),hover,stopHover,place,select,move,resize,rotate,browseEntries,openModel,clearSelection:()=>select(null),state:()=>({restored,selected,models:[...entries.values()].map(e=>({...e.record,x:e.object.position.x,z:e.object.position.z,height:e.height,footprint:e.footprint,colour:models.get(e.record.modelId)?.colour})),modelCount:entries.size,uniqueMeshes:models.size,textureCount:textureCount(),occupiedCells:[...cellCounts].map(([cell,count])=>({col:cell%20,row:Math.floor(cell/20),count})),occupiedColour:'#f2d86b',scaling:!!scaleDrag,rotating:!!rotateDrag,dragging:!!drag?.started,pendingDrag:!!drag}),dispose:()=>{handleLayer.remove();cells.geometry.dispose();cells.material.dispose();models.forEach(m=>release(m.template));marker.geometry.dispose();marker.material.dispose();if(outline){outline.geometry.dispose();outline.material.dispose();}}});
+ return Object.freeze({ready,updateHandles,spaceSources:()=>[...entries.values()].map(e=>({id:e.record.id,modelId:e.record.modelId,name:e.record.name,object:e.object,layout:{col:e.record.col,row:e.record.row,span:e.record.span,scale:e.record.scale||1,rotation:e.record.rotation||0}})),showSources:value=>{group.visible=!!value;if(!value)select(null);cells.visible=!isRoom()&&group.visible;invalidate();},setViewMode:mode=>{cells.visible=mode==='axonometric'&&group.visible;updateHandles();invalidate();},cellAt,hitModelAt:(x,y)=>pickExact({clientX:x,clientY:y}),hover,stopHover,place,select,move,resize,rotate,browseEntries,openModel,clearSelection:()=>select(null),state:()=>({restored,sourcesVisible:group.visible,selected,models:[...entries.values()].map(e=>({...e.record,x:e.object.position.x,z:e.object.position.z,height:e.height,footprint:e.footprint,colour:models.get(e.record.modelId)?.colour})),modelCount:entries.size,uniqueMeshes:models.size,textureCount:textureCount(),occupiedCells:[...cellCounts].map(([cell,count])=>({col:cell%20,row:Math.floor(cell/20),count})),occupiedColour:'#f2d86b',scaling:!!scaleDrag,rotating:!!rotateDrag,dragging:!!drag?.started,pendingDrag:!!drag}),dispose:()=>{handleLayer.remove();cells.geometry.dispose();cells.material.dispose();models.forEach(m=>release(m.template));marker.geometry.dispose();marker.material.dispose();if(outline){outline.geometry.dispose();outline.material.dispose();}}});
 }
 

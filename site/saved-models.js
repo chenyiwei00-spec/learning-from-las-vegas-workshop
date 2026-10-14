@@ -89,6 +89,9 @@ async function importEntry(source,viewer,metadata={}){
  await transaction('readwrite',s=>s.put(entry));notify();return {entry,alreadySaved:false};
 }
 
+async function updateMedia(id,linkedMedia){
+ const db=await database();await new Promise((resolve,reject)=>{const tx=db.transaction(STORE,'readwrite'),store=tx.objectStore(STORE),r=store.get(id);r.onsuccess=()=>{const entry=r.result;if(!entry){tx.abort();return;}entry.record.linkedMedia=structuredClone(linkedMedia);store.put(entry);};tx.oncomplete=resolve;tx.onerror=tx.onabort=()=>reject(tx.error||Error('This saved model was removed.'));});notify();
+}
 async function update(id,metadata){
  const db=await database();
  await new Promise((resolve,reject)=>{const tx=db.transaction(STORE,'readwrite'),store=tx.objectStore(STORE),r=store.get(id);
@@ -135,6 +138,6 @@ async function gallery(){
  document.getElementById('saved-model-edit-form')?.addEventListener('submit',async e=>{e.preventDefault();try{await update(editingId,{title:document.getElementById('saved-edit-name').value,group:document.getElementById('saved-edit-group').value});dialog.close();document.getElementById('history-status').textContent='Name and group updated.';window.dispatchEvent(new CustomEvent('saved-sculpture-renamed',{detail:{id:editingId}}));}catch(error){document.getElementById('history-status').textContent=error.message;}});
  listeners.add(render);window.addEventListener('focus',render);await render();
 }
-window.SavedSculptures=Object.freeze({list,get,remove,removeGroup,save,importEntry,update,overwrite,cameraView,download,gallery,subscribe:fn=>{listeners.add(fn);return()=>listeners.delete(fn);}});
+window.SavedSculptures=Object.freeze({list,get,remove,removeGroup,save,importEntry,update,updateMedia,overwrite,cameraView,download,gallery,subscribe:fn=>{listeners.add(fn);return()=>listeners.delete(fn);}});
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',gallery);else gallery();
 })();

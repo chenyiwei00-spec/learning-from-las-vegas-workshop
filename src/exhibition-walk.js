@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import {createCanopy} from './exhibition-canopy.js';
 import {createExhibitionPlacement} from './exhibition-placement.js';
 import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
 
@@ -15,6 +16,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
   const eye = new THREE.Vector3(0, EYE_HEIGHT, 7);
   const forward = new THREE.Vector3(), right = new THREE.Vector3(), direction = new THREE.Vector3();
   let renderer, scene, camera, roomCamera, axonCamera, axonControls, axonGroup, roomDetailGroup, floorGrid;
+  let space=null;
   let roomMeshes = [], ready = false, disposed = false, viewMode = 'room', twoPoint = false;
   let yaw = 0, pitch = 0, fly = false, active = false, drag = null;
   let raf = 0, lastTime = 0, frameCount = 0, teleport = null;
@@ -27,6 +29,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
     position.x = clamp(position.x,-LIMIT,LIMIT);
     position.z = clamp(position.z,-LIMIT,LIMIT);
     position.y = fly ? clamp(position.y,RADIUS,ROOM.height-RADIUS) : EYE_HEIGHT;
+    space?.constrain(position,RADIUS);
     return position;
   }
   function orient() {
@@ -155,7 +158,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
     const rect = renderer.domElement.getBoundingClientRect();
     pointer.set((event.clientX-rect.left)/rect.width*2-1,-(event.clientY-rect.top)/rect.height*2+1);
     raycaster.setFromCamera(pointer,camera);
-    return raycaster.intersectObjects(viewMode === 'room' ? roomMeshes : [axonGroup.getObjectByName('axonometric-floor')],false)[0] || null;
+    return raycaster.intersectObjects(viewMode === 'room' ? [...roomMeshes,...(space?.collisionMeshes()||[])] : [axonGroup.getObjectByName('axonometric-floor')],false)[0] || null;
   }
   function showError(message) {
     $('walk-error').textContent = message;
@@ -247,6 +250,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
 
   const canvas = renderer.domElement;
   const placement=createExhibitionPlacement({scene,canvas,getCamera:()=>camera,getRoomMeshes:()=>roomMeshes,isRoom:()=>viewMode==='room',orient,invalidate:requestFrame,suspend:suspendNavigation});
+  space=createCanopy({scene,renderer,placement,getView:()=>viewMode,setView:setViewMode,navigate:value=>{clearInput();teleport=null;fly=false;eye.set(value.x,value.y,value.z);yaw=value.yaw;pitch=value.pitch||0;constrain(eye);ui();requestFrame();focusView();},invalidate:requestFrame});
   // Capture focus before OrbitControls receives the pointer-down event.
   canvas.addEventListener('pointerdown',() => {if(viewMode==='axonometric')focusView();},true);
   axonControls = new OrbitControls(axonCamera,canvas);
@@ -407,13 +411,13 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
         if(object.material)for(const material of (Array.isArray(object.material)?object.material:[object.material]))materials.add(material);
       });
       geometries.forEach(geometry=>geometry.dispose());materials.forEach(material=>material.dispose());
-      renderer.dispose();
+      space?.dispose();renderer.dispose();
     }
   });
   window.addEventListener('pageshow',() => {resize();});
   window.ExhibitionWalk = Object.freeze({
     state:() => ({
-      ready,environment:'white-enclosed-gallery',room:{...ROOM,closed:true,wallCount:4,floor:true,ceiling:true},
+      space:space.state(),ready,environment:'white-enclosed-gallery',room:{...ROOM,closed:true,wallCount:4,floor:true,ceiling:true},
       camera:viewMode==='room'?{x:eye.x,y:eye.y,z:eye.z,yaw,pitch}:{x:axonCamera.position.x,y:axonCamera.position.y,z:axonCamera.position.z},
       viewMode,twoPoint,projection:camera.isOrthographicCamera?'orthographic':'perspective',
       walkingCamera:{x:eye.x,y:eye.y,z:eye.z,yaw,pitch},fly,active,fullscreen:document.fullscreenElement===surface,
@@ -425,7 +429,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
       performance:{triangles:renderer.info.render.triangles,drawCalls:renderer.info.render.calls,pixelRatio:renderer.getPixelRatio(),continuousRendering:!!raf,frameCount},
       moving:!!teleport || movingByKeys()
     }),
-    reset,setViewMode,setTwoPoint,suspendNavigation,placement,
+    reset,setViewMode,setTwoPoint,suspendNavigation,placement,space,
     gridSegments:()=>Array.from(floorGrid.geometry.attributes.position.array),
     setCamera:value => {
       clearInput();teleport=null;
