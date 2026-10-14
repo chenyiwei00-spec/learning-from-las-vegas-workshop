@@ -1,0 +1,915 @@
+{
+  "format": "borrowed-worlds-exhibition-v1",
+  "title": "借来的城市 / Borrowed Worlds",
+  "description": "七组由现有招牌模型重新组合的雕塑。每个作品都可以再次复制、旋转、拼贴并放回展览。",
+  "placements": [
+    {
+      "id": "7a231f05-6f9c-45b6-913d-8c9c2e9d8ceb",
+      "kind": "composition",
+      "name": "借来的地平线 / Borrowed Horizon",
+      "parts": [
+        {
+          "descriptor": {
+            "display": 1,
+            "name": "Golden Nugget",
+            "fullUrl": "assets/exhibition-desert/models/sign_01_full.glb",
+            "previewUrl": "assets/exhibition-desert/models/sign_01_preview.glb",
+            "bounds": [
+              [
+                -0.368012011051178,
+                -3.89984400328558e-9,
+                -0.05165507271885872
+              ],
+              [
+                0.36831700801849365,
+                0.9768069982528687,
+                0.05181499943137169
+              ]
+            ],
+            "fullTriangles": 1790009,
+            "previewTriangles": 80000,
+            "original": true,
+            "relevance": 1,
+            "generation": 0,
+            "sourceIds": [
+              1
+            ]
+          },
+          "position": [
+            -0.7,
+            0.25,
+            0.1
+          ],
+          "quaternion": [
+            0.005986411642675494,
+            0.0596644362138059,
+            0.09965377040044006,
+            0.9932136950183025
+          ],
+          "scale": [
+            2.6,
+            2.6,
+            2.5999999999999996
+          ]
+        },
+        {
+          "descriptor": {
+            "display": 2,
+            "name": "Dunes",
+            "fullUrl": "assets/exhibition-desert/models/sign_02_full.glb",
+            "previewUrl": "assets/exhibition-desert/models/sign_02_preview.glb",
+            "bounds": [
+              [
+                -0.25503501296043396,
+                -2.290455380915546e-9,
+                -0.030338075011968613
+              ],
+              [
+                0.25500500202178955,
+                0.9821169972419739,
+                0.028967000544071198
+              ]
+            ],
+            "fullTriangles": 1976508,
+            "previewTriangles": 80000,
+            "original": true,
+            "relevance": 1,
+            "generation": 0,
+            "sourceIds": [
+              2
+            ]
+          },
+          "position": [
+            0.75,
+            -0.3,
+            0.25
+          ],
+          "quaternion": [
+            0.06942222575402983,
+            -0.08715154026434975,
+            -0.21203922403948416,
+            0.9708885265928532
+          ],
+          "scale": [
+            2.15,
+            2.15,
+            2.15
+          ]
+        },
+        {
+          "descriptor": {
+            "display": 6,
+            "name": "Vegas World",
+            "fullUrl": "assets/exhibition-desert/models/sign_06_full.glb",
+            "previewUrl": "assets/exhibition-desert/models/sign_06_preview.glb",
+            "bounds": [
+              [
+                -0.48931899666786194,
+                -3.2161351359860646e-9,
+                -0.042599067091941833
+              ],
+              [
+                0.4890750050544739,
+                0.8919069766998291,
+                0.0425029993057251
+              ]
+            ],
+            "fullTriangles": 1938170,
+            "previewTriangles": 80000,
+            "original": true,
+            "relevance": 1,
+            "generation": 0,
+            "sourceIds": [
+              6
+            ]
+          },
+          "position": [
+            0,
+            1.35,
+            -0.2
+          ],
+          "quaternion": [
+            0.007468793718392069,
+            0.14925137372094469,
+            0.04941795707411653,
+            0.9875353715596337
+          ],
+          "scale": [
+            0.9000000000000001,
+            0.9,
+            0.9
+          ]
+        }
+      ],
+      "original": false,
+      "relevance": 1,
+      "palette": "#ab6e44",
+      "generation": 1,
+      "sourceIds": [
+        1,
+        2,
+        6
+      ],
+      "display": 1
+    },
+    {
+      "id": "8392dd03-fe21-45e1-9c10-dfe246540e23",
+      "kind": "composition",
+      "name": "垂直的记忆 / Vertical Memory",
+      "parts": [
+        {
+          "descriptor": {
+            "display": 3,
+            "name": "Sahara",
+            "fullUrl": "assets/exhibition-desert/models/sign_03_full.glb",
+            "previewUrl": "assets/exhibition-desert/models/sign_03_preview.glb",
+            "bounds": [
+              [
+                -0.1566469967365265,
+                -5.7859326219045215e-9,
+                -0.07663707435131073
+              ],
+              [
+                0.1567690074443817,
+                0.9775090217590332,
+                0.0759579986333847
+              ]
+            ],
+            "fullTriangles": 1943941,
+            "previewTriangles": 80000,
+            "original": true,
+            "relevance": 1,
+            "generation": 0,
+            "sourceIds": [
+              3
+            ]
+          },
+          "position": [
+            -0.3,
+            0.3,
+            0
+          ],
+          "quaternion": [
+            -0.003992271861283497,
+            -0.09975356056184052,
+            0.03978955408239595,
+            0.9942082680739207
+          ],
+          "scale": [
+            3,
+            2.9999999999999996,
+            3
+          ]
+        },
+        {
+          "descriptor": {
+            "display": 5,
+            "name": "Sam's Town",
+            "fullUrl": "assets/exhibition-desert/models/sign_05_full.glb",
+            "previewUrl": "assets/exhibition-desert/models/sign_05_preview.glb",
+            "bounds": [
+              [
+                -0.13736000657081604,
+                -3.892596467380827e-9,
+                -0.051559075713157654
+              ],
+              [
+                0.1371919959783554,
+                0.9801939725875854,
+                0.053467001765966415
+              ]
+            ],
+            "fullTriangles": 1985974,
+            "previewTriangles": 80000,
+            "original": true,
+            "relevance": 1,
+            "generation": 0,
+            "sourceIds": [
+              5
+            ]
+          },
+          "position": [
+            0.6,
+            -0.6,
+            0.3
+          ],
+          "quaternion": [
+            0.030003695919510714,
+            0.10730617237727562,
+            -0.18278074213086926,
+            0.9768195144994782
+          ],
+          "scale": [
+            1.9,
+            1.9,
+            1.8999999999999997
+          ]
+        }
+      ],
+      "original": false,
+      "relevance": 1,
+      "palette": "#a07640",
+      "generation": 1,
+      "sourceIds": [
+        3,
+        5
+      ],
+      "display": 2
+    },
+    {
+      "id": "4bb46ecc-b0f3-4635-af3a-c76184c9c166",
+      "kind": "composition",
+      "name": "反向的宫殿 / Reversed Palace",
+      "parts": [
+        {
+          "descriptor": {
+            "display": 7,
+            "name": "Imperial Palace",
+            "fullUrl": "assets/exhibition-desert/models/sign_07_full.glb",
+            "previewUrl": "assets/exhibition-desert/models/sign_07_preview.glb",
+            "bounds": [
+              [
+                -0.29620400071144104,
+                -9.273633416739813e-9,
+                -0.12283307313919067
+              ],
+              [
+                0.2979130148887634,
+                0.9798579812049866,
+                0.12254299968481064
+              ]
+            ],
+            "fullTriangles": 1877648,
+            "previewTriangles": 80000,
+            "original": true,
+            "relevance": 1,
+            "generation": 0,
+            "sourceIds": [
+              7
+            ]
+          },
+          "position": [
+            -0.55,
+            0.1,
+            0
+          ],
+          "quaternion": [
+            0.03160985279362455,
+            -0.1779352022241101,
+            0.08952744724707631,
+            0.9794512326835125
+          ],
+          "scale": [
+            2.7,
+            2.7000000000000006,
+            2.7000000000000006
+          ]
+        },
+        {
+          "descriptor": {
+            "display": 2,
+            "name": "Dunes",
+            "fullUrl": "assets/exhibition-desert/models/sign_02_full.glb",
+            "previewUrl": "assets/exhibition-desert/models/sign_02_preview.glb",
+            "bounds": [
+              [
+                -0.25503501296043396,
+                -2.290455380915546e-9,
+                -0.030338075011968613
+              ],
+              [
+                0.25500500202178955,
+                0.9821169972419739,
+                0.028967000544071198
+              ]
+            ],
+            "fullTriangles": 1976508,
+            "previewTriangles": 80000,
+            "original": true,
+            "relevance": 1,
+            "generation": 0,
+            "sourceIds": [
+              2
+            ]
+          },
+          "position": [
+            0.7,
+            0.25,
+            0.35
+          ],
+          "quaternion": [
+            -0.03697158563757034,
+            0.1447924628309111,
+            -0.24462587947773923,
+            0.9580325796404554
+          ],
+          "scale": [
+            1.9,
+            1.9,
+            1.9
+          ]
+        }
+      ],
+      "original": false,
+      "relevance": 1,
+      "palette": "#b28082",
+      "generation": 1,
+      "sourceIds": [
+        7,
+        2
+      ],
+      "display": 3
+    },
+    {
+      "id": "cfad9f65-a39b-4fd2-9f5a-3c808a469cad",
+      "kind": "composition",
+      "name": "霓虹的花冠 / Neon Crown",
+      "parts": [
+        {
+          "descriptor": {
+            "display": 4,
+            "name": "Pinball Hall of Fame",
+            "fullUrl": "assets/exhibition-desert/models/sign_04_full.glb",
+            "previewUrl": "assets/exhibition-desert/models/sign_04_preview.glb",
+            "bounds": [
+              [
+                -0.3776549994945526,
+                -6.2161951142059024e-9,
+                -0.08233607560396194
+              ],
+              [
+                0.3775329887866974,
+                0.9794009923934937,
+                0.08223000168800354
+              ]
+            ],
+            "fullTriangles": 1952360,
+            "previewTriangles": 79999,
+            "original": true,
+            "relevance": 1,
+            "generation": 0,
+            "sourceIds": [
+              4
+            ]
+          },
+          "position": [
+            0,
+            0.1,
+            0
+          ],
+          "quaternion": [
+            0,
+            0.09983341664682815,
+            0,
+            0.9950041652780257
+          ],
+          "scale": [
+            2.5,
+            2.5,
+            2.5
+          ]
+        },
+        {
+          "descriptor": {
+            "display": 1,
+            "name": "Golden Nugget",
+            "fullUrl": "assets/exhibition-desert/models/sign_01_full.glb",
+            "previewUrl": "assets/exhibition-desert/models/sign_01_preview.glb",
+            "bounds": [
+              [
+                -0.368012011051178,
+                -3.89984400328558e-9,
+                -0.05165507271885872
+              ],
+              [
+                0.36831700801849365,
+                0.9768069982528687,
+                0.05181499943137169
+              ]
+            ],
+            "fullTriangles": 1790009,
+            "previewTriangles": 80000,
+            "original": true,
+            "relevance": 1,
+            "generation": 0,
+            "sourceIds": [
+              1
+            ]
+          },
+          "position": [
+            -1.1,
+            0.7,
+            0.15
+          ],
+          "quaternion": [
+            0.010956291681936764,
+            -0.15683770819400744,
+            0.23708355381879523,
+            0.9586830975195517
+          ],
+          "scale": [
+            1.3,
+            1.3,
+            1.3
+          ]
+        },
+        {
+          "descriptor": {
+            "display": 5,
+            "name": "Sam's Town",
+            "fullUrl": "assets/exhibition-desert/models/sign_05_full.glb",
+            "previewUrl": "assets/exhibition-desert/models/sign_05_preview.glb",
+            "bounds": [
+              [
+                -0.13736000657081604,
+                -3.892596467380827e-9,
+                -0.051559075713157654
+              ],
+              [
+                0.1371919959783554,
+                0.9801939725875854,
+                0.053467001765966415
+              ]
+            ],
+            "fullTriangles": 1985974,
+            "previewTriangles": 80000,
+            "original": true,
+            "relevance": 1,
+            "generation": 0,
+            "sourceIds": [
+              5
+            ]
+          },
+          "position": [
+            0.85,
+            0.7,
+            0.2
+          ],
+          "quaternion": [
+            -0.07808455861091843,
+            0.1364584506196167,
+            -0.20351290650439124,
+            0.9663665918517499
+          ],
+          "scale": [
+            1.1999999999999997,
+            1.2,
+            1.2000000000000002
+          ]
+        }
+      ],
+      "original": false,
+      "relevance": 1,
+      "palette": "#b57350",
+      "generation": 1,
+      "sourceIds": [
+        4,
+        1,
+        5
+      ],
+      "display": 4
+    },
+    {
+      "id": "d88eb18e-cd8a-4fb7-a3ba-b29d51b6bfd7",
+      "kind": "composition",
+      "name": "折叠的旅馆 / Folded Hotel",
+      "parts": [
+        {
+          "descriptor": {
+            "display": 5,
+            "name": "Sam's Town",
+            "fullUrl": "assets/exhibition-desert/models/sign_05_full.glb",
+            "previewUrl": "assets/exhibition-desert/models/sign_05_preview.glb",
+            "bounds": [
+              [
+                -0.13736000657081604,
+                -3.892596467380827e-9,
+                -0.051559075713157654
+              ],
+              [
+                0.1371919959783554,
+                0.9801939725875854,
+                0.053467001765966415
+              ]
+            ],
+            "fullTriangles": 1985974,
+            "previewTriangles": 80000,
+            "original": true,
+            "relevance": 1,
+            "generation": 0,
+            "sourceIds": [
+              5
+            ]
+          },
+          "position": [
+            -0.7,
+            0.2,
+            0.15
+          ],
+          "quaternion": [
+            0.00858633990181472,
+            -0.2041972380153459,
+            0.1847344327679949,
+            0.9613027369688916
+          ],
+          "scale": [
+            2.7,
+            2.7000000000000006,
+            2.7
+          ]
+        },
+        {
+          "descriptor": {
+            "display": 7,
+            "name": "Imperial Palace",
+            "fullUrl": "assets/exhibition-desert/models/sign_07_full.glb",
+            "previewUrl": "assets/exhibition-desert/models/sign_07_preview.glb",
+            "bounds": [
+              [
+                -0.29620400071144104,
+                -9.273633416739813e-9,
+                -0.12283307313919067
+              ],
+              [
+                0.2979130148887634,
+                0.9798579812049866,
+                0.12254299968481064
+              ]
+            ],
+            "fullTriangles": 1877648,
+            "previewTriangles": 80000,
+            "original": true,
+            "relevance": 1,
+            "generation": 0,
+            "sourceIds": [
+              7
+            ]
+          },
+          "position": [
+            0.8,
+            0.4,
+            0
+          ],
+          "quaternion": [
+            -0.030313643576310535,
+            0.17144890372772567,
+            -0.17144890372772567,
+            0.9696863564236895
+          ],
+          "scale": [
+            1.9999999999999998,
+            2,
+            1.9999999999999998
+          ]
+        },
+        {
+          "descriptor": {
+            "display": 3,
+            "name": "Sahara",
+            "fullUrl": "assets/exhibition-desert/models/sign_03_full.glb",
+            "previewUrl": "assets/exhibition-desert/models/sign_03_preview.glb",
+            "bounds": [
+              [
+                -0.1566469967365265,
+                -5.7859326219045215e-9,
+                -0.07663707435131073
+              ],
+              [
+                0.1567690074443817,
+                0.9775090217590332,
+                0.0759579986333847
+              ]
+            ],
+            "fullTriangles": 1943941,
+            "previewTriangles": 80000,
+            "original": true,
+            "relevance": 1,
+            "generation": 0,
+            "sourceIds": [
+              3
+            ]
+          },
+          "position": [
+            0,
+            -0.9,
+            0.3
+          ],
+          "quaternion": [
+            0.13807300831164798,
+            0.025895865983788142,
+            0.5672407266168874,
+            0.8114821048968774
+          ],
+          "scale": [
+            1.1499999999999997,
+            1.1499999999999997,
+            1.15
+          ]
+        }
+      ],
+      "original": false,
+      "relevance": 1,
+      "palette": "#998a82",
+      "generation": 1,
+      "sourceIds": [
+        5,
+        7,
+        3
+      ],
+      "display": 5
+    },
+    {
+      "id": "cda5de3a-2c1b-4f56-8fc1-5d126c16c0b4",
+      "kind": "composition",
+      "name": "路边的仪式 / Roadside Ritual",
+      "parts": [
+        {
+          "descriptor": {
+            "display": 6,
+            "name": "Vegas World",
+            "fullUrl": "assets/exhibition-desert/models/sign_06_full.glb",
+            "previewUrl": "assets/exhibition-desert/models/sign_06_preview.glb",
+            "bounds": [
+              [
+                -0.48931899666786194,
+                -3.2161351359860646e-9,
+                -0.042599067091941833
+              ],
+              [
+                0.4890750050544739,
+                0.8919069766998291,
+                0.0425029993057251
+              ]
+            ],
+            "fullTriangles": 1938170,
+            "previewTriangles": 80000,
+            "original": true,
+            "relevance": 1,
+            "generation": 0,
+            "sourceIds": [
+              6
+            ]
+          },
+          "position": [
+            -0.55,
+            0.2,
+            0
+          ],
+          "quaternion": [
+            0.02170688563468011,
+            0.12277051869533062,
+            0.17274968796600892,
+            0.9770433747602861
+          ],
+          "scale": [
+            2.4,
+            2.4,
+            2.4
+          ]
+        },
+        {
+          "descriptor": {
+            "display": 4,
+            "name": "Pinball Hall of Fame",
+            "fullUrl": "assets/exhibition-desert/models/sign_04_full.glb",
+            "previewUrl": "assets/exhibition-desert/models/sign_04_preview.glb",
+            "bounds": [
+              [
+                -0.3776549994945526,
+                -6.2161951142059024e-9,
+                -0.08233607560396194
+              ],
+              [
+                0.3775329887866974,
+                0.9794009923934937,
+                0.08223000168800354
+              ]
+            ],
+            "fullTriangles": 1952360,
+            "previewTriangles": 79999,
+            "original": true,
+            "relevance": 1,
+            "generation": 0,
+            "sourceIds": [
+              4
+            ]
+          },
+          "position": [
+            0.75,
+            -0.3,
+            0.3
+          ],
+          "quaternion": [
+            0.1054677365953123,
+            -0.12873232486552094,
+            -0.23089608448878507,
+            0.9586404660976542
+          ],
+          "scale": [
+            1.9,
+            1.9000000000000001,
+            1.9
+          ]
+        }
+      ],
+      "original": false,
+      "relevance": 1,
+      "palette": "#c17551",
+      "generation": 1,
+      "sourceIds": [
+        6,
+        4
+      ],
+      "display": 6
+    },
+    {
+      "id": "63733c2a-adcd-47a8-a07b-c595adc28c7f",
+      "kind": "composition",
+      "name": "城市的回声 / City Echoes",
+      "parts": [
+        {
+          "descriptor": {
+            "display": 2,
+            "name": "Dunes",
+            "fullUrl": "assets/exhibition-desert/models/sign_02_full.glb",
+            "previewUrl": "assets/exhibition-desert/models/sign_02_preview.glb",
+            "bounds": [
+              [
+                -0.25503501296043396,
+                -2.290455380915546e-9,
+                -0.030338075011968613
+              ],
+              [
+                0.25500500202178955,
+                0.9821169972419739,
+                0.028967000544071198
+              ]
+            ],
+            "fullTriangles": 1976508,
+            "previewTriangles": 80000,
+            "original": true,
+            "relevance": 1,
+            "generation": 0,
+            "sourceIds": [
+              2
+            ]
+          },
+          "position": [
+            -0.85,
+            0.2,
+            0.1
+          ],
+          "quaternion": [
+            -0.01554378914467761,
+            -0.12370197962726148,
+            0.12370197962726148,
+            0.9844562108553223
+          ],
+          "scale": [
+            2.4,
+            2.4,
+            2.4
+          ]
+        },
+        {
+          "descriptor": {
+            "display": 7,
+            "name": "Imperial Palace",
+            "fullUrl": "assets/exhibition-desert/models/sign_07_full.glb",
+            "previewUrl": "assets/exhibition-desert/models/sign_07_preview.glb",
+            "bounds": [
+              [
+                -0.29620400071144104,
+                -9.273633416739813e-9,
+                -0.12283307313919067
+              ],
+              [
+                0.2979130148887634,
+                0.9798579812049866,
+                0.12254299968481064
+              ]
+            ],
+            "fullTriangles": 1877648,
+            "previewTriangles": 80000,
+            "original": true,
+            "relevance": 1,
+            "generation": 0,
+            "sourceIds": [
+              7
+            ]
+          },
+          "position": [
+            0.7,
+            0.35,
+            0.05
+          ],
+          "quaternion": [
+            0.030424506502139785,
+            0.1305312288620848,
+            -0.14192569421403592,
+            0.980761461833467
+          ],
+          "scale": [
+            2.1,
+            2.1,
+            2.0999999999999996
+          ]
+        },
+        {
+          "descriptor": {
+            "display": 1,
+            "name": "Golden Nugget",
+            "fullUrl": "assets/exhibition-desert/models/sign_01_full.glb",
+            "previewUrl": "assets/exhibition-desert/models/sign_01_preview.glb",
+            "bounds": [
+              [
+                -0.368012011051178,
+                -3.89984400328558e-9,
+                -0.05165507271885872
+              ],
+              [
+                0.36831700801849365,
+                0.9768069982528687,
+                0.05181499943137169
+              ]
+            ],
+            "fullTriangles": 1790009,
+            "previewTriangles": 80000,
+            "original": true,
+            "relevance": 1,
+            "generation": 0,
+            "sourceIds": [
+              1
+            ]
+          },
+          "position": [
+            0,
+            -1,
+            0.3
+          ],
+          "quaternion": [
+            0.00992932811269875,
+            0.1984210458640611,
+            0.04898291339046186,
+            0.9788417498233436
+          ],
+          "scale": [
+            1.2,
+            1.2,
+            1.2
+          ]
+        }
+      ],
+      "original": false,
+      "relevance": 1,
+      "palette": "#a47d6e",
+      "generation": 1,
+      "sourceIds": [
+        2,
+        7,
+        1
+      ],
+      "display": 7
+    }
+  ]
+}
