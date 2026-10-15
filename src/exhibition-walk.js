@@ -83,7 +83,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
     if(document.activeElement===surface)surface.blur();
   }
   function focusView() {
-    if(!immersive){suspendNavigation();return;}
+    surface.dataset.inputActive='true';
     active = true;
     if (axonControls) axonControls.enabled = viewMode === 'axonometric';
     surface.focus({preventScroll:true});
@@ -285,7 +285,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
   surface.addEventListener('pointerleave',()=>surface.classList.remove('show-exit'));
   $('walk-exit').addEventListener('click',leaveImmersive);
   // Capture focus before OrbitControls receives the pointer-down event.
-  canvas.addEventListener('pointerdown',() => {if(viewMode==='axonometric')focusView();},true);
+  surface.addEventListener('pointerdown',event => {if(event.target===canvas)focusView();},true);
   axonControls = new OrbitControls(axonCamera,canvas);
   axonControls.enabled=false;axonControls.enableDamping=false;
   axonControls.minPolarAngle=0.12;axonControls.maxPolarAngle=Math.PI/2-0.10;
@@ -312,10 +312,10 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
     if(twoPoint)pitch=clamp(pitch,-0.8,0.8);
     ui();requestFrame();
   }
-  ui();resize();
+  setViewMode('axonometric');
   canvas.addEventListener('contextmenu',event => event.preventDefault());
   canvas.addEventListener('pointerdown',event => {
-    if (!immersive || viewMode === 'axonometric' || event.button > 2) return;
+    if (viewMode === 'axonometric' || event.button > 2) return;
     event.preventDefault(); focusView(); teleport = null;
     const hit = event.button === 2 ? hitAt(event) : null;
     const pivot = hit?.point.clone() || eye.clone().add(camera.getWorldDirection(new THREE.Vector3()).multiplyScalar(5));
@@ -398,10 +398,10 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
   document.addEventListener('keyup',event => {
     if (keys.delete(event.code)) requestFrame();
   });
-  surface.addEventListener('focus',() => {active=immersive;if(axonControls)axonControls.enabled=immersive&&viewMode==='axonometric';});
+  surface.addEventListener('focus',() => {active=true;surface.dataset.inputActive='true';if(axonControls)axonControls.enabled=viewMode==='axonometric';});
   surface.addEventListener('blur',() => {active=false;axonControls.enabled=false;clearInput();teleport=null;});
   document.addEventListener('pointerdown',event => {
-    if (!surface.contains(event.target)) {active=false;axonControls.enabled=false;clearInput();teleport=null;surface.blur();}
+    if (!surface.contains(event.target)) {surface.dataset.inputActive='false';active=false;axonControls.enabled=false;clearInput();teleport=null;surface.blur();}
   },true);
   window.addEventListener('blur',() => {active=false;axonControls.enabled=false;clearInput();teleport=null;});
   document.addEventListener('visibilitychange',() => {

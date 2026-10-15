@@ -17,7 +17,12 @@ function attach(viewer,{frame,fitCamera,applyCamera,onChange,listEntries=null,on
   hint.textContent=phase==='overview'?'Click the model to enter your saved view · '+(index+1)+' / '+ids.length:phase==='entering'?'Saved view · '+(index+1)+' / '+ids.length:phase==='detail'?'Saved view · '+(index+1)+' / '+ids.length:'';
   frame.dataset.galleryPhase=phase;stage.dataset.gallerySwitching=String(switching);onChange();
  }
- function stop(){ticket++;cancelAnimationFrame(raf);raf=0;if(panResolve){panResolve(false);panResolve=null;}}
+ function freezeRotation(){
+  if(!viewer.autoRotate)return;
+  const pose=SavedSculptures.cameraView(viewer),rotation=viewer.turntableRotation||0;
+  viewer.autoRotate=false;viewer.resetTurntableRotation(0);pose.orbit.theta-=rotation;applyCamera(pose);viewer.jumpCameraToGoal();
+ }
+ function stop(){freezeRotation();ticket++;cancelAnimationFrame(raf);raf=0;if(panResolve){panResolve(false);panResolve=null;}}
  function reset(preserveSwitch=false){stop();if(!preserveSwitch)disposeBuffer();entry=null;phase='idle';ids=[];index=-1;switching=preserveSwitch;viewer.style.transform='';viewer.style.visibility='';viewer.style.opacity=buffer?'0':'';viewer.cameraControls=true;ui();}
  function beginBrowse(){switching=true;ui();}
  async function set(entryValue){
@@ -126,16 +131,8 @@ function attach(viewer,{frame,fitCamera,applyCamera,onChange,listEntries=null,on
  }
  function overview(){
   if(!entry)return;stop();fitCamera();switching=false;phase='overview';viewer.style.visibility='';viewer.style.opacity='1';viewer.cameraControls=false;ui();
-  const run=ticket;let previous=0;
-  const spin=async now=>{
-   if(run!==ticket||phase!=='overview')return;
-   const bounds=frame.getBoundingClientRect(),visible=!document.hidden&&bounds.bottom>0&&bounds.top<innerHeight;
-   if(previous&&visible&&!reduced.matches){
-    const camera=SavedSculptures.cameraView(viewer);camera.orbit.theta+=Math.min((now-previous)/1000,.05)*Math.PI/12;
-    applyCamera(camera);await viewer.updateComplete;if(run!==ticket)return;viewer.jumpCameraToGoal();
-   }
-   previous=now;if(run===ticket)raf=requestAnimationFrame(spin);
-  };raf=requestAnimationFrame(spin);
+  viewer.resetTurntableRotation(0);viewer.autoRotateDelay=0;viewer.rotationPerSecond=reduced.matches?'0deg':'15deg';viewer.autoRotate=!reduced.matches;
+
  }
  async function enter(){
   if(phase!=='overview'||!entry)return;stop();const run=ticket,from=SavedSculptures.cameraView(viewer),to=entry.camera||from;

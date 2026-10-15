@@ -6,16 +6,18 @@ async function crop(blob){const im=await createImageBitmap(blob),raw=document.cr
  for(let x=0;x<w;x++){add(x);add((h-1)*w+x);}for(let y=0;y<h;y++){add(y*w);add(y*w+w-1);}
  while(head<tail){const i=todo[head++],x=i%w;p[i*4+3]=0;if(x>0)add(i-1);if(x<w-1)add(i+1);add(i-w);add(i+w);}
  let x0=w,y0=h,x1=-1,y1=-1;for(let y=0;y<h;y++)for(let x=0;x<w;x++)if(p[(y*w+x)*4+3]>64){x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x);y1=Math.max(y1,y);}
- const out=document.createElement('canvas');out.width=out.height=640;const ctx=out.getContext('2d');ctx.fillStyle='rgb(242,242,242)';ctx.fillRect(0,0,640,640);
- if(x1>=x0){g.putImageData(data,0,0);const width=x1-x0+1,height=y1-y0+1,scale=Math.min(620/width,620/height);ctx.drawImage(raw,x0,y0,width,height,(640-width*scale)/2,(640-height*scale)/2,width*scale,height*scale);}
+ const out=document.createElement('canvas');out.width=800;out.height=600;const ctx=out.getContext('2d');ctx.fillStyle='rgb(242,242,242)';ctx.fillRect(0,0,800,600);
+ if(x1>=x0){g.putImageData(data,0,0);const width=x1-x0+1,height=y1-y0+1,scale=Math.min(780/width,580/height);ctx.drawImage(raw,x0,y0,width,height,(800-width*scale)/2,(600-height*scale)/2,width*scale,height*scale);}
  return new Promise((resolve,reject)=>out.toBlob(b=>b?resolve(b):reject(Error('Saved-view preview unavailable')),'image/png'));
 }
 async function modelPreview(row){
+ while(document.hidden||window.ExhibitionAgent?.state().busy||window.ExhibitionAgentDrafts?.state().busy||window.ExhibitionMedia?.state().videoPlaying||window.ExhibitionMedia?.state().audioPlaying||(()=>{const v=document.getElementById('generated-sculpture-viewer'),r=v?.getBoundingClientRect();return v?.autoRotate&&r?.bottom>0&&r.top<innerHeight;})())await new Promise(r=>setTimeout(r,400));
+
  if(!(row.glb instanceof Blob))return crop(row.preview);
  await customElements.whenDefined('model-viewer');
  const viewer=document.createElement('model-viewer'),url=URL.createObjectURL(row.glb);
  viewer.setAttribute('aria-hidden','true');viewer.tabIndex=-1;viewer.setAttribute('loading','eager');viewer.setAttribute('interaction-prompt','none');viewer.setAttribute('exposure','1');viewer.setAttribute('shadow-intensity','.25');
- viewer.style.cssText='position:fixed;left:0;top:0;width:640px;height:640px;opacity:0;z-index:-1;pointer-events:none;background:rgb(242,242,242)';
+ viewer.style.cssText='position:fixed;left:0;top:0;width:800px;height:600px;opacity:0;z-index:-1;pointer-events:none;background:rgb(242,242,242)';
  (document.fullscreenElement||document.body).append(viewer);
  try{
   await new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(Error('Card model preview timed out.')),15000);viewer.addEventListener('load',()=>{clearTimeout(timer);resolve();},{once:true});viewer.addEventListener('error',()=>{clearTimeout(timer);reject(Error('Card model could not load.'));},{once:true});viewer.src=url;});
@@ -47,7 +49,7 @@ function attach(grid,rows){
  cleanup();observers.get(grid)?.disconnect();const byId=new Map(rows.map(r=>[r.id,r]));
  function prepare(card){
   const row=byId.get(card.dataset.saved),im=card.querySelector('img');if(!row?.preview||!im)return;
-  im.dataset.previewPending='true';
+
   preview(row).then(blob=>{if(!im.isConnected)return;const url=URL.createObjectURL(blob);urls.set(im,url);im.src=url;delete im.dataset.previewPending;im.dataset.savedViewReady='true';}).catch(()=>{delete im.dataset.previewPending;});
  }
  if(!window.IntersectionObserver){for(const card of grid.children)prepare(card);return;}

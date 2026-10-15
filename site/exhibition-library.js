@@ -1,11 +1,11 @@
 /* Device-local model references: generated library and explicit placement collection. */
 (()=>{'use strict';
 const $=id=>document.getElementById(id),urls=new Map(),KEY='learning-vegas-agent-model-libraries-v1';
-let rendering=0,placing=false,rows=[],generated=[],collection=[],selection=new Set(),anchor=null,sourceMode=false;
-try{const v=JSON.parse(localStorage.getItem(KEY)||'{}');generated=Array.isArray(v.generated)?v.generated:[];collection=Array.isArray(v.collection)?v.collection:[];}catch{}
+let rendering=0,placing=false,rows=[],generated=[],collection=[],selection=new Set(),anchor=null,sourceMode=false,manualPool=false;
+try{const v=JSON.parse(localStorage.getItem(KEY)||'{}');generated=Array.isArray(v.generated)?v.generated:[];collection=Array.isArray(v.collection)?v.collection:[];manualPool=!!v.manualPool;}catch{}
 const identity=r=>r.record?.id||r.id;
 const unique=list=>[...new Map(list.map(r=>[identity(r),r])).values()];
-function persist(){localStorage.setItem(KEY,JSON.stringify({generated,collection}));}
+function persist(){localStorage.setItem(KEY,JSON.stringify({generated,collection,manualPool}));}
 function busy(){return placing||!!window.ExhibitionAgent?.state().busy||!!window.ExhibitionAgentDrafts?.state().busy||!!window.ExhibitionStudio?.state().model.busy;}
 function generatedRows(){const ids=new Set(generated);return unique(rows.filter(r=>ids.has(r.id)));}
 function collectionRows(){const byId=new Map(rows.map(r=>[r.id,r]));return unique(collection.map(id=>byId.get(id)).filter(Boolean));}
@@ -46,8 +46,10 @@ async function saveCurrent(number,metadata={}){const model=ExhibitionStudio.capt
  const result=await SavedSculptures.save(model.record,viewer,{title:(model.record.target==='city'?'City':'Sculpture')+' / '+new Date().toLocaleTimeString('en-GB')+' / '+number,group:'Agent batch',...metadata});generated.push(result.entry.id);persist();await render();return result.entry;}
 const random=()=>crypto.getRandomValues(new Uint32Array(1))[0]/4294967296;
 async function arrange(){if(busy())return;placing=true;refreshLayoutButton();let done=0;
- try{await ExhibitionWalk.placement.ready;const selected=collectionRows();if(!selected.length)throw Error('Add models to the placement collection first.');
- const layout=ExhibitionLayoutPlanner.plan(selected,{random}),floor=ExhibitionWalk.placement.state().models;
+ try{await ExhibitionWalk.placement.ready;await render();const count=Math.max(0,Math.min(50,Math.round(Number($('exhibition-place-count').value)||0))),pool=manualPool?collectionRows():unique(rows);if(!count)return;if(!pool.length)throw Error('Save models in the lower library first.');
+ const shuffled=[...pool];for(let i=shuffled.length-1;i>0;i--){const j=Math.floor(random()*(i+1));[shuffled[i],shuffled[j]]=[shuffled[j],shuffled[i]];}
+ const selected=Array.from({length:count},(_,i)=>shuffled[i%shuffled.length]);
+ const layout=ExhibitionLayoutPlanner.plan(selected.map((r,i)=>({...r,id:r.id+':instance:'+i})),{random}),floor=ExhibitionWalk.placement.state().models;
  const existing=ExhibitionWalk.placement.browseEntries(),byModel=new Map(existing.map(r=>[r.id.replace('exhibit:',''),r]));
  const used=new Set(),matched=selected.map(row=>floor.find(f=>!used.has(f.id)&&identity(byModel.get(f.modelId)||{})===identity(row)&&(used.add(f.id),true)));
  ExhibitionWalk.space?.showOriginal();
@@ -57,18 +59,23 @@ async function arrange(){if(busy())return;placing=true;refreshLayoutButton();let
  $('exhibition-layout-status').textContent=done+' arranged';$('place-model-status').textContent=done+' models arranged in the current view.';
  }catch(e){$('exhibition-layout-status').textContent=e.message;$('place-model-status').textContent=e.message;}finally{placing=false;renderPanes();}
 }
-function refreshLayoutButton(){const disabled=busy()||!collectionRows().length;$('exhibition-layout-run').disabled=disabled;$('place-model-run').disabled=disabled;}
+function refreshLayoutButton(){
+ const count=Math.max(0,Math.min(50,Number($('exhibition-place-count').value)||0)),pool=manualPool?collectionRows():unique(rows);
+ $('exhibition-place-count').disabled=busy();$('exhibition-place-count-value').textContent=String(count);$('place-model-random').hidden=!manualPool;
+ const disabled=busy()||count===0||!pool.length;$('exhibition-layout-run').disabled=disabled;$('place-model-run').disabled=disabled;}
 // PLACE never changes the walk/axon camera.
 $('agent-model-toggle').onclick=()=>{$('agent-model-toggle').closest('details').open=false;selection.clear();ExhibitionWorkspace.openPanel('agent-models');renderPanes();};
-$('place-model-toggle').onclick=()=>{selection.clear();sourceMode=false;ExhibitionWorkspace.openPanel('placement');renderPanes();};
+$('place-model-toggle').onclick=()=>{$('place-agent-options').open=false;selection.clear();collection.forEach(id=>selection.add(id));sourceMode=true;ExhibitionWorkspace.openPanel('placement');renderPanes();};
+$('place-model-random').onclick=()=>{if(busy())return;manualPool=false;persist();renderPanes();};
+$('exhibition-place-count').oninput=refreshLayoutButton;
 $('place-model-source').onclick=()=>{if(busy())return;sourceMode=!sourceMode;selection.clear();anchor=null;renderPanes();};
-$('place-model-add').onclick=()=>{if(busy())return;collection=unique([...collectionRows(),...currentRows().filter(r=>selection.has(r.id))]).map(r=>r.id);persist();selection.clear();sourceMode=false;renderPanes();};
+$('place-model-add').onclick=()=>{if(busy())return;collection=unique(currentRows().filter(r=>selection.has(r.id))).map(r=>r.id);manualPool=true;persist();selection.clear();sourceMode=false;renderPanes();};
 $('place-model-remove').onclick=()=>{if(busy())return;collection=collection.filter(id=>!selection.has(id));persist();selection.clear();renderPanes();};
 $('exhibition-layout-run').onclick=arrange;$('place-model-run').onclick=arrange;
-for(const name of ['exhibition-draft-queue-change','exhibition-placement-change','exhibition-studio-ready'])window.addEventListener(name,refreshLayoutButton);
+for(const name of ['exhibition-draft-queue-change','exhibition-placement-change','exhibition-studio-ready','exhibition-agent-change'])window.addEventListener(name,refreshLayoutButton);
 SavedSculptures.subscribe(()=>render().catch(e=>$('workspace-library-status').textContent=e.message));
 new MutationObserver(refreshLayoutButton).observe($('model-frame'),{attributes:true,attributeFilter:['aria-busy']});
 window.addEventListener('pagehide',()=>urls.forEach(u=>URL.revokeObjectURL(u)));
-window.ExhibitionLibrary=Object.freeze({render,saveCurrent,arrange,state:()=>({placing,count:rows.length,generated:generatedRows().map(r=>r.id),collection:collectionRows().map(r=>r.id),sourceMode})});
+window.ExhibitionLibrary=Object.freeze({render,saveCurrent,arrange,state:()=>({placing,count:rows.length,generated:generatedRows().map(r=>r.id),collection:collectionRows().map(r=>r.id),sourceMode,manualPool,requested:Number($('exhibition-place-count').value)})});
 render().catch(e=>$('workspace-library-status').textContent=e.message);
 })();

@@ -2,7 +2,7 @@
 (()=>{
 'use strict';
 const $=id=>document.getElementById(id),runButton=$('exhibition-agent-run'),status=$('exhibition-agent-status');
-let stopRequested=false,completed=0,total=0;
+let stopRequested=false,completed=0,collagesCompleted=0,total=0,failures=[];
 let busy=false,phase='idle',plan=null,previous=null,error='',lastTheme=-1;
 const recent=new Set(),themes=[
  {id:'borrowed-monuments',title:'Borrowed monuments',terms:/eiffel|paris|egypt|pyramid|sphinx|liberty|venetian|venice|roman|caesars|colosseum|luxor|new york/i},
@@ -13,13 +13,13 @@ const random=()=>crypto.getRandomValues(new Uint32Array(1))[0]/4294967296;
 function setPhase(value,text){phase=value;status.textContent=text;render();}
 function render(){
  const studio=window.ExhibitionStudio,state=studio?.state().model;
- runButton.disabled=!studio||busy||!!window.ExhibitionAgentDrafts?.state().busy||!!state?.busy||Number($('exhibition-agent-count').value)===0;$('exhibition-agent-count').disabled=busy||!!window.ExhibitionAgentDrafts?.state().busy;$('exhibition-agent-stop').hidden=!busy;$('exhibition-layout-run').disabled=busy||!!window.ExhibitionAgentDrafts?.state().busy||!!window.ExhibitionLibrary?.state().placing||!window.ExhibitionLibrary?.state().collection.length;runButton.textContent=busy?'...':'+';runButton.title=status.textContent||'Compose editable collages first';$('exhibition-agent-keyword').textContent=phase==='error'?'ERROR':phase==='generating'?'BUILD':phase==='matching'?'MATCH':phase==='selecting'?'SELECT':phase==='ready'?'READY':phase==='collage-ready'?'EDIT':'AGENT';runButton.setAttribute('aria-busy',String(busy));
+ runButton.disabled=!studio||!state?.ready||busy||!!window.ExhibitionAgentDrafts?.state().busy||!!state?.busy||Number($('exhibition-agent-count').value)===0;$('exhibition-agent-count').disabled=busy||!!window.ExhibitionAgentDrafts?.state().busy;$('exhibition-agent-stop').hidden=!busy;runButton.textContent=busy?'...':'+';runButton.title=status.textContent||'Compose and generate models';$('exhibition-agent-keyword').textContent=phase==='error'?'ERROR':phase==='generating'?'BUILD':phase==='matching'?'MATCH':phase==='selecting'?'SELECT':phase==='ready'?'READY':phase==='collage-ready'?'EDIT':'AGENT';runButton.setAttribute('aria-busy',String(busy));
  $('exhibition-agent-edit').hidden=!plan;$('exhibition-agent-edit').disabled=busy||!!window.ExhibitionAgentDrafts?.state().busy;
  $('exhibition-agent-previous').hidden=!previous;$('exhibition-agent-previous').disabled=busy||!!window.ExhibitionAgentDrafts?.state().busy;
 }
 function lock(value){
- document.body.dataset.archiveAgentBusy=String(value);
- for(const id of ['workspace-collage-pane','model-panel','saved-model-grid','workspace-library-grid'])$(id).inert=value;
+ document.body.dataset.archiveAgentBusy=String(value);window.dispatchEvent(new Event('exhibition-agent-change'));
+ for(const id of ['workspace-collage-pane','model-panel','saved-model-grid','workspace-library-grid','archive-collage-pane','archive-space-pane'])$(id).inert=value;
  // Generation remains explicit; navigation through the room still works while it runs.
 }
 function eligible(o,photo){
@@ -67,22 +67,32 @@ async function makeSculpturePlan(excluded){
 }
 async function run(){
  if(busy||window.ExhibitionAgentDrafts?.state().busy||!window.ExhibitionStudio||ExhibitionStudio.state().model.busy||ExhibitionLibrary.state().placing)return;
- total=Math.max(0,Math.min(50,Math.round(Number($('exhibition-agent-count').value)||0)));if(!total)return;completed=0;stopRequested=false;$('exhibition-agent-stop').disabled=false;busy=true;error='';lock(true);let applied=false;
+ if(!ExhibitionStudio.state().model.ready){error='The local 3D generator is unavailable.';setPhase('error',error);return;}
+ total=Math.max(0,Math.min(50,Math.round(Number($('exhibition-agent-count').value)||0)));if(!total)return;completed=0;collagesCompleted=0;failures=[];stopRequested=false;$('exhibition-agent-stop').disabled=false;busy=true;error='';lock(true);let applied=false;
  try{
   await ExhibitionBrowse.close();await ExhibitionStudio.prepareAgent();previous=ExhibitionStudio.captureDraft();ExhibitionWorkspace.closePanel();
   for(let number=1;number<=total;number++){
-   if(stopRequested)break;const direction=random()<.5?'city':'sculpture';setPhase('selecting',completed+' / '+total+' collages / choosing '+(direction==='city'?'Las Vegas':'V&A')+' fragments');
-   let proposed;const excluded=new Set();for(let attempt=0;attempt<3;attempt++){proposed=await makePlan(excluded,direction);setPhase('composing',completed+' / '+total+' collages / composing');try{await ExhibitionStudio.applyAgentPlan(proposed);plan=ExhibitionStudio.getDocument().agentPlan;applied=true;break;}catch(e){proposed.pieces.forEach(p=>excluded.add(p.key));if(attempt===2)throw e;}}
+   if(stopRequested)break;const direction=random()<.5?'city':'sculpture';setPhase('selecting',completed+' / '+total+' models / choosing '+(direction==='city'?'Las Vegas':'V&A')+' fragments');
+   let proposed;const excluded=new Set();for(let attempt=0;attempt<3;attempt++){proposed=await makePlan(excluded,direction);setPhase('composing',completed+' / '+total+' models / composing');try{await ExhibitionStudio.applyAgentPlan(proposed);plan=ExhibitionStudio.getDocument().agentPlan;applied=true;break;}catch(e){proposed.pieces.forEach(p=>excluded.add(p.key));if(attempt===2)throw e;}}
    lastTheme=plan.themeIndex;plan.pieces.forEach(p=>{recent.add(p.key);if(p.partId)recent.add(p.partId);});while(recent.size>120)recent.delete(recent.values().next().value);render();
-   await ExhibitionAgentDrafts.save(number);ExhibitionStudio.releaseUnused();completed++;setPhase('collage-ready',completed+' / '+total+' collages ready');
+   const draft=await ExhibitionAgentDrafts.save(number);collagesCompleted++;
+   try{
+    setPhase('generating',completed+' / '+total+' models / generating '+number);
+    await ExhibitionStudio.generate();const state=ExhibitionStudio.state().model;
+    if(state.error)throw Error(state.error);if(!state.jobId)throw Error('No model was produced.');
+    await ExhibitionAgentDrafts.waitForPreview(state.jobId);
+    const entry=await ExhibitionLibrary.saveCurrent(number,{title:draft.title,group:'Agent batch'});
+    await ExhibitionAgentDrafts.attachModel(draft.id,entry.id);completed++;
+   }catch(e){failures.push({id:draft.id,message:e.message});}
+   ExhibitionStudio.releaseUnused();setPhase('ready',completed+' / '+total+' models saved');
 
   }
-  setPhase('collage-ready',completed+' / '+total+' collages ready'+(stopRequested?' / stopped':''));if(completed){$('workspace-collage-library').open=true;await ExhibitionAgentDrafts.render();}
- }catch(e){error=e.message;setPhase('error',completed+' / '+total+' collages ready. '+(applied?'Current collage kept. ':'')+error);}
+  setPhase(failures.length?'error':'ready',completed+' / '+total+' models saved / '+collagesCompleted+' collages'+(stopRequested?' / stopped':'')+(failures.length?' / '+failures.length+' failed: '+failures.at(-1).message:''));if(completed){$('model-history').open=true;window.ExhibitionArchives?.select('models');}await ExhibitionAgentDrafts.render();
+ }catch(e){error=e.message;setPhase('error',completed+' / '+total+' models saved. '+(applied?'Current collage kept. ':'')+error);}
  finally{busy=false;lock(false);render();}
 }
 $('exhibition-agent-count').oninput=()=>{$('exhibition-agent-count-value').textContent=$('exhibition-agent-count').value;render();};
-$('exhibition-agent-stop').onclick=()=>{stopRequested=true;status.textContent='Stopping after the current collage is saved...';$('exhibition-agent-stop').disabled=true;};
+$('exhibition-agent-stop').onclick=()=>{stopRequested=true;status.textContent='Finishing and saving the current model, then stopping...';$('exhibition-agent-stop').disabled=true;};
 runButton.onclick=run;
 $('exhibition-agent-edit').onclick=()=>{if(busy||window.ExhibitionAgentDrafts?.state().busy)return;ExhibitionWorkspace.openPanel(ExhibitionStudio.state().sourceSurface==='sculpture'?'sculpture':'collage');$('exhibition-message').textContent='Every object is editable. Adjust the collage, then click Generate updated 3D.';};
 $('exhibition-agent-previous').onclick=async()=>{
@@ -93,5 +103,5 @@ $('exhibition-agent-previous').onclick=async()=>{
 window.addEventListener('exhibition-counterparts-preparing',()=>{if(busy)setPhase('matching','Matching city silhouettes to V&A sculpture fragments...');});
 window.addEventListener('exhibition-studio-ready',render);window.addEventListener('exhibition-draft-queue-change',render);
 new MutationObserver(render).observe($('model-frame'),{attributes:true,attributeFilter:['aria-busy']});
-window.ExhibitionAgent=Object.freeze({run,makePlan,state:()=>({busy,phase,error,completed,total,stopRequested,plan:plan?structuredClone(plan):null,canRestore:!!previous})});render();
+window.ExhibitionAgent=Object.freeze({run,makePlan,state:()=>({busy,phase,error,completed,collagesCompleted,failures:structuredClone(failures),total,stopRequested,plan:plan?structuredClone(plan):null,canRestore:!!previous})});render();
 })();

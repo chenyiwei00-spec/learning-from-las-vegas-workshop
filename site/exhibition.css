@@ -548,3 +548,12 @@ body[data-archive-agent-busy=true] .agent-library-control{display:none}
 #archive-collage-grid .saved-model-image,#archive-space-grid .saved-model-image{aspect-ratio:1}
 #archive-collage-grid .saved-model-image,#archive-collage-grid .saved-model-image img{background:#fff}
 #model-stage:fullscreen #model-fullscreen{display:none}
+
+/* Restore landscape cards and align their type marker with the metadata. */
+.exhibition-page .exhibition-model-library button.saved-model-image,#archive-collage-grid .saved-model-image,#archive-space-grid .saved-model-image{aspect-ratio:4/3}
+.exhibition-page .exhibition-model-library .saved-model-image img{aspect-ratio:4/3}
+.exhibition-model-library .saved-model-image span{left:20px}
+.exhibition-model-library .saved-model-meta h3{min-height:53px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.exhibition-model-library .saved-model-meta .saved-group{min-height:16px}
+.agent-libraries-menu>[hidden]{display:none!important}
+#place-agent-options .agent-libraries-menu{width:150px}
