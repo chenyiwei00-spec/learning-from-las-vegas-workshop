@@ -80,14 +80,10 @@ callback unused and implement its own lighting.
 An iframe or other Three.js version can be bridged using copies of the GLB blobs
 rather than passing Object3D instances between runtimes.
 
-## Teammate branch integration
+## Team integration
 
-The independent single-sculpture prototype is available through the exhibition's
-**Inhabit** entry. Its adapter has been ported onto the latest interface, retaining
-the current libraries, model preview, MAKE SPACE controls, agents and media.
-The optional same-origin GLB bridge keeps its runtime and independent buildings
-separate from the existing MAKE SPACE aggregation engine. It does not register a
-competing MAKE SPACE handler. See [INHABITABLE_SCULPTURE_ZH.md](INHABITABLE_SCULPTURE_ZH.md).
+Keep the shared exhibition interface and its existing MAKE SPACE workflow.
+The separate single-sculpture prototype is not included in this shared website.
 
 After implementation:
 

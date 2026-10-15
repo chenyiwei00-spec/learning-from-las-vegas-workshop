@@ -1,6 +1,0 @@
-import {collectGeometry} from './collectGeometry.js';
-export class AnalysisService{
- constructor(){this.cache=new Map();this.pending=new Map();this.next=0;this.worker=new Worker(new URL('./analysis.worker.js',import.meta.url),{type:'module'});this.worker.onmessage=({data})=>{const p=this.pending.get(data.id);if(!p)return;this.pending.delete(data.id);data.error?p.reject(new Error(data.error)):p.resolve(data.result);};this.worker.onerror=e=>{for(const p of this.pending.values())p.reject(new Error(e.message||'Geometry analysis worker failed.'));this.pending.clear();this.cache.clear();};}
- analyze(loaded){const key=loaded.metadata.sha256;if(!this.cache.has(key)){const geometry=collectGeometry(loaded.scene),id=++this.next;const promise=new Promise((resolve,reject)=>{this.pending.set(id,{resolve,reject});this.worker.postMessage({id,geometry},[geometry.positions.buffer,geometry.indices.buffer]);}).then(result=>({...result,id:loaded.entry.id,name:loaded.entry.name,sha256:key})).catch(error=>{this.cache.delete(key);throw error;});this.cache.set(key,promise);}return this.cache.get(key).then(a=>({...a,id:loaded.entry.id,name:loaded.entry.name}));}
- dispose(){this.worker.terminate();for(const p of this.pending.values())p.reject(new Error('Analysis stopped.'));this.pending.clear();}
-}
