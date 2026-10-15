@@ -169,7 +169,7 @@ async function create(options){
   const ticket=++epoch;restoreRevision++;busy=false;loaded=false;render();
   if(typeof entry==='string')entry=await SavedSculptures.get(entry);if(ticket!==epoch)return false;
   if(!valid(entry?.record)||!(entry.glb instanceof Blob))throw Error('This saved model is invalid.');
-  if(options.associateMedia&&(!entry.record.linkedMedia||entry.record.linkedMedia.version<2)&&entry.composition){const linkedMedia=await options.associateMedia(entry.composition);if(entry.record.linkedMedia?.video)linkedMedia.video={...entry.record.linkedMedia.video,muted:true};if(ticket!==epoch)return false;if(!entry.ephemeral)await SavedSculptures.updateMedia(entry.id,linkedMedia);if(ticket!==epoch)return false;entry={...entry,record:{...entry.record,linkedMedia}};}
+  if(options.associateMedia&&entry.record.target!=='space'&&(!entry.record.linkedMedia?.video?.url||!entry.record.linkedMedia?.audio?.url)&&entry.composition){const linkedMedia=await options.associateMedia(entry.composition);for(const type of ['video','audio'])if(entry.record.linkedMedia?.[type]?.url)linkedMedia[type]=entry.record.linkedMedia[type];if(ticket!==epoch)return false;if(!entry.ephemeral)await SavedSculptures.updateMedia(entry.id,linkedMedia);if(ticket!==epoch)return false;entry={...entry,record:{...entry.record,linkedMedia}};}
   busy=false;record=structuredClone(entry.record);libraryEntry=entry;loaded=false;loadingError=false;lastError='';
   $('model-name').value=entry.title;$('model-group').value=entry.group||'';pendingCamera=null;incomingDirection=direction;interaction.reset();await gallery.set(entry);if(ticket!==epoch)return false;render();await loadMesh(gallery.source(entry.id)||entry.glb);return ticket===epoch;
  }
