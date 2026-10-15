@@ -1,6 +1,6 @@
 import {analyseSource,Builder,meshBounds} from './form-geometry.js';
 import {SETTINGS,validateComposition} from './form-state.js';
-import {seeded,rotation,profile,forward,moduleDistance,massFunction,makeVoids,remesh,topology,vertexColor,clamp,keepPrimaryCore} from './surreal-volume.js';
+import {seeded,rotation,profile,forward,moduleDistance,massFunction,makeVoids,remesh,topology,vertexColor,clamp,keepPrimaryCore,refineSurface} from './surreal-volume.js';
 import {surfaceGrid,buildNavigation,validateCirculation,floorAt,renderedFloor,floorClear,prepareTerrain,terrainVoid,bodyClear,buildWideRoutes} from './surreal-navigation.js';
 const TAU=Math.PI*2,distance=(a,b)=>Math.hypot(a.x-b.x,a.z-b.z);
 function curve(a,b,width,rng,role,options={}){
@@ -16,11 +16,11 @@ function curve(a,b,width,rng,role,options={}){
  return {points,width,role,length:total,maxGrade:rise/(lengths[last]-lengths[first]||1),from:a.id,to:b.id};
 }
 function growth(items,analysis,s,rng){
- const modules=[],nodes=[],edges=[],count=Math.max(items.length,s.moduleCount);
+ const modules=[],nodes=[],edges=[],count=s.layoutDriven?items.length:Math.max(items.length,s.moduleCount);
  const compact=clamp(s.compactness+(s.density-.7)*.18,0,1),lock=clamp(s.interlocking+(s.connectionStrength-.65)*.12,0,1);
  for(let k=0;k<count;k++){
   const source=items[k%items.length],a=analysis[source.asset],base=Math.max(3.4,(3.6*s.spatialScale/2.6)*source.scale*(1+(rng()*2-1)*s.scaleVariation));
-  const scaleX=base*(.92+rng()*.22),scaleY=base*(.88+rng()*.25),scaleZ=base*(.90+rng()*.23);
+  const scaleX=base*(.92+rng()*.22),scaleY=Math.max(base*(.88+rng()*.25),s.layoutDriven?7.5/a.height:0),scaleZ=base*(.90+rng()*.23);
   const footprint=a.maxRadius*Math.min(scaleX,scaleZ),parent=k?(k<3?k-1:k%4===3?modules.reduce((best,m,j)=>m.floor>modules[best].floor?j:best,0):Math.floor(rng()*k)):null;
   let x=source.x*.15,z=source.z*.15,floor=0,yaw=source.rotation+(rng()-.5)*1.1;
   if(k){const p=modules[parent],spacing=Math.max(5.7+(1-compact)*.6+(1-lock)*.25,(footprint+p.footprint)*(.73-.17*lock)*(1.10-.18*compact)+s.separation*.10),heading=p.yaw+(rng()-.5)*2.8+1.1+Math.atan2(source.x-p.stageX,source.z-p.stageZ)*.28;
@@ -34,8 +34,13 @@ function growth(items,analysis,s,rng){
    floor=clamp(p.floor+direction*step,0,5.7*s.verticalComplexity);
    edges.push({a:parent,b:k});
   }
+  if(s.layoutDriven){
+   // One cast per placed sculpture: retain relative plan position and quarter-turn orientation.
+   x=source.x;z=source.z;yaw=source.rotation;floor=0;
+   if(k){const nearest=modules.reduce((best,q,j)=>distance({x,z},q)<distance({x,z},modules[best])?j:best,0);edges[edges.length-1]={a:nearest,b:k};}
+  }
   const pitch=(rng()-.5)*(.25+s.rotationVariation*.8),roll=(rng()-.5)*(.22+s.rotationVariation*.7);
-  const m={id:source.id+'/grown '+(k+1),sourceId:source.id,asset:source.asset,a,scaleX,scaleY,scaleZ,x,z,floor,cy:floor+a.height*scaleY*.23,matrix:rotation(yaw,pitch,roll),yaw,pitch,roll,distortion:s.distortion,phase:rng()*TAU,footprint,parent,stageX:source.x,stageZ:source.z};
+  const m={layoutDriven:!!s.layoutDriven,id:source.id+'/grown '+(k+1),sourceId:source.id,asset:source.asset,a,scaleX,scaleY,scaleZ,x,z,floor,cy:floor+a.height*scaleY*.23,matrix:rotation(yaw,pitch,roll),yaw,pitch,roll,distortion:s.distortion,phase:rng()*TAU,footprint,parent:s.layoutDriven&&k?edges.at(-1).a:parent,stageX:source.x,stageZ:source.z};
   const radius=2.10+s.voidDensity*.65+a.maxRadius*.15,variation=rng();
   modules.push(m);nodes.push({id:m.id,sourceId:m.sourceId,asset:m.asset,kind:'interlocked source void',center:{x,z,y:floor},floor,radius,variation,view:{x,z,y:floor+.055},entry:{x,z,y:floor+.055},exit:null,height:floor+a.height*scaleY*.78,openingHeight:3.4,openingWidth:s.corridorWidth,scale:base});
  }
@@ -44,7 +49,7 @@ function growth(items,analysis,s,rng){
  for(let k=2;k<nodes.length;k++)for(let j=0;j<k-1;j++)if(distance(nodes[k].center,nodes[j].center)<5.6&&Math.abs(nodes[k].floor-nodes[j].floor)<1.0&&!edges.some(e=>e.a===j&&e.b===k)&&rng()<.23+s.connectionStrength*.17)edges.push({a:j,b:k,loop:true});
  return {modules,nodes,edges};
 }
-function nativeFragments(modules,sources,voids,s){
+function nativeFragments(modules,sources,voids,s,paths){
  const meshes=[];let retainedTriangles=0;
  for(let k=0;k<modules.length;k++){const m=modules[k],source=sources[m.asset],p=source.positions,c=source.colors,b=new Builder(m.id+'/recognisable scanned fragments',m.sourceId,'Original scanned crown and projecting fragments → tilted, stretched and locally cut by the shared voids');
   const count=p.length/3,transformed=new Float32Array(p.length);for(let v=0;v<count;v++)transformed.set(forward(m,Array.from(p.subarray(v*3,v*3+3))),v*3);
@@ -53,6 +58,7 @@ function nativeFragments(modules,sources,voids,s){
    if(nativeY/m.a.height<.66-s.intensity*.14&&!(nativeY/m.a.height>.24&&radial>m.a.maxRadius*.83))continue;
    const tri=ids.map(v=>Array.from(transformed.subarray(v,v+3)));if(tri.some(v=>v[1]<-.65))continue;
    const center=tri.reduce((acc,v)=>acc.map((q,j)=>q+v[j]/3),[0,0,0]);if([center,...tri].some(v=>voids.value(...v)<.65))continue;
+   if(s.layoutDriven&&paths.some(path=>path.points.some(q=>Math.hypot(q.x-center[0],q.z-center[2])<s.corridorWidth/2+.65&&center[1]>q.y-.25&&center[1]<q.y+2.4)))continue;
    // Exclude scanned faces buried deeply inside another fused body.
    if(modules.some((other,j)=>j!==k&&moduleDistance(other,...center)<-.35))continue;
    b.tri(...tri,...ids.map(v=>Array.from(c.subarray(v,v+3))));retainedTriangles++;
@@ -91,7 +97,7 @@ function oneGrowth(items,sources,input,onProgress=()=>{},diagnostics=null){
  const rng=seeded(s.seed),{modules,nodes,edges}=growth(items,analysis,s,rng);
  onProgress(10,'Growing a compact, interlocking three-dimensional body');
  const roughBounds={minX:Infinity,maxX:-Infinity,minY:-1.5,maxY:-Infinity,minZ:Infinity,maxZ:-Infinity};
- for(const m of modules){const r=m.a.maxRadius*Math.max(m.scaleX,m.scaleY,m.scaleZ)+1.6;roughBounds.minX=Math.min(roughBounds.minX,m.x-r);roughBounds.maxX=Math.max(roughBounds.maxX,m.x+r);roughBounds.minZ=Math.min(roughBounds.minZ,m.z-r);roughBounds.maxZ=Math.max(roughBounds.maxZ,m.z+r);roughBounds.maxY=Math.max(roughBounds.maxY,m.floor+m.a.height*m.scaleY+2.0);}
+ for(const m of modules){const r=m.a.maxRadius*Math.max(m.scaleX,m.scaleZ)+m.a.height*m.scaleY*(Math.abs(Math.sin(m.pitch))+Math.abs(Math.sin(m.roll)))*.5+1.6;roughBounds.minX=Math.min(roughBounds.minX,m.x-r);roughBounds.maxX=Math.max(roughBounds.maxX,m.x+r);roughBounds.minZ=Math.min(roughBounds.minZ,m.z-r);roughBounds.maxZ=Math.max(roughBounds.maxZ,m.z+r);roughBounds.maxY=Math.max(roughBounds.maxY,m.floor+m.a.height*m.scaleY+2.0);}
  const mass=massFunction(modules,.18+s.fusionStrength*1.6),paths=[];
  function connect(a,b,role,optional=false){let best=null;
   const rise=Math.abs(b.y-a.y),base=rise>.7?2.7+rise*.5:.8;
@@ -123,9 +129,9 @@ function oneGrowth(items,sources,input,onProgress=()=>{},diagnostics=null){
  const windows=outer.map((n,k)=>{const dx=n.center.x-mean.x,dz=n.center.z-mean.z,L=Math.hypot(dx,dz)||1,normal={x:dx/L,z:dz/L};return {role:'source facade section',carveRadius:k===0?1.35+s.opening*.7:.87+s.opening*.5,clearance:k===0?4.1:2.7,points:[{x:n.center.x+normal.x*n.radius*.35,z:n.center.z+normal.z*n.radius*.35,y:n.floor+(k===0?0:.5)},{x:n.center.x+normal.x*8,z:n.center.z+normal.z*8,y:n.floor+(k===0?0:.5)}]};});
  const originalVoids=makeVoids(nodes,paths.concat(windows),atriums,s,bounds),bedVoid=terrainVoid(nav),voids={value:(x,y,z)=>Math.min(originalVoids.value(x,y,z),bedVoid(x,y,z))};
  const field=(x,y,z)=>Math.max(mass(x,y,z),-voids.value(x,y,z));
- const extracted=remesh(field,modules,bounds,onProgress),core=extracted.mesh;const discardedVoxelTriangles=keepPrimaryCore(core);
+ const extracted=remesh(field,modules,bounds,onProgress),core=extracted.mesh;const discardedVoxelTriangles=keepPrimaryCore(core);refineSurface(core,modules);
  onProgress(74,'Restoring recognisable original crowns and projecting fragments');
- const details=nativeFragments(modules,sources,voids,s),meshes=[core,...details.meshes],topo=topology(core);
+ const details=nativeFragments(modules,sources,voids,s,paths),meshes=[core,...details.meshes],topo=topology(core);
  if(topo.boundaryEdges||topo.nonManifoldEdges)throw Error('The shared volume could not close reliably. Try the next seed.');
  diagnostics?.({meshes,nodes,paths,bounds,grid:extracted.grid,topology:topo,atriums});
  onProgress(83,'Measuring the actual three-dimensional carved surface');

@@ -15,7 +15,7 @@ function choose(id,e,list){if(busy())return;const i=list.findIndex(r=>r.id===id)
  else if(e.ctrlKey||e.metaKey){selection.has(id)?selection.delete(id):selection.add(id);anchor=id;}
  else{selection.clear();selection.add(id);anchor=id;}syncSelection();
 }
-function thumb(row,selectable,list){const b=document.createElement('button');b.type='button';b.className='workspace-library-item agent-model-item';b.dataset.agentModelId=row.id;
+function thumb(row,selectable,list){const b=document.createElement('button');b.type='button';b.className='workspace-library-item agent-model-item';b.dataset.agentModelId=row.id;b.dataset.saved=row.id;
  const im=document.createElement('img');im.alt=row.title;if(row.preview instanceof Blob){if(!urls.has(row.id))urls.set(row.id,URL.createObjectURL(row.preview));im.src=urls.get(row.id);}const n=document.createElement('span');n.textContent=row.title;b.append(im,n);
  b.title=row.title+' / double-click to view';b.onclick=e=>selectable?choose(row.id,e,list):null;b.ondblclick=()=>{if(!busy())window.dispatchEvent(new CustomEvent('saved-sculpture-open',{detail:{id:row.id}}));};
  b.setAttribute('aria-pressed',String(selection.has(row.id)));b.classList.toggle('is-selected',selection.has(row.id));
@@ -25,6 +25,7 @@ function renderPanes(){
  const own=generatedRows(),list=currentRows();
  $('agent-model-grid').replaceChildren(...own.map(r=>thumb(r,false,own)));$('agent-model-count').textContent=own.length+' models';
  $('place-model-grid').replaceChildren(...list.map(r=>thumb(r,true,list)));
+ ExhibitionCardImages.attach($('place-model-grid'),list,{mode:'reset'});
  syncSelection();
 }
 function syncSelection(){const list=currentRows();for(const b of document.querySelectorAll('[data-agent-model-id]')){const active=selection.has(b.dataset.agentModelId);b.classList.toggle('is-selected',active);b.setAttribute('aria-pressed',String(active));}

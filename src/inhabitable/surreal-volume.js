@@ -30,8 +30,15 @@ export function moduleDistance(m,x,y,z){
  return Math.max((Math.hypot(p[0],p[2])-envelope)*Math.min(m.scaleX,m.scaleZ),-p[1]*m.scaleY,(p[1]-m.a.height*.71)*m.scaleY);
 }
 export function massFunction(modules,blend){
- const contacts=modules.filter(m=>m.parent!==null).map(m=>{const p=modules[m.parent];return {x:(m.x+p.x)/2,z:(m.z+p.z)/2,y:(m.floor+p.floor)/2+2.7};});
- return (x,y,z)=>{let d=1e5;for(const m of modules)d=smoothMin(d,moduleDistance(m,x,y,z),blend);let seam=0;for(const c of contacts){const q=((x-c.x)/3.1)**2+((z-c.z)/3.1)**2+((y-c.y)/5.2)**2;seam=Math.max(seam,(.7+blend*.6)*Math.exp(-q*.65));}return Math.max(d-seam,-.70-y);};
+ const contacts=modules.filter(m=>m.parent!==null).map(m=>{const p=modules[m.parent];return {a:p,b:m,x:(m.x+p.x)/2,z:(m.z+p.z)/2,y:(m.floor+p.floor)/2+2.7};});
+ return (x,y,z)=>{let d=1e5;for(const m of modules)d=smoothMin(d,moduleDistance(m,x,y,z),blend);let seam=0;for(const c of contacts){const q=((x-c.x)/3.1)**2+((z-c.z)/3.1)**2+((y-c.y)/5.2)**2;seam=Math.max(seam,(.7+blend*.6)*Math.exp(-q*.65));
+   if(c.b.layoutDriven){
+    // A fused overhead connection follows the nearest-neighbour layout edge.
+    const dx=c.b.x-c.a.x,dz=c.b.z-c.a.z,t=clamp(((x-c.a.x)*dx+(z-c.a.z)*dz)/(dx*dx+dz*dz||1),0,1);
+    const roof=(1-t)*(c.a.floor+c.a.a.height*c.a.scaleY*.57)+t*(c.b.floor+c.b.a.height*c.b.scaleY*.57);
+    const tube=Math.hypot(x-c.a.x-dx*t,z-c.a.z-dz*t,y-roof)-(1.65+blend*.4);
+    d=smoothMin(d,tube,blend);
+   }}return Math.max(d-seam,-.70-y);};
 }
 export function makeVoids(nodes,paths,atriums,s,bounds){
  const primitives=[],bins=new Map(),binSize=3.5,pad=1.0;
@@ -57,16 +64,26 @@ export function makeVoids(nodes,paths,atriums,s,bounds){
  };
  return {value,primitives};
 }
-export function vertexColor(modules,x,y,z){
- let d=1e5,tag=0;for(let k=0;k<modules.length;k++){const v=moduleDistance(modules[k],x,y,z);if(v<d){d=v;tag=k;}}
- const m=modules[tag],p=inverse(m,x,y,z),b=clamp(Math.round(p[1]/m.a.height*(m.a.bands-1)),0,m.a.bands-1),angle=Math.atan2(p[2],p[0]),j=((Math.round(angle/TAU*m.a.angles)%m.a.angles)+m.a.angles)%m.a.angles;
- const c=m.a.colors[b];return {tag,color:[c[j*3]*.86+.08,c[j*3+1]*.86+.08,c[j*3+2]*.86+.08]};
+function sampleColour(m,x,y,z){
+ const p=inverse(m,x,y,z),v=clamp(p[1]/m.a.height,0,1)*(m.a.bands-1),b=Math.min(m.a.bands-2,Math.floor(v)),t=v-b;
+ const angle=Math.atan2(p[2],p[0]),u=((angle/TAU%1)+1)%1*m.a.angles,j=Math.floor(u)%m.a.angles,n=(j+1)%m.a.angles,w=u-Math.floor(u);
+ return [0,1,2].map(k=>(m.a.colors[b][j*3+k]*(1-w)+m.a.colors[b][n*3+k]*w)*(1-t)+(m.a.colors[b+1][j*3+k]*(1-w)+m.a.colors[b+1][n*3+k]*w)*t);
 }
+export function vertexColor(modules,x,y,z){
+ let d=Infinity,tag=0;const distances=modules.map((m,k)=>{const v=moduleDistance(m,x,y,z);if(v<d){d=v;tag=k;}return v;});
+ let total=0;const color=[0,0,0];
+ for(let k=0;k<modules.length;k++){
+  const u=clamp(1-(distances[k]-d)/1.6,0,1),weight=u*u*(3-2*u);if(!weight)continue;
+  const c=sampleColour(modules[k],x,y,z);for(let j=0;j<3;j++)color[j]+=c[j]*weight;total+=weight;
+ }
+ return {tag,color:color.map(v=>clamp(v/(total||1),0,1))};
+}
+
 const cube=[[0,0,0],[1,0,0],[1,1,0],[0,1,0],[0,0,1],[1,0,1],[1,1,1],[0,1,1]];
 const tetra=[[0,5,1,6],[0,1,2,6],[0,2,3,6],[0,3,7,6],[0,7,4,6],[0,4,5,6]];
 export function remesh(field,modules,bounds,onProgress=()=>{}){
- let step=.36,volume=(bounds.maxX-bounds.minX)*(bounds.maxY-bounds.minY)*(bounds.maxZ-bounds.minZ);
- step=Math.max(step,Math.cbrt(volume/420000));
+ let step=.26,volume=(bounds.maxX-bounds.minX)*(bounds.maxY-bounds.minY)*(bounds.maxZ-bounds.minZ);
+ step=Math.max(step,Math.cbrt(volume/650000));
  const nx=Math.ceil((bounds.maxX-bounds.minX)/step)+1,ny=Math.ceil((bounds.maxY-bounds.minY)/step)+1,nz=Math.ceil((bounds.maxZ-bounds.minZ)/step)+1,minX=bounds.minX,minY=bounds.minY,minZ=bounds.minZ;
  const indexOf=(x,y,z)=>(z*ny+y)*nx+x,values=new Float32Array(nx*ny*nz);
  for(let z=0;z<nz;z++){for(let y=0;y<ny;y++)for(let x=0;x<nx;x++){let d=field(minX+x*step,minY+y*step,minZ+z*step);if(Math.abs(d)<1e-5)d=1e-5;values[indexOf(x,y,z)]=d;}if(z%5===0)onProgress(30+Math.round(z/nz*25),'Blending the source bodies and carving connected voids');}
@@ -102,4 +119,26 @@ export function keepPrimaryCore(mesh){
  const p=[],c=[],tags=[],index=[],map=new Map();
  for(let k=0;k<mesh.index.length;k+=3)if(find(mesh.index[k])===biggest[0])for(let j=0;j<3;j++){const old=mesh.index[k+j];if(!map.has(old)){map.set(old,p.length/3);p.push(...mesh.positions.subarray(old*3,old*3+3));c.push(...mesh.colors.subarray(old*3,old*3+3));tags.push(mesh.sourceTags[old]);}index.push(map.get(old));}
  mesh.positions=Float32Array.from(p);mesh.colors=Float32Array.from(c);mesh.sourceTags=Uint8Array.from(tags);mesh.index=Uint32Array.from(index);return total-biggest[1];
+}
+
+/** Small volume-preserving relaxation; navigation is validated against these final triangles. */
+export function refineSurface(mesh,modules){
+ const p=mesh.positions,idx=mesh.index,N=p.length/3,adj=Array.from({length:N},()=>new Set());
+ for(let i=0;i<idx.length;i+=3)for(let j=0;j<3;j++){const a=idx[i+j],b=idx[i+(j+1)%3];adj[a].add(b);adj[b].add(a);}
+ const out=new Float32Array(p.length);
+ for(let round=0;round<3;round++)for(const amount of [.32,-.34]){
+  for(let i=0;i<N;i++)for(let k=0;k<3;k++){let sum=0;for(const j of adj[i])sum+=p[j*3+k];out[i*3+k]=p[i*3+k]+amount*(sum/(adj[i].size||1)-p[i*3+k]);}
+  p.set(out);
+ }
+ const normals=new Float32Array(p.length);
+ for(let i=0;i<idx.length;i+=3){
+  const a=idx[i]*3,b=idx[i+1]*3,c=idx[i+2]*3,ux=p[b]-p[a],uy=p[b+1]-p[a+1],uz=p[b+2]-p[a+2],vx=p[c]-p[a],vy=p[c+1]-p[a+1],vz=p[c+2]-p[a+2],x=uy*vz-uz*vy,y=uz*vx-ux*vz,z=ux*vy-uy*vx;
+  for(const j of [a,b,c]){normals[j]+=x;normals[j+1]+=y;normals[j+2]+=z;}
+ }
+ for(let pass=0;pass<2;pass++){
+  for(let i=0;i<N;i++){const x=normals[i*3],y=normals[i*3+1],z=normals[i*3+2],L=Math.hypot(x,y,z)||1;out.set([x/L,y/L,z/L],i*3);}normals.set(out);
+  for(let i=0;i<N;i++)for(let k=0;k<3;k++){let sum=0;for(const j of adj[i])sum+=normals[j*3+k];out[i*3+k]=normals[i*3+k]*.5+sum/(adj[i].size||1)*.5;}normals.set(out);
+ }
+ for(let i=0;i<N;i++){const L=Math.hypot(normals[i*3],normals[i*3+1],normals[i*3+2])||1;for(let k=0;k<3;k++)normals[i*3+k]/=L;mesh.colors.set(vertexColor(modules,p[i*3],p[i*3+1],p[i*3+2]).color,i*3);}
+ mesh.normals=normals;
 }

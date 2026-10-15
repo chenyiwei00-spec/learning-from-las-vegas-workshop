@@ -61,7 +61,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
     $('walk-two-point').setAttribute('aria-pressed',String(twoPoint));
     $('walk-view-toggle').textContent=axon?'Axonometric / switch':'Eye level / switch';$('walk-view-toggle').setAttribute('aria-pressed',String(axon));
     $('walk-status').textContent = axon ? 'AXONOMETRIC / 2 M GRID' : (fly ? 'FLY' : 'WALK') + ' / EYE ' + eye.y.toFixed(2) + ' M';
-    $('walk-view-label').textContent = axon ? 'FLOOR PLAN' : 'WHITE ROOM';
+    $('walk-view-label').textContent = axon ? 'FLOOR PLAN' : 'WHITE ATMOSPHERE';
     $('walk-caption-text').textContent = axon ? 'Drag to rotate · Wheel to zoom · Right / middle drag to pan' : 'WASD to walk · Drag to look · Q up / E down · Space to walk · Shift faster';
     $('walk-dimensions').textContent = axon ? '40 \u00d7 40 M / 400 CELLS' : '40 \u00d7 40 \u00d7 '+ROOM.height.toFixed(1)+' M';
     surface.setAttribute('aria-label',axon ? 'Orthographic floor view with four hundred two metre grid cells. Drag to rotate; wheel to zoom; right or middle drag to pan.' : 'Walk through a forty by forty metre white studio hall with windows');
@@ -209,14 +209,14 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
     renderer.domElement.setAttribute('aria-hidden','true');
 
     const wall = new THREE.MeshStandardMaterial({color:0xffffff,roughness:0.94,metalness:0});
-    const floor = new THREE.MeshStandardMaterial({color:0xe2e5e8,roughness:0.83,metalness:0});
+    const floor = new THREE.MeshStandardMaterial({color:0xffffff,roughness:0.72,metalness:0});
     const t = ROOM.wallThickness, half = ROOM.width/2;
     function box(name,width,height,depth,x,y,z,material=wall) {
       const mesh = new THREE.Mesh(new THREE.BoxGeometry(width,height,depth),material);
       mesh.receiveShadow=true;mesh.name = name; mesh.position.set(x,y,z); scene.add(mesh); roomMeshes.push(mesh);
       return mesh;
     }
-    box('floor',40+2*t,t,40+2*t,0,-t/2,0,floor);
+    box('floor',240,t,240,0,-t/2,0,floor);
     box('ceiling',40+2*t,t,40+2*t,0,ROOM.height+t/2,0,new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false}));
     factoryRoom=createFactoryRoom({scene,height:ROOM.height,wallMaterial:wall});roomMeshes.push(...factoryRoom.collisionMeshes());
     // Gentle contact shading and a fine perimeter seam clarify wall/floor junctions.
@@ -242,7 +242,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
 
     // A separate exact 40m floor avoids exposing the room's wall thickness in plan.
     axonGroup = new THREE.Group();axonGroup.name='axonometric-floor-view';axonGroup.visible=false;scene.add(axonGroup);
-    const planFloor = new THREE.Mesh(new THREE.PlaneGeometry(40,40),new THREE.MeshBasicMaterial({color:0xf7f7f7,side:THREE.DoubleSide,toneMapped:false}));
+    const planFloor = new THREE.Mesh(new THREE.PlaneGeometry(40,40),new THREE.MeshBasicMaterial({color:0xffffff,side:THREE.DoubleSide,toneMapped:false}));
     planFloor.name='axonometric-floor';planFloor.rotation.x=-Math.PI/2;axonGroup.add(planFloor);
     floorGrid = new THREE.GridHelper(40,20,0xadb5bd,0xadb5bd);
     floorGrid.name='two-metre-grid';floorGrid.position.y=0.004;
@@ -258,12 +258,12 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
     axonGroup.add(planBorder);
 
     // White materials with gentle lighting retain the depth of the empty room.
-    scene.add(new THREE.HemisphereLight(0xe4efff,0xd1c5b7,.60));
+    scene.add(new THREE.HemisphereLight(0xe9f2ff,0xc1ad95,.42));
     for (const x of [-5,5]) for (const z of [-5,5]) {
       const light = new THREE.PointLight(0xffffff,7,28,2);
-      light.name='gallery-ceiling-light';light.position.set(x,ROOM.height-.45,z); scene.add(light);
+      light.visible=false;light.name='gallery-ceiling-light';light.position.set(x,ROOM.height-.45,z); scene.add(light);
     }
-    skylight=createSkylight({scene,renderer,height:ROOM.height,floorMaterial:floor});const pmrem=new THREE.PMREMGenerator(renderer),environment=new RoomEnvironment();scene.environment=pmrem.fromScene(environment,.05).texture;scene.environmentIntensity=.28;pmrem.dispose();environment.dispose();
+    skylight=createSkylight({scene,renderer,height:ROOM.height,floorMaterial:floor,openAtmosphere:true});const pmrem=new THREE.PMREMGenerator(renderer),environment=new RoomEnvironment();scene.environment=pmrem.fromScene(environment,.05).texture;scene.environmentIntensity=.68;pmrem.dispose();environment.dispose();
     ready = true;
     surface.setAttribute('aria-busy','false');
     ui();
@@ -299,14 +299,14 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
   function setViewMode(mode) {
     if(!['room','axonometric'].includes(mode))throw new TypeError('Unknown gallery view.');
     clearInput();teleport=null;viewMode=mode;
-    const axon=mode==='axonometric';scene.background.set(axon?'#ffffff':'#f2f2f2');
-    roomMeshes.forEach(mesh=>mesh.visible=!axon);
-    factoryRoom.setVisible(!axon);roomDetailGroup.visible=!axon;axonGroup.visible=axon;skylight.setRoomMode(!axon);
-    camera=axon?axonCamera:roomCamera;placement.setViewMode(mode);
+    const axon=mode==='axonometric';scene.background.set('#ffffff');scene.fog=axon?null:new THREE.Fog(0xffffff,25,100);
+    roomMeshes.forEach(mesh=>mesh.visible=!axon&&mesh.name==='floor');
+    factoryRoom.setVisible(false);roomDetailGroup.visible=false;axonGroup.visible=axon;skylight.setRoomMode(!axon);
+    camera=axon?axonCamera:roomCamera;placement.setViewMode(mode);space?.setViewMode?.(mode);
     axonControls.enabled=axon&&active;
     ui();resize();requestFrame();
   }
-  function setRoomHeight(value){const height=clamp(Number(value)||30,30,70);if(Math.abs(height-ROOM.height)<.01)return;ROOM=Object.freeze({...ROOM,height});roomMeshes.find(m=>m.name==='ceiling').position.y=height+ROOM.wallThickness/2;factoryRoom.setHeight(height);roomMeshes=roomMeshes.filter(m=>['floor','ceiling'].includes(m.name)).concat(factoryRoom.collisionMeshes());roomMeshes.forEach(m=>m.visible=viewMode==='room');scene.traverse(o=>{if(o.isPointLight&&o.name==='gallery-ceiling-light')o.position.y=height-.45;});skylight.setHeight(height);constrain(eye);ui();invalidateScene();}
+  function setRoomHeight(value){const height=clamp(Number(value)||30,30,70);if(Math.abs(height-ROOM.height)<.01)return;ROOM=Object.freeze({...ROOM,height});roomMeshes.find(m=>m.name==='ceiling').position.y=height+ROOM.wallThickness/2;factoryRoom.setHeight(height);roomMeshes=roomMeshes.filter(m=>['floor','ceiling'].includes(m.name)).concat(factoryRoom.collisionMeshes());roomMeshes.forEach(m=>m.visible=viewMode==='room'&&m.name==='floor');scene.traverse(o=>{if(o.isPointLight&&o.name==='gallery-ceiling-light')o.position.y=height-.45;});skylight.setHeight(height);constrain(eye);ui();invalidateScene();}
 
   function frameSpace(bounds){setRoomHeight(Math.max(30,bounds.max.y+3));requestFrame();}
 
@@ -449,7 +449,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
   window.addEventListener('pageshow',() => {resize();});
   window.ExhibitionWalk = Object.freeze({
     state:() => ({
-      space:space.state(),skylight:skylight.state(),ready,environment:'white-enclosed-gallery',room:{...ROOM,closed:true,wallCount:4,floor:true,ceiling:true},
+      space:space.state(),skylight:skylight.state(),ready,environment:'white-sunlit-fog',atmosphere:{fog:!!scene.fog,background:'#ffffff',sunShadows:viewMode==='room',volumetric:skylight.state().volumetric.visible},room:{...ROOM,closed:false,wallCount:0,floor:true,ceiling:false},
       camera:viewMode==='room'?{x:eye.x,y:eye.y,z:eye.z,yaw,pitch}:{x:axonCamera.position.x,y:axonCamera.position.y,z:axonCamera.position.z},
       viewMode,twoPoint,projection:camera.isOrthographicCamera?'orthographic':'perspective',
       walkingCamera:{x:eye.x,y:eye.y,z:eye.z,yaw,pitch},fly,active,immersive,fullscreen:document.fullscreenElement===surface,
