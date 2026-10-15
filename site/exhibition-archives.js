@@ -76,7 +76,7 @@ async function render(){
   $('archive-collage-grid').replaceChildren(...drafts.map(r=>card(r,'collage')));
   $('archive-space-grid').replaceChildren(...saved.map(r=>card(r,'space')));
   $('archive-collage-empty').hidden=!!drafts.length;$('archive-space-empty').hidden=!!saved.length;
-  ExhibitionCardImages.attach($('archive-space-grid'),saved);syncTabs();
+  ExhibitionCardImages.attach($('archive-space-grid'),saved);syncTabs();window.dispatchEvent(new Event('exhibition-space-library-change'));
  }catch(e){report(e);}
 }
 function select(next){kind=next;try{localStorage.setItem('learning-vegas-library-kind',kind);}catch{}syncTabs();render();}

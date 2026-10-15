@@ -13,16 +13,18 @@ export function createInhabitableSpace({scene,renderer,placement,getView,getCame
  const ray=new THREE.Raycaster(),pointer=new THREE.Vector2();let pointerDown=null,feedbackTimer;
  const feedback=$('exhibition-space-feedback');
  const say=text=>{$('exhibition-space-status').textContent=text;feedback.textContent=text;feedback.hidden=false;clearTimeout(feedbackTimer);};
+ const containsPlacedSpace=()=>placement.spaceSources().some(s=>s.target==='space');
  function ui(){
-  const button=$('exhibition-make-space');button.disabled=busy||!placement.state().modelCount||!!window.ExhibitionAgentDrafts?.state().busy||!!window.ExhibitionAgent?.state().busy;
-  const label='Make space';button.textContent=busy?Math.round(progress)+'%':'+';button.title=label;button.setAttribute('aria-label',label);$('exhibition-space-keyword').textContent=label.toUpperCase();
+  const blocked=containsPlacedSpace();
+  const button=$('exhibition-make-space');button.disabled=blocked||busy||!placement.state().modelCount||!!window.ExhibitionAgentDrafts?.state().busy||!!window.ExhibitionAgent?.state().busy;
+  const label='Make space';button.textContent=busy?Math.round(progress)+'%':'+';button.title=blocked?'Saved spaces can be arranged, but cannot make another space.':label;button.setAttribute('aria-label',label);$('exhibition-space-keyword').textContent=label.toUpperCase();
   $('exhibition-space-options').hidden=false;$('space-options-empty').hidden=!!result;
   $('exhibition-space-original').hidden=!result;$('exhibition-space-original').textContent=active?'Original models':'Show space';$('exhibition-space-original').disabled=busy;
   $('exhibition-enter-space').hidden=!result||!active;$('exhibition-enter-space').disabled=busy;
   $('exhibition-export-space').hidden=!result;$('exhibition-export-space').disabled=busy;
   $('walk-save-space').hidden=!result;$('walk-save-space').disabled=busy||!result;
   $('exhibition-space-save').disabled=busy||!placement.state().modelCount;$('exhibition-space-load').disabled=busy;
-  surface.dataset.spaceEngine='inhabitable-v1';surface.dataset.spacePreview=String(active);surface.dataset.spaceBusy=String(busy);surface.dataset.spaceStale=String(stale);surface.dataset.spaceProgress=String(progress);
+  surface.dataset.spaceGenerationBlocked=String(blocked);surface.dataset.spaceEngine='inhabitable-v1';surface.dataset.spacePreview=String(active);surface.dataset.spaceBusy=String(busy);surface.dataset.spaceStale=String(stale);surface.dataset.spaceProgress=String(progress);
   clearTimeout(feedbackTimer);if(!busy&&!stale&&!error&&!feedback.hidden)feedbackTimer=setTimeout(()=>{feedback.hidden=true;},6000);
   for(const el of document.querySelectorAll('[data-space-setting]')){if(el.dataset.spaceSetting==='seed'){el.disabled=true;el.title='Determined by the placed models and their layout';}if(document.activeElement!==el)el.value=settings[el.dataset.spaceSetting];const out=el.nextElementSibling;if(out?.tagName==='OUTPUT')out.textContent=String(settings[el.dataset.spaceSetting]);}
  }
@@ -59,6 +61,7 @@ export function createInhabitableSpace({scene,renderer,placement,getView,getCame
  }
  async function generate({restore=false,override=null}={}){
   if(busy||disposed||window.ExhibitionAgentDrafts?.state().busy||window.ExhibitionAgent?.state().busy)return false;await placement.ready;
+  if(containsPlacedSpace()){error='Saved spaces can be arranged, but cannot be used to make another space.';say(error);ui();return false;}
   const key=layoutSignature(placement),revisionAtStart=settingsRevision,pendingAtStart={...settings};busy=true;progress=0;error='';ui();let next;
   try{
    const chosen={...checkSettings(override||settings),layoutDriven:true,moduleCount:Math.max(placement.spaceSources().length,(override||settings).layoutVersion===2?(override||settings).moduleCount:9),layoutVersion:2,seed:layoutSeed(placement.spaceSources())};
@@ -178,7 +181,7 @@ export function createInhabitableSpace({scene,renderer,placement,getView,getCame
  return Object.freeze({ready,generate,captureArchive,saveSpace,openSaved,enter,showOriginal:()=>visibility(false),showSpace:()=>visibility(true),constrain,collisionMeshes:()=>active&&result?result.meshes:[],exportGLB,
   setViewMode:mode=>{if(result)result.footprints.visible=active&&mode==='axonometric';},
   audioAnchors:()=>active&&result?result.plan.nodes.map(n=>({id:n.sourceId,x:n.center.x*result.scale+result.offset.x,z:n.center.z*result.scale+result.offset.z,y:n.view.y*result.scale+result.offset.y+1.65,width:n.radius*2*result.scale,...(result.savedAudio?{audio:result.savedAudio.find(a=>a.id===n.sourceId)?.audio,name:result.savedAudio.find(a=>a.id===n.sourceId)?.name}:{})})):[],
-  state:()=>({engine:'inhabitable-v1',layoutDriven:true,scale:result?.scale||SPACE_SCALE,groundContactCells:result?.footprints.children.length||0,anchors:result?result.plan.nodes.map(n=>({id:n.sourceId,x:n.center.x*result.scale+result.offset.x,z:n.center.z*result.scale+result.offset.z})):[],active,busy,stale,error,signature,settings:{...settings},generatedSettings,progress,connected:!!result?.plan.validation.routesClear,minimumClearance:(result?.plan.validation.headroom||0)*(result?.scale||1),triangles:result?.triangles||0,validation:result?.plan.validation||null,bounds:result?{min:result.bounds.min.toArray(),max:result.bounds.max.toArray()}:null,offset:result?.offset||null,sourceSelection}),
+  state:()=>({canGenerate:!containsPlacedSpace(),engine:'inhabitable-v1',layoutDriven:true,scale:result?.scale||SPACE_SCALE,groundContactCells:result?.footprints.children.length||0,anchors:result?result.plan.nodes.map(n=>({id:n.sourceId,x:n.center.x*result.scale+result.offset.x,z:n.center.z*result.scale+result.offset.z})):[],active,busy,stale,error,signature,settings:{...settings},generatedSettings,progress,connected:!!result?.plan.validation.routesClear,minimumClearance:(result?.plan.validation.headroom||0)*(result?.scale||1),triangles:result?.triangles||0,validation:result?.plan.validation||null,bounds:result?{min:result.bounds.min.toArray(),max:result.bounds.max.toArray()}:null,offset:result?.offset||null,sourceSelection}),
   dispose:()=>{disposed=true;clearTimeout(feedbackTimer);cancelPending?.();worker?.terminate();handlers.forEach(([id,fn])=>$(id).removeEventListener('click',fn));$('exhibition-space-recipe').removeEventListener('change',loadRecipe);for(const el of document.querySelectorAll('[data-space-setting]')){el.removeEventListener('input',settingChange);el.removeEventListener('change',settingChange);}window.removeEventListener('exhibition-placement-change',placementChange);window.removeEventListener('exhibition-draft-queue-change',ui);window.removeEventListener('exhibition-agent-change',ui);renderer.domElement.removeEventListener('pointerdown',down);renderer.domElement.removeEventListener('pointerup',up);onSpaceLight?.(null,false);disposeResult(result);result=null;}
  });
 }
