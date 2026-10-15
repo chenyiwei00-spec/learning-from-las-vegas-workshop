@@ -99,6 +99,9 @@ py -3 scripts/check_project.py
 Commit source and generated bundles. Verify on an independent work branch, then
 submit the replacement through the normal pull request into main.
 
+## Current local integration
+The inhabitable adapter now uses this seam as the default. See [MAKE_SPACE_INTEGRATION.md](MAKE_SPACE_INTEGRATION.md). The host additionally supplies optional getCamera() and passes {fly, eyeHeight} as the third constrain argument; existing API-1 providers may ignore these additions.
+
 
 ## Saving generated spaces in the shared library
 

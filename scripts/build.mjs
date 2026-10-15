@@ -6,3 +6,5 @@ for(const name of ['exhibition-walk','exhibition-model-studio']){
  await build({entryPoints:[path.join(root,'src',name+'.js')],bundle:true,format:'iife',platform:'browser',target:'es2022',minify:true,outfile:path.join(root,'site',name+'.js')});
 }
 console.log('Both exhibition bundles built.');
+
+await build({entryPoints:[path.join(root,"src/inhabitable/form-worker.js")],bundle:true,format:"iife",platform:"browser",target:"es2022",minify:true,outfile:path.join(root,"site/exhibition-space-worker.js")});
