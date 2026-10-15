@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import {FLOOR_HALF,CELL_SIZE,worldCell} from './exhibition-dimensions.js';
 /* Shared screen selection and world-space transforms for both exhibition cameras. */
-export function createMultiSelection({scene,canvas,entries,group,getCamera,orient,pick,fit,selectLegacy,updateCells,save,suspend,invalidate,handles,rotateHandle,moveHandle,handleLayer,getMaxHeight,prune}){
+export function createMultiSelection({scene,canvas,entries,group,getCamera,orient,pick,fit,selectLegacy,updateCells,save,suspend,invalidate,handles,rotateHandle,moveHandle,handleLayer,getMaxHeight,prune,isLocked=()=>false}){
  const ids=new Set(),surface=document.getElementById('walk-surface'),button=document.getElementById('exhibition-box-select'),marquee=document.createElement('div');
  marquee.className='exhibition-model-marquee';marquee.hidden=true;canvas.parentElement.append(marquee);
  let enabled=false,operation=null,outline=null,syncing=false;
@@ -27,6 +27,7 @@ export function createMultiSelection({scene,canvas,entries,group,getCamera,orien
  function snapshot(){const bounds=box(),centre=bounds.getCenter(new THREE.Vector3());centre.y=0;return{centre,bounds,rows:selected().map(e=>({id:e.record.id,record:structuredClone(e.record),position:e.object.position.clone(),height:e.height}))};}
  function write(e,p,units,rotation){const n=Math.max(1,Math.min(3,Math.ceil(units-1e-6))),col=Math.max(0,Math.min(20-n,Math.floor((p.x+FLOOR_HALF)/CELL_SIZE-n/2))),row=Math.max(0,Math.min(20-n,Math.floor((p.z+FLOOR_HALF)/CELL_SIZE-n/2)));Object.assign(e.record,{col,row,span:n,scale:units/n,rotation,offsetX:p.x-worldCell(col,n),offsetZ:p.z-worldCell(row,n)});delete e.record.scaleCentreX;delete e.record.scaleCentreZ;fit(e);}
  function transform(snapshot,{dx=0,dz=0,scale=1,angle=0},persist=false){
+  if(isLocked())return false;
   if(!snapshot.rows.length||snapshot.rows.some(r=>!entries.has(r.id)))return false;
   const turn=Math.round(angle/(Math.PI/2))*Math.PI/2;
   const units=snapshot.rows.map(r=>r.record.span*(r.record.scale||1));if(scale!==1)scale=Math.max(.35/Math.min(...units),Math.min(3/Math.max(...units),getMaxHeight()/Math.max(...snapshot.rows.map(r=>r.height)),scale));
@@ -37,7 +38,7 @@ export function createMultiSelection({scene,canvas,entries,group,getCamera,orien
   updateCells();updateOutline();if(persist)save();return true;
  }
  function begin(e,type,target){e.preventDefault();e.stopImmediatePropagation();suspend();const snap=snapshot(),r=canvas.getBoundingClientRect(),p=snap.centre.clone().project(getCamera()),cx=r.left+(p.x+1)*r.width/2,cy=r.top+(1-p.y)*r.height/2;operation={type,pointerId:e.pointerId,target,start:{x:e.clientX,y:e.clientY},snapshot:snap,ground:ground(e.clientX,e.clientY),cx,cy,distance:Math.max(20,Math.hypot(e.clientX-cx,e.clientY-cy)),last:Math.atan2(e.clientY-cy,e.clientX-cx),angle:0,changed:false};target.setPointerCapture(e.pointerId);}
- function down(e){if(e.button!==0||!group.visible)return;const id=pick(e);if(e.ctrlKey||e.metaKey){e.preventDefault();e.stopImmediatePropagation();suspend();if(id){ids.has(id)?ids.delete(id):ids.add(id);refresh();}else startBox(e,true);return;}
+ function down(e){if(isLocked())return;if(e.button!==0||!group.visible)return;const id=pick(e);if(e.ctrlKey||e.metaKey){e.preventDefault();e.stopImmediatePropagation();suspend();if(id){ids.has(id)?ids.delete(id):ids.add(id);refresh();}else startBox(e,true);return;}
   if(!id&&(enabled||e.shiftKey)){startBox(e,e.shiftKey);return;}
   if(id&&e.shiftKey){e.preventDefault();e.stopImmediatePropagation();suspend();ids.add(id);refresh();return;}
   if(id&&ids.size>1&&ids.has(id)){begin(e,'move',canvas);return;}

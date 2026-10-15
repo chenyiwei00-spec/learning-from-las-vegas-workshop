@@ -4,13 +4,13 @@
 const $=id=>document.getElementById(id),surface=$('walk-surface'),browser=$('exhibition-model-browser'),body=$('exhibition-browser-body'),panel=$('model-panel'),dock=$('workspace-model-pane'),inline=$('exhibition-inline-model'),inlineBody=$('exhibition-inline-body'),stage=$('model-stage'),info=panel.querySelector('.model-info');
 let active=false,mode='inline',aliases=new Map();
 async function entries(){
- const saved=await SavedSculptures.list(),floor=window.ExhibitionWalk?.placement.browseEntries()||[],result=[...saved];aliases=new Map();
+ const saved=await SavedSculptures.list(),floor=window.ExhibitionWalk?.placement.browseEntries()||[],result=[...saved,...(await window.ExhibitionArchives?.spaces()||[])];aliases=new Map();
  for(const entry of floor){const match=saved.find(s=>s.id===entry.libraryId||s.record.id===entry.record.id);if(match)aliases.set(entry.id,match.id);else result.push(entry);}
  return result;
 }
 async function resolve(id){
  await entries();const resolved=aliases.get(id)||id,floor=ExhibitionWalk.placement.browseEntries();
- const entry=resolved.startsWith('exhibit:')?floor.find(e=>e.id===resolved)||null:await SavedSculptures.get(resolved);
+ const entry=resolved.startsWith('exhibit:')?floor.find(e=>e.id===resolved)||null:resolved.startsWith('space:')?await ExhibitionArchives.getSpace(resolved):await SavedSculptures.get(resolved);
  const counterpart=entry&&floor.find(e=>e.id===entry.id||e.record.id===entry.record.id),state=ExhibitionWalk.placement.state(),modelId=counterpart?.id.slice(8);
  const current=state.models.find(m=>m.id===state.selected&&m.modelId===modelId)||state.models.find(m=>m.modelId===modelId);
  ExhibitionWalk.placement.select(current?.id||null);return entry;
