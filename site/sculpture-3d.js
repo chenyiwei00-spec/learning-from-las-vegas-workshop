@@ -127,7 +127,7 @@ async function create(options){
  }
  async function finishMeshLoad(source,ticket=meshTicket){
   if(!record||source!==meshUrl||viewer.src!==source||loaded||finishingMesh===ticket)return;finishingMesh=ticket;
-  fitCamera();if(pendingCamera){applyCamera(pendingCamera);pendingCamera=null;}await viewer.updateComplete;
+  window.ModelPreviewFinish?.apply(viewer,{target:record.target});fitCamera();if(pendingCamera){applyCamera(pendingCamera);pendingCamera=null;}await viewer.updateComplete;
   if(ticket!==meshTicket||!record||source!==meshUrl||viewer.src!==source)return;
   viewer.jumpCameraToGoal();loaded=true;loadingError=false;lastError='';render();
   if(pendingReveal){pendingReveal=false;$('model-stage').scrollIntoView({behavior:'smooth',block:'nearest'});}if(libraryEntry)await gallery.ready(incomingDirection);

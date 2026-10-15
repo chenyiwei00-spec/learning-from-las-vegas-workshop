@@ -74,7 +74,7 @@ function attach(viewer,{frame,fitCamera,applyCamera,onChange,listEntries=null,on
   buffer=valueBuffer;frame.insertBefore(other,prev);
   const loaded=await new Promise((resolve,reject)=>{
    let done=false;const finish=(ok,error)=>{if(done)return;done=true;clearTimeout(timer);other.removeEventListener('load',load);other.removeEventListener('error',failed);valueBuffer.cancel=null;error?reject(error):resolve(ok);};
-   const load=async event=>{if(event.detail?.url!==valueBuffer.url)return;fitCamera(other);await other.updateComplete;if(buffer!==valueBuffer||run!==ticket){finish(false);return;}other.jumpCameraToGoal();valueBuffer.pose=SavedSculptures.cameraView(other);
+   const load=async event=>{if(event.detail?.url!==valueBuffer.url)return;window.ModelPreviewFinish?.apply(other,{target:value.record?.target});fitCamera(other);await other.updateComplete;if(buffer!==valueBuffer||run!==ticket){finish(false);return;}other.jumpCameraToGoal();valueBuffer.pose=SavedSculptures.cameraView(other);
     const start=shifted(valueBuffer.pose,-Math.sign(direction)*edgeDistance(other,valueBuffer.pose,Math.sign(direction)));
     if(!await paintHidden(other,start,run)){finish(false);return;}valueBuffer.ready=true;finish(true);};
    const failed=()=>finish(false,Error('The next saved model could not load.'));

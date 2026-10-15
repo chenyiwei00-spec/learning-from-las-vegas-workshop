@@ -11,7 +11,7 @@ try{
  modelUrl=URL.createObjectURL(entry.glb);viewer.src=modelUrl;$('saved-view-stage').hidden=false;
  $('saved-view-title').textContent=entry.title;$('saved-view-direction').textContent=entry.record.target==='city'?'BORROW A BODY. COMPOSE ANOTHER CITY.':'BORROW A CITY. COMPOSE ANOTHER BODY.';document.title=entry.title+' / Learning from Las Vegas';
  $('saved-view-meta').textContent=new Date(entry.savedAt).toLocaleString('en-GB')+' · '+Number(entry.record.triangles).toLocaleString('en-GB')+' triangles';
- viewer.addEventListener('load',()=>{status.textContent='Saved model ready.';fit();});
+ viewer.addEventListener('load',()=>{window.ModelPreviewFinish?.apply(viewer,{target:entry.record.target});status.textContent='Saved model ready.';fit();});
  viewer.addEventListener('error',()=>status.textContent='The saved mesh could not be displayed. You can still export it.');
  for(const kind of ['glb','obj'])$('saved-export-'+kind).addEventListener('click',()=>SavedSculptures.download(entry[kind],entry.title.toLowerCase().replace(/\s+/g,'-')+'.'+kind));
  $('saved-reset-camera').addEventListener('click',fit);

@@ -9,6 +9,7 @@ const $=id=>document.getElementById(id),surface=$('walk-surface'),panel=$('works
 if(!surface||!panel)return;
 const thumbnail=$('workspace-model-thumbnail'),viewer=$('generated-sculpture-viewer');
 let currentPanel=null,previewFrame=0,modelPreviewSrc='';
+window.ModelPreviewFinish?.configure(thumbnail);thumbnail.addEventListener('load',()=>window.ModelPreviewFinish?.apply(thumbnail,{target:window.ExhibitionStudio?.captureModel().record?.target}));
 function suspendScene(){window.ExhibitionWalk?.suspendNavigation();}
 function syncCollagePreview(){
  previewFrame=0;
