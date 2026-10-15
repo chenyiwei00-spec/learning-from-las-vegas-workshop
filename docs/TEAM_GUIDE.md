@@ -4,7 +4,7 @@
 2. Accept the private repository invitation.
 3. Clone the repository using GitHub Desktop, Git or your own Codex. Use Clone, not Download ZIP, to receive later code updates.
 4. Install Python 3.10+ if absent. Double-click START_TEAM_WEBSITE.cmd on Windows; on macOS run python3 serve_local.py --open.
-5. Obtain team-assets-v1.zip from the owner through the agreed private file-sharing location. Import it with py -3 scripts/import_assets.py "full-path-to-zip" (macOS: python3).
+5. Run DOWNLOAD_TEAM_ASSETS.cmd (macOS/Linux: python3 scripts/download_assets.py) to install the private GitHub asset release. For the newer models and shared saved project, also follow [Teacher quick start](TEACHER_QUICKSTART.md).
 6. Open this repository directory in your own Codex. Read AGENTS.md. Create a feature branch before editing.
 7. Commit and push your change, then submit a pull request into main. Coordinate when two people edit the same component.
 8. To view the shared accepted version, return to a clean main branch and run SYNC_UPDATES.cmd. START_LIVE_SYNC.cmd checks every 30 seconds while open. Stop with Ctrl+C.

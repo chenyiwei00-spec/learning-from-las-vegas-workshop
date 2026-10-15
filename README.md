@@ -2,6 +2,8 @@
 
 This repository contains the current local interactive website: archive search, Las Vegas / V&A collages, 3D model history, and the desert exhibition studio. Source is shared through GitHub. Large media and AI weights are separate.
 
+For a teacher or first-time visitor, follow [Teacher quick start](docs/TEACHER_QUICKSTART.md), including the shared saved-project supplement.
+
 ## Start
 Windows: double-click START_TEAM_WEBSITE.cmd.
 macOS/Linux: run python3 serve_local.py --open.

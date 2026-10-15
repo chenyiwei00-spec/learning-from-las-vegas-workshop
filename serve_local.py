@@ -195,7 +195,7 @@ def status(port):
   if obj.get('identity')==IDENTITY and obj.get('testRoot')==str(ROOT):return True
  except Exception:pass
  return False
-def launch(open_browser):
+def launch(open_browser,shared_workshop=False):
  for port in range(8065,8075):
   if status(port):break
  else:
@@ -217,14 +217,14 @@ def launch(open_browser):
   else:raise RuntimeError('Local test server did not become ready.')
  url=f'http://127.0.0.1:{port}/'
  (ROOT/'runtime/local_runtime.json').write_text(json.dumps({'url':url,'localOnly':True,'sourceCommit':CONFIG.get('sourceCommit','team-main')},indent=2),encoding='utf-8')
- if open_browser:webbrowser.open(url,new=2)
+ if open_browser:webbrowser.open(url+('tools/workshop-transfer.html' if shared_workshop else ''),new=2)
  print(url,flush=True)
-parser=argparse.ArgumentParser();parser.add_argument('--serve',action='store_true');parser.add_argument('--open',action='store_true');parser.add_argument('--launch',action='store_true');parser.add_argument('--port',type=int,default=8065)
+parser=argparse.ArgumentParser();parser.add_argument('--serve',action='store_true');parser.add_argument('--open',action='store_true');parser.add_argument('--launch',action='store_true');parser.add_argument('--port',type=int,default=8065);parser.add_argument('--shared-workshop',action='store_true')
 args=parser.parse_args()
 if args.serve:
  server=ThreadingHTTPServer(('127.0.0.1',args.port),Handler);server.daemon_threads=True
  print(f'Local-only test preview: http://127.0.0.1:{args.port}/',flush=True);server.serve_forever()
-else:launch(args.open)
+else:launch(args.open,args.shared_workshop)
 
 
 
