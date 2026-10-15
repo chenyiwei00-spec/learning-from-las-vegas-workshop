@@ -19,7 +19,7 @@ function render(){
 }
 function lock(value){
  document.body.dataset.archiveAgentBusy=String(value);window.dispatchEvent(new Event('exhibition-agent-change'));
- for(const id of ['workspace-collage-pane','model-panel','saved-model-grid','workspace-library-grid','archive-collage-pane','archive-space-pane'])$(id).inert=value;
+ for(const id of ['workspace-collage-pane'])$(id).inert=value;
  // Generation remains explicit; navigation through the room still works while it runs.
 }
 function eligible(o,photo){
@@ -75,15 +75,14 @@ async function run(){
    if(stopRequested)break;const direction=random()<.5?'city':'sculpture';setPhase('selecting',completed+' / '+total+' models / choosing '+(direction==='city'?'Las Vegas':'V&A')+' fragments');
    let proposed;const excluded=new Set();for(let attempt=0;attempt<3;attempt++){proposed=await makePlan(excluded,direction);setPhase('composing',completed+' / '+total+' models / composing');try{await ExhibitionStudio.applyAgentPlan(proposed);plan=ExhibitionStudio.getDocument().agentPlan;applied=true;break;}catch(e){proposed.pieces.forEach(p=>excluded.add(p.key));if(attempt===2)throw e;}}
    lastTheme=plan.themeIndex;plan.pieces.forEach(p=>{recent.add(p.key);if(p.partId)recent.add(p.partId);});while(recent.size>120)recent.delete(recent.values().next().value);render();
-   const draft=await ExhibitionAgentDrafts.save(number);collagesCompleted++;
+   const draft=await ExhibitionAgentDrafts.save(number);collagesCompleted++;ExhibitionAgentDrafts.setActive(draft.id);
    try{
     setPhase('generating',completed+' / '+total+' models / generating '+number);
-    await ExhibitionStudio.generate();const state=ExhibitionStudio.state().model;
-    if(state.error)throw Error(state.error);if(!state.jobId)throw Error('No model was produced.');
-    await ExhibitionAgentDrafts.waitForPreview(state.jobId);
+    const result=await ExhibitionStudio.generate();if(!result?.record)throw Error('No model was produced.');
+    await ExhibitionAgentDrafts.waitForPreview(result.record.id);
     const entry=await ExhibitionLibrary.saveCurrent(number,{title:draft.title,group:'Agent batch'});
     await ExhibitionAgentDrafts.attachModel(draft.id,entry.id);completed++;
-   }catch(e){failures.push({id:draft.id,message:e.message});}
+   }catch(e){failures.push({id:draft.id,message:e.message});}finally{ExhibitionAgentDrafts.setActive(null);}
    ExhibitionStudio.releaseUnused();setPhase('ready',completed+' / '+total+' models saved');
 
   }

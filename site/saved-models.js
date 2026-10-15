@@ -18,7 +18,12 @@ async function get(id){
   const responseMesh=await fetch(root+'sculpture.glb',{cache:'no-store'});if(!responseMesh.ok)throw Error('Legacy colour mesh unavailable.');const glb=await responseMesh.blob();if(await glb.slice(0,4).text()!=='glTF')throw Error('Legacy colour mesh invalid.');
   const db=await database();await new Promise((resolve,reject)=>{const tx=db.transaction(STORE,'readwrite'),s=tx.objectStore(STORE),r=s.get(id);r.onsuccess=()=>{const current=r.result;if(current){current.glb=glb;current.colourVersion='inferred-v2';delete current.textureVersion;s.put(current);entry.glb=glb;entry.colourVersion='inferred-v2';delete entry.textureVersion;entry.title=current.title;entry.group=current.group;}};tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);});
  }catch{/* The stored mesh remains available if its local source cache is absent. */}
- const source=await ModelColour.referenceSource(entry.glb,entry.record.modelUrl),finished=await ModelColour.enhance(source);if(entry.colourVersion!==ModelColour.version||finished!==entry.glb){entry.glb=finished;entry.obj=entry.obj?await ModelColour.obj(entry.obj):null;entry.colourVersion=ModelColour.version;await transaction('readwrite',s=>s.put(entry));}
+ const source=await ModelColour.referenceSource(entry.glb,entry.record.modelUrl),finished=await ModelColour.enhance(source);if(entry.colourVersion!==ModelColour.version||finished!==entry.glb){
+  const obj=entry.obj?await ModelColour.obj(entry.obj):null,db=await database();let latest=null;
+  // Colour migration can finish after a user edits a name or camera. Patch only mesh fields.
+  await new Promise((resolve,reject)=>{const tx=db.transaction(STORE,'readwrite'),s=tx.objectStore(STORE),r=s.get(id);r.onsuccess=()=>{const current=r.result;if(current){Object.assign(current,{glb:finished,obj,colourVersion:ModelColour.version});s.put(current);latest=current;}};tx.oncomplete=resolve;tx.onerror=tx.onabort=()=>reject(tx.error||Error('Model colour update failed.'));});
+  if(!latest)return null;Object.assign(entry,latest);
+ }
  return entry;
 }
 async function remove(id){await transaction('readwrite',s=>s.delete(id));notify();}
@@ -109,9 +114,19 @@ async function gallery(){
  const grid=document.getElementById('saved-model-grid');if(!grid)return;
  const exhibition=document.body.classList.contains('exhibition-page');
  const history=document.getElementById('model-history');try{const preference=localStorage.getItem('learning-vegas-model-history-open');if(preference!==null)history.open=preference==='true';}catch{}history.addEventListener('toggle',()=>{try{localStorage.setItem('learning-vegas-model-history-open',String(history.open));}catch{}});
- const filter=document.getElementById('history-group-filter'),dialog=document.getElementById('saved-model-edit');let revision=0,urls=[],editingId=null;
+ const filter=document.getElementById('history-group-filter'),dialog=document.getElementById('saved-model-edit');let revision=0,urls=[],editingId=null,savedJobs=new Set();
+ function renderPending(){
+  grid.querySelector('[data-generating-model]')?.remove();
+  const state=window.ExhibitionStudio?.generationState?.(),result=window.ExhibitionStudio?.generationResult?.();if(!exhibition||!state)return;const pending=state.busy,ready=!pending&&result&&!savedJobs.has(result.record.id)&&ExhibitionStudio.captureModel().record?.id!==result.record.id;if(!pending&&!ready)return;
+  const card=document.createElement('article');card.className='saved-model-card';card.dataset.generatingModel='true';card.setAttribute('aria-busy',String(pending));
+  const image=document.createElement('button');image.type='button';image.className='saved-model-image';image.disabled=pending;image.setAttribute('aria-label',pending?'Model generation in progress':'Open completed model');if(ready)image.onclick=()=>ExhibitionStudio.openGeneration();
+  const img=document.createElement('img');img.alt='Current model composition';if(state.preview)img.src=state.preview;
+  const badge=document.createElement('span');badge.textContent=pending?'3D / GENERATING':'3D / READY';image.append(img,badge);
+  const meta=document.createElement('div');meta.className='saved-model-meta';const title=document.createElement('h3');title.textContent=pending?'Generating model':'Model ready';const note=document.createElement('p');note.textContent=state.message;meta.append(title,note);card.append(image,meta);grid.prepend(card);
+ }
+ window.addEventListener('exhibition-generation-change',renderPending);
  async function render(){const ticket=++revision;
-  try{const rows=await list();if(ticket!==revision)return;urls.forEach(URL.revokeObjectURL);urls=[];
+  try{const rows=await list();if(ticket!==revision)return;savedJobs=new Set(rows.map(r=>r.record.id));urls.forEach(URL.revokeObjectURL);urls=[];
    const groups=[...new Set(rows.map(r=>r.group||'').filter(Boolean))].sort((a,b)=>a.localeCompare(b));
    if(filter){const selected=filter.value;filter.innerHTML='<option value="">All groups</option><option value="__ungrouped__">Ungrouped</option>'+groups.map(g=>'<option value="'+text(g)+'">'+text(g)+'</option>').join('');filter.value=selected;if(filter.selectedIndex<0)filter.value='';}
    const datalist=document.getElementById('model-group-options');if(datalist)datalist.innerHTML=groups.map(g=>'<option value="'+text(g)+'"></option>').join('');
@@ -122,7 +137,7 @@ async function gallery(){
    grid.innerHTML=shown.map(r=>{const url=URL.createObjectURL(r.preview);urls.push(url);const date=new Date(r.savedAt).toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
     return '<article class="saved-model-card" data-saved="'+text(r.id)+'"><button class="saved-model-image" data-open aria-label="Preview '+text(r.title)+' in the 3D stage"><img src="'+url+'" alt="Saved model preview"><span>3D / '+(r.record.target==='city'?'CITY':'SCULPTURE')+'</span></button><div class="saved-model-meta"><h3>'+text(r.title)+'</h3><p class="saved-group">'+text(r.group||'Ungrouped')+'</p><p>'+text(date)+' · '+Number(r.record.triangles||0).toLocaleString('en-GB')+' triangles</p><div class="saved-model-actions">'+(exhibition?'':'<button data-open>Preview &rarr;</button>')+'<button data-edit>Name / group</button><button data-export="glb">GLB ↗</button><button data-export="obj"'+(!r.obj?' disabled':'')+'>OBJ ↗</button><button class="delete-saved" data-delete aria-label="Delete '+text(r.title)+'">Delete</button></div></div></article>';
    }).join('');
-   if(exhibition)window.ExhibitionCardImages?.attach(grid,shown);
+   if(exhibition)window.ExhibitionCardImages?.attach(grid,shown);renderPending();
   }catch(e){document.getElementById('history-status').textContent=e.message;}
  }
  filter?.addEventListener('change',render);
