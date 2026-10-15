@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict';
 import {spacePigments} from '../src/inhabitable/space-pigments.js';
-const input=Float32Array.from([.45,.25,.16,.6,.6,.6,1,1,1,1,0,0]),original=input.slice(),out=spacePigments(input);
+const input=Float32Array.from([.40,.28,.22,.6,.6,.6,1,1,1,1,0,0]),original=input.slice(),out=spacePigments(input);
 assert.deepEqual(input,original);
 const luma=(a,i)=>a[i]*.2126+a[i+1]*.7152+a[i+2]*.0722;
 for(let i=0;i<input.length;i+=3)assert(Math.abs(luma(input,i)-luma(out,i))<1e-7);
-assert(out[0]-out[2]>(input[0]-input[2])*1.60);
+assert(out[0]-out[2]>(input[0]-input[2])*2.10);
 assert.deepEqual(out.slice(3,9),input.slice(3,9));
 assert([...out].every(v=>v>=0&&v<=1));assert.deepEqual(out.slice(9),input.slice(9));
 console.log('PASS: generated-space pigments gain chroma without changing hue/luminance, neutrals, bounds or original source arrays.');
