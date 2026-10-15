@@ -569,3 +569,9 @@ body[data-archive-agent-busy=true] .agent-library-control{display:none}
 .exhibition-page #place-model-grid .agent-model-item{padding:0;display:flex;flex-direction:column;background:white;overflow:hidden}
 .exhibition-page #place-model-grid .agent-model-item img{aspect-ratio:4/3;object-fit:cover;flex:none}
 .exhibition-page #place-model-grid .agent-model-item span{display:block;flex:1;width:100%;box-sizing:border-box;background:white;padding:12px 10px 16px;min-height:42px}
+
+/* Keep feedback clear of the small floor labels. */
+.exhibition-space-feedback{bottom:56px}
+@media(max-width:760px){.exhibition-space-feedback{bottom:48px}}
+
+.walk-section-panel{display:inline-flex;align-items:center;gap:7px;font:10px/1.2 Arial,sans-serif}.walk-section-panel[hidden]{display:none}.walk-section-panel input{width:92px;accent-color:#222}.walk-section-panel select{background:#fff;border:1px solid #ddd;padding:5px;font:inherit}.walk-section-panel output{min-width:42px}

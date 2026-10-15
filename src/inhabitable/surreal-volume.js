@@ -41,7 +41,7 @@ export function massFunction(modules,blend){
    }}return Math.max(d-seam,-.70-y);};
 }
 export function makeVoids(nodes,paths,atriums,s,bounds){
- const primitives=[],bins=new Map(),binSize=3.5,pad=1.0;
+ const primitives=[],bins=new Map(),binSize=3.5,pad=1.0+(s.routePadding||0);
  for(const n of nodes){const radius=n.radius,top=n.floor+3.6+s.voidDensity*1.7;primitives.push({type:'room',node:n,x:n.center.x,z:n.center.z,rx:radius,rz:radius*(.9+n.variation*.18),bottom:n.floor-.23,top,
  bounds:{minX:n.center.x-radius*1.3,maxX:n.center.x+radius*1.3,minZ:n.center.z-radius*1.3,maxZ:n.center.z+radius*1.3,minY:n.floor-.5,maxY:top+.7}});}
  for(const path of paths)for(let k=1;k<path.points.length;k++){
@@ -82,8 +82,8 @@ export function vertexColor(modules,x,y,z){
 const cube=[[0,0,0],[1,0,0],[1,1,0],[0,1,0],[0,0,1],[1,0,1],[1,1,1],[0,1,1]];
 const tetra=[[0,5,1,6],[0,1,2,6],[0,2,3,6],[0,3,7,6],[0,7,4,6],[0,4,5,6]];
 export function remesh(field,modules,bounds,onProgress=()=>{}){
- let step=.26,volume=(bounds.maxX-bounds.minX)*(bounds.maxY-bounds.minY)*(bounds.maxZ-bounds.minZ);
- step=Math.max(step,Math.cbrt(volume/650000));
+ let step=.22,volume=(bounds.maxX-bounds.minX)*(bounds.maxY-bounds.minY)*(bounds.maxZ-bounds.minZ);
+ step=Math.max(step,Math.cbrt(volume/900000));
  const nx=Math.ceil((bounds.maxX-bounds.minX)/step)+1,ny=Math.ceil((bounds.maxY-bounds.minY)/step)+1,nz=Math.ceil((bounds.maxZ-bounds.minZ)/step)+1,minX=bounds.minX,minY=bounds.minY,minZ=bounds.minZ;
  const indexOf=(x,y,z)=>(z*ny+y)*nx+x,values=new Float32Array(nx*ny*nz);
  for(let z=0;z<nz;z++){for(let y=0;y<ny;y++)for(let x=0;x<nx;x++){let d=field(minX+x*step,minY+y*step,minZ+z*step);if(Math.abs(d)<1e-5)d=1e-5;values[indexOf(x,y,z)]=d;}if(z%5===0)onProgress(30+Math.round(z/nz*25),'Blending the source bodies and carving connected voids');}
@@ -126,7 +126,7 @@ export function refineSurface(mesh,modules){
  const p=mesh.positions,idx=mesh.index,N=p.length/3,adj=Array.from({length:N},()=>new Set());
  for(let i=0;i<idx.length;i+=3)for(let j=0;j<3;j++){const a=idx[i+j],b=idx[i+(j+1)%3];adj[a].add(b);adj[b].add(a);}
  const out=new Float32Array(p.length);
- for(let round=0;round<3;round++)for(const amount of [.32,-.34]){
+ for(let round=0;round<6;round++)for(const amount of [.32,-.34]){
   for(let i=0;i<N;i++)for(let k=0;k<3;k++){let sum=0;for(const j of adj[i])sum+=p[j*3+k];out[i*3+k]=p[i*3+k]+amount*(sum/(adj[i].size||1)-p[i*3+k]);}
   p.set(out);
  }

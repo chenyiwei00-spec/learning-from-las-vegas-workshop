@@ -2,6 +2,8 @@ import {analyseSource,Builder,meshBounds} from './form-geometry.js';
 import {SETTINGS,validateComposition} from './form-state.js';
 import {seeded,rotation,profile,forward,moduleDistance,massFunction,makeVoids,remesh,topology,vertexColor,clamp,keepPrimaryCore,refineSurface} from './surreal-volume.js';
 import {surfaceGrid,buildNavigation,validateCirculation,floorAt,renderedFloor,floorClear,prepareTerrain,terrainVoid,bodyClear,buildWideRoutes} from './surreal-navigation.js';
+import {GENERATED_SPACE_SCALE} from '../exhibition-dimensions.js';
+import {roundRoad} from './road-surface.js';
 const TAU=Math.PI*2,distance=(a,b)=>Math.hypot(a.x-b.x,a.z-b.z);
 function curve(a,b,width,rng,role,options={}){
  const dx=b.x-a.x,dz=b.z-a.z,L=Math.hypot(dx,dz)||1,right={x:-dz/L,z:dx/L},rise=Math.abs(b.y-a.y),bend=options.bend??(rise>.7?2.7+rise*.5:.65+rng()*.7),sign=options.sign??(rng()>.5?1:-1),points=[];
@@ -80,19 +82,23 @@ function nativeFragments(modules,sources,voids,s,paths){
  return {meshes,retainedTriangles};
 }
 function floors(nav,modules,thickness=0){
+ const topOffsets=[];
  nav.corners=new Float32Array(nav.heights.length*4);nav.corners.fill(NaN);const b=new Builder('Carved floors / connected split levels',null,'Source footprints → level terraces and continuously rising carved ramps',false),step=nav.step;
- const heightNear=(ix,iz,h)=>{if(ix<0||iz<0||ix>=nav.nx||iz>=nav.nz)return h;const id=iz*nav.nx+ix;let best=h,d=.35;for(let k=0;k<nav.counts[id];k++){const v=nav.heights[id*nav.layers+k],delta=Math.abs(v-h);if(delta<d){d=delta;best=v;}}return best;};
- const corner=(x,z,h,sx,sz)=>{const sum=heightNear(x,z,h)+heightNear(x+sx,z,h)+heightNear(x,z+sz,h)+heightNear(x+sx,z+sz,h);return [nav.minX+(x+sx*.5)*step,sum/4,nav.minZ+(z+sz*.5)*step];};
- for(let z=0;z<nav.nz;z++)for(let x=0;x<nav.nx;x++){const id=z*nav.nx+x;for(let k=0;k<nav.counts[id];k++){const h=nav.heights[id*nav.layers+k],color=vertexColor(modules,nav.minX+x*step,h+1,nav.minZ+z*step).color.map(v=>v*.25+.48);const q=[corner(x,z,h,-1,-1),corner(x,z,h,1,-1),corner(x,z,h,1,1),corner(x,z,h,-1,1)];nav.corners.set(q.map(v=>v[1]),(id*nav.layers+k)*4);b.quad(...q,color);
-  if(thickness){
-   const lower=q.map(v=>[v[0],v[1]-thickness,v[2]]);b.quad(lower[3],lower[2],lower[1],lower[0],[.018,.023,.032]);
-   for(const [edge,dx,dz] of [[0,0,-1],[1,1,0],[2,0,1],[3,-1,0]]){
-    const xx=x+dx,zz=z+dz,j=zz*nav.nx+xx;
-    let neighbour=false;if(xx>=0&&xx<nav.nx&&zz>=0&&zz<nav.nz)for(let n=0;n<nav.counts[j];n++)if(Math.abs(nav.heights[j*nav.layers+n]-h)<.35){neighbour=true;break;}
-    if(!neighbour){const next=(edge+1)%4;b.quad(q[edge],lower[edge],lower[next],q[next],[.018,.023,.032]);}
-   }
-  }}}
- const mesh=b.finish();mesh.road=true;mesh.thickness=thickness;return mesh;
+ // Shared corners average only present cells. Missing cells must not invent
+ // different edge heights for each neighbouring slab (which left tiny open cracks).
+ const corner=(x,z,h,sx,sz)=>{
+  const xx=x+(sx<0?-1:0),zz=z+(sz<0?-1:0),values=[];
+  for(let dz=0;dz<2;dz++)for(let dx=0;dx<2;dx++){
+   const ix=xx+dx,iz=zz+dz;if(ix<0||iz<0||ix>=nav.nx||iz>=nav.nz)continue;
+   const id=iz*nav.nx+ix;let near=null,d=.6;
+   for(let k=0;k<nav.counts[id];k++){const v=nav.heights[id*nav.layers+k];if(Math.abs(v-h)<d){near=v;d=Math.abs(v-h);}}
+   if(near!==null)values.push(near);
+  }
+  return [nav.minX+(x+sx*.5)*step,values.length?values.reduce((a,b)=>a+b,0)/values.length:h,nav.minZ+(z+sz*.5)*step];
+ };
+ for(let z=0;z<nav.nz;z++)for(let x=0;x<nav.nx;x++){const id=z*nav.nx+x;for(let k=0;k<nav.counts[id];k++){const h=nav.heights[id*nav.layers+k],color=vertexColor(modules,nav.minX+x*step,h+1,nav.minZ+z*step).color.map(v=>v*.25+.48);const q=[corner(x,z,h,-1,-1),corner(x,z,h,1,-1),corner(x,z,h,1,1),corner(x,z,h,-1,1)];nav.corners.set(q.map(v=>v[1]),(id*nav.layers+k)*4);topOffsets.push(b.p.length);b.quad(...q,color);
+ }}
+ const mesh=b.finish();mesh.road=true;mesh.thickness=thickness;return thickness?roundRoad(mesh,topOffsets,step):mesh;
 }
 function connectedNavigation(nav,nodes,entrance,exit){
  const index=p=>{const x=Math.round((p.x-nav.minX)/nav.step),z=Math.round((p.z-nav.minZ)/nav.step),id=z*nav.nx+x;let best=-1,d=.4;for(let k=0;k<nav.counts[id];k++){const h=nav.heights[id*nav.layers+k],v=Math.abs(h-p.y);if(v<d){d=v;best=id*nav.layers+k;}}return best;};
@@ -133,7 +139,7 @@ function oneGrowth(items,sources,input,onProgress=()=>{},diagnostics=null){
  if(nodes.length>5){const n=nodes[Math.floor(nodes.length/2)];atriums.push({x:n.center.x+1.5,z:n.center.z-1.4,floor:n.floor,radius:1.1+s.voidDensity*.45,phase:rng()*TAU});}
  const margin=2.2,bounds={minX:Math.floor(Math.min(roughBounds.minX,...paths.flatMap(p=>p.points.map(v=>v.x)))-margin),maxX:Math.ceil(Math.max(roughBounds.maxX,...paths.flatMap(p=>p.points.map(v=>v.x)))+margin),minY:-1.5,maxY:Math.ceil(roughBounds.maxY),minZ:Math.floor(Math.min(roughBounds.minZ,...paths.flatMap(p=>p.points.map(v=>v.z)))-margin),maxZ:Math.ceil(Math.max(roughBounds.maxZ,...paths.flatMap(p=>p.points.map(v=>v.z)))+margin)};
  onProgress(22,'Carving overlapping rooms, irregular atriums and split-level passages');
- const nav=prepareTerrain(buildNavigation(nodes,paths,null,null,bounds));
+ const nav=prepareTerrain(buildNavigation(nodes,paths,null,null,bounds,s.routePadding||0));
  const floorMesh=floors(nav,modules);
  for(const n of nodes){const h=floorAt(nav,n.center.x,n.center.z,n.floor+.055,10);if(h!==null){n.nominalFloor=n.floor;n.floor=h-.055;n.view.y=h;n.entry.y=h;}}
  for(const path of paths)for(const p of path.points){const h=floorAt(nav,p.x,p.z,p.y+.055,10);if(h!==null)p.y=h-.055;}
@@ -147,14 +153,15 @@ function oneGrowth(items,sources,input,onProgress=()=>{},diagnostics=null){
  if(topo.boundaryEdges||topo.nonManifoldEdges)throw Error('The shared volume could not close reliably. Try the next seed.');
  diagnostics?.({meshes,nodes,paths,bounds,grid:extracted.grid,topology:topo,atriums});
  onProgress(83,'Measuring the actual three-dimensional carved surface');
- const occupancy=surfaceGrid(meshes,extracted.grid),circulation=validateCirculation(nodes,paths,extracted.grid,occupancy,s.corridorWidth);
+ const actorScale=s.layoutDriven?1/GENERATED_SPACE_SCALE:1,routeWidth=s.corridorWidth*actorScale;
+ const occupancy=surfaceGrid(meshes,extracted.grid),circulation=validateCirculation(nodes,paths,extracted.grid,occupancy,routeWidth,null,actorScale);
  for(let id=0;id<nav.counts.length;id++){const x=nav.minX+(id%nav.nx)*nav.step,z=nav.minZ+Math.floor(id/nav.nx)*nav.step,keep=[];
-  for(let k=0;k<nav.counts[id];k++){const h=renderedFloor(nav,id,k,x,z);if(bodyClear(extracted.grid,occupancy,x,h,z)&&floorClear(nav,x,z,h))keep.push({h,c:Array.from(nav.corners.subarray((id*nav.layers+k)*4,(id*nav.layers+k)*4+4))});}
+  for(let k=0;k<nav.counts[id];k++){const h=renderedFloor(nav,id,k,x,z);if(bodyClear(extracted.grid,occupancy,x,h,z,.23*actorScale,false,actorScale)&&floorClear(nav,x,z,h,.23*actorScale,actorScale))keep.push({h,c:Array.from(nav.corners.subarray((id*nav.layers+k)*4,(id*nav.layers+k)*4+4))});}
   nav.counts[id]=keep.length;for(let k=0;k<keep.length;k++){nav.heights[id*nav.layers+k]=keep[k].h;nav.corners.set(keep[k].c,(id*nav.layers+k)*4);}
  }
  meshes.push(floors(nav,modules,.24));
- const actualRoutes=buildWideRoutes(nav,nodes,entrance,exit,extracted.grid,occupancy,s.corridorWidth,edges);paths.splice(0,paths.length,...actualRoutes);
- const floorCirculation=validateCirculation(nodes,paths,extracted.grid,occupancy,s.corridorWidth,nav);
+ const actualRoutes=buildWideRoutes(nav,nodes,entrance,exit,extracted.grid,occupancy,routeWidth,edges,actorScale);paths.splice(0,paths.length,...actualRoutes);
+ const floorCirculation=validateCirculation(nodes,paths,extracted.grid,occupancy,routeWidth,nav,actorScale);
  const walkableCells=connectedNavigation(nav,nodes,{...entrance,y:floorAt(nav,entrance.x,entrance.z,entrance.y+.055,10)},{...exit,y:floorAt(nav,exit.x,exit.z,exit.y+.055,10)});
  const ground=new Builder('Surrounding ground',null,'A modest ground plane around the shared source body',false);ground.quad([bounds.minX,-.025,bounds.minZ],[bounds.maxX,-.025,bounds.minZ],[bounds.maxX,-.025,bounds.maxZ],[bounds.minX,-.025,bounds.maxZ],[.64,.61,.54]);meshes.push(ground.finish());
  onProgress(97,'Checking connected floors, rising ramps and source attribution');
@@ -168,10 +175,10 @@ function oneGrowth(items,sources,input,onProgress=()=>{},diagnostics=null){
 
 export function generateSurreal(items,sources,input,onProgress=()=>{},diagnostics=null){
  let lastError;const requested=input.seed??SETTINGS.seed;
- for(let attempt=0;attempt<3;attempt++){const effective=attempt===0?requested:((requested^(Math.imul(attempt,0x9e3779b9)))>>>0)%1000000;
-  try{const plan=oneGrowth(items,sources,{...input,seed:effective},(p,m)=>onProgress(Math.min(99,attempt*30+p*.30),(attempt?'Refining the growth contacts. ':'')+m),diagnostics);
-   plan.settings={...SETTINGS,...input};plan.validation.requestedSeed=requested;plan.validation.effectiveSeed=effective;plan.validation.growthAttempts=attempt+1;onProgress(100,'One shared body. Many borrowed spaces.');return plan;
-  }catch(error){lastError=error;if(/outside its limits|invalid|unavailable|at least one/.test(error.message))throw error;}
+ for(let attempt=0;attempt<4;attempt++){const effective=attempt===0?requested:((requested^(Math.imul(attempt,0x9e3779b9)))>>>0)%1000000;
+  try{const plan=oneGrowth(items,sources,{...input,seed:effective,routePadding:attempt===3?.65:0},(p,m)=>onProgress(Math.min(99,attempt*30+p*.30),(attempt?'Refining the growth contacts. ':'')+m),diagnostics);
+   plan.settings={...SETTINGS,...input};plan.validation.requestedSeed=requested;plan.validation.effectiveSeed=effective;plan.validation.growthAttempts=attempt+1;plan.validation.routeRepair=attempt===3;onProgress(100,'One shared body. Many borrowed spaces.');return plan;
+  }catch(error){lastError=error;if(attempt===2&&!/route|support|entrance|chamber/.test(error.message))break;if(/outside its limits|invalid|unavailable|at least one/.test(error.message))throw error;}
  }
  throw lastError;
 }

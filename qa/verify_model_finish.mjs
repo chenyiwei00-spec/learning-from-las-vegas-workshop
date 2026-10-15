@@ -14,11 +14,15 @@ const shiny=await finish.enhance(original),a=await unpack(original),b=await unpa
 assert.deepEqual(a.bin,b.bin,'PBR finish must not change any position/index/normal/UV bytes');
 assert.equal(b.json.materials[0].alphaMode,a.json.materials[0].alphaMode);
 assert.equal(b.json.materials[0].pbrMetallicRoughness.baseColorFactor[3],a.json.materials[0].pbrMetallicRoughness.baseColorFactor[3]);
-assert.equal(b.json.materials[0].pbrMetallicRoughness.metallicFactor,.48);assert.equal(b.json.materials[0].pbrMetallicRoughness.roughnessFactor,.32);
+assert.equal(b.json.materials[0].pbrMetallicRoughness.metallicFactor,a.json.materials[0].pbrMetallicRoughness.metallicFactor);assert.equal(b.json.materials[0].pbrMetallicRoughness.roughnessFactor,a.json.materials[0].pbrMetallicRoughness.roughnessFactor);
 assert.equal(await finish.enhance(shiny),shiny);
-const colours=b.json.materials[0].pbrMetallicRoughness.baseColorFactor.slice();delete b.json.asset.extras.materialFinish;
-b.json.materials[0].pbrMetallicRoughness.metallicFactor=0;
+const colours=b.json.materials[0].pbrMetallicRoughness.baseColorFactor.slice();b.json.asset.extras.materialFinish='metallic-archive-v1';
+b.json.materials[0].pbrMetallicRoughness.metallicFactor=.48;b.json.materials[0].pbrMetallicRoughness.roughnessFactor=.32;
+b.json.materials[0].extensions={KHR_materials_clearcoat:{clearcoatFactor:.4}};
+b.json.extensionsUsed=['KHR_materials_clearcoat'];
+
 const legacy=await finish.enhance(pack(b)),c=await unpack(legacy);assert.deepEqual(c.bin,a.bin);assert.deepEqual(c.json.materials[0].pbrMetallicRoughness.baseColorFactor,colours,'Legacy saturated models must not saturate twice');
+assert.equal(c.json.materials[0].pbrMetallicRoughness.metallicFactor,0);assert.equal(c.json.materials[0].pbrMetallicRoughness.roughnessFactor,1);assert(!c.json.materials[0].extensions.KHR_materials_clearcoat);assert.equal(await finish.enhance(legacy),legacy);
 const group=new THREE.Group();group.userData.engine='inhabitable-v1';group.add(new THREE.Mesh(new THREE.BoxGeometry(2,.24,2),new THREE.MeshPhysicalMaterial({metalness:.96,roughness:.055})));
 const space=new Blob([await new GLTFExporter().parseAsync(group,{binary:true})]);assert.equal(await finish.enhance(space),space,'Generated space materials must retain their mirror-road finish');
-console.log('PASS: metallic GLB finish, unchanged geometry/UV/index/alpha, repeat/legacy colour idempotence and preserved space-road materials.');
+console.log('PASS: original GLB finish and legacy non-metal migration, unchanged geometry/UV/index/alpha, repeat/legacy colour idempotence and preserved space-road materials.');

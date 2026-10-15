@@ -1,7 +1,7 @@
 /* Saturate generated GLB colours, preserving geometry and alpha. Idempotent for saved models. */
 (()=>{
 'use strict';
-const FACTOR=1.35,VERSION='saturation-1.35-v1',FINISH='metallic-archive-v1',cache=new WeakMap(),encoder=new TextEncoder();
+const FACTOR=1.35,VERSION='saturation-1.35-v1',FINISH='original-archive-v1',cache=new WeakMap(),encoder=new TextEncoder();
 function rgb(values,offset=0,max=1){const r=values[offset]/max,g=values[offset+1]/max,b=values[offset+2]/max,y=r*.2126+g*.7152+b*.0722;values[offset]=Math.max(0,Math.min(1,y+(r-y)*FACTOR))*max;values[offset+1]=Math.max(0,Math.min(1,y+(g-y)*FACTOR))*max;values[offset+2]=Math.max(0,Math.min(1,y+(b-y)*FACTOR))*max;}
 async function enhance(blob){
  if(!(blob instanceof Blob))return blob;if(cache.has(blob))return cache.get(blob);
@@ -18,11 +18,14 @@ async function enhance(blob){
   const imageIndices=new Set();for(const m of tree.materials||[]){const p=m.pbrMetallicRoughness,t=p?.baseColorTexture;if(t&&!colourDone)imageIndices.add(tree.textures?.[t.index]?.source);if(!colourDone&&p?.baseColorFactor&&!t&&seen.size===0)rgb(p.baseColorFactor);}
   for(const idx of imageIndices){const image=tree.images?.[idx],bv=tree.bufferViews?.[image?.bufferView];if(!bv)continue;const original=new Blob([binary.slice(bv.byteOffset||0,(bv.byteOffset||0)+bv.byteLength)],{type:image.mimeType||'image/png'}),bitmap=await createImageBitmap(original),canvas=document.createElement('canvas');canvas.width=bitmap.width;canvas.height=bitmap.height;const g=canvas.getContext('2d');g.drawImage(bitmap,0,0);bitmap.close();const pixels=g.getImageData(0,0,canvas.width,canvas.height);for(let i=0;i<pixels.data.length;i+=4)rgb(pixels.data,i,255);g.putImageData(pixels,0,0);const png=await new Promise(r=>canvas.toBlob(r,'image/png')),encoded=new Uint8Array(await png.arrayBuffer()),offset=(binary.length+3)&~3,next=new Uint8Array(offset+encoded.length);next.set(binary);next.set(encoded,offset);binary=next;image.bufferView=tree.bufferViews.length;tree.bufferViews.push({buffer:0,byteOffset:offset,byteLength:encoded.length});image.mimeType='image/png';
   }
-  for(const material of tree.materials||[]){
-   const p=material.pbrMetallicRoughness||={};p.metallicFactor=.48;p.roughnessFactor=.32;delete p.metallicRoughnessTexture;
-   material.extensions||={};delete material.extensions.KHR_materials_unlit;material.extensions.KHR_materials_clearcoat={clearcoatFactor:.4,clearcoatRoughnessFactor:.22};
+  // Undo only our previous finish migration; new inputs keep their source materials.
+  if(tree.asset?.extras?.materialFinish==='metallic-archive-v1'){
+   for(const material of tree.materials||[]){
+    const p=material.pbrMetallicRoughness||={};p.metallicFactor=0;p.roughnessFactor=1;
+    if(material.extensions)delete material.extensions.KHR_materials_clearcoat;
+   }
+   for(const key of ['extensionsUsed','extensionsRequired'])if(tree[key])tree[key]=tree[key].filter(x=>x!=='KHR_materials_clearcoat');
   }
-  tree.extensionsUsed=[...new Set([...(tree.extensionsUsed||[]),'KHR_materials_clearcoat'])];
   tree.asset ||= {version:'2.0'};tree.asset.extras={...tree.asset.extras,colourVersion:VERSION,saturation:FACTOR,materialFinish:FINISH};tree.buffers[0].byteLength=binary.length;
   const json=encoder.encode(JSON.stringify(tree)),jsonSize=(json.length+3)&~3,binSize=(binary.length+3)&~3,out=new ArrayBuffer(28+jsonSize+binSize),o=new DataView(out),bytes=new Uint8Array(out);
   o.setUint32(0,0x46546c67,true);o.setUint32(4,2,true);o.setUint32(8,out.byteLength,true);o.setUint32(12,jsonSize,true);o.setUint32(16,0x4e4f534a,true);bytes.fill(32,20,20+jsonSize);bytes.set(json,20);o.setUint32(20+jsonSize,binSize,true);o.setUint32(24+jsonSize,0x004e4942,true);bytes.set(binary,28+jsonSize);return new Blob([out],{type:'model/gltf-binary'});
