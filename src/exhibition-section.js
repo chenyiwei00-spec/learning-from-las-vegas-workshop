@@ -28,7 +28,7 @@ export function createExhibitionSection({scene,renderer,getMeshes,invalidate}){
     const order=caps*3+1;
     for(const [side,op] of [[THREE.BackSide,THREE.IncrementWrapStencilOp],[THREE.FrontSide,THREE.DecrementWrapStencilOp]]){
      const mat=new THREE.MeshBasicMaterial({depthWrite:false,depthTest:false,colorWrite:false,stencilWrite:true,stencilFunc:THREE.AlwaysStencilFunc,stencilFail:op,stencilZFail:op,stencilZPass:op,side,clippingPlanes:[plane]});
-     const mask=new THREE.Mesh(mesh.geometry,mat);mask.matrixAutoUpdate=false;mask.matrix.copy(mesh.matrixWorld);mask.renderOrder=order;mask.frustumCulled=false;overlays.add(mask);
+     const mask=new THREE.Mesh(mesh.sectionGeometry||mesh.geometry,mat);mask.matrixAutoUpdate=false;mask.matrix.copy(mesh.matrixWorld);mask.renderOrder=order;mask.frustumCulled=false;overlays.add(mask);
     }
     const mat=new THREE.MeshBasicMaterial({color:0x222222,toneMapped:false,side:THREE.DoubleSide,stencilWrite:true,stencilRef:0,stencilFunc:THREE.NotEqualStencilFunc,stencilFail:THREE.ReplaceStencilOp,stencilZFail:THREE.ReplaceStencilOp,stencilZPass:THREE.ReplaceStencilOp,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1});
     const cap=new THREE.Mesh(new THREE.PlaneGeometry(side,side),mat);cap.name='Dark grey cut surface';cap.userData.ownsGeometry=true;cap.renderOrder=order+1;cap.frustumCulled=false;cap.onAfterRender=()=>renderer.clearStencil();overlays.add(cap);caps++;
@@ -41,6 +41,7 @@ export function createExhibitionSection({scene,renderer,getMeshes,invalidate}){
   output.textContent=height.toFixed(1)+' m';range.value=String(Math.round(ratio*100));axis.value=axisName;overlays.visible=true;invalidate();
  }
  function set(value){enabled=value.enabled??enabled;ratio=THREE.MathUtils.clamp(value.ratio??ratio,.01,.99);axisName=['x','y','z'].includes(value.axis)?value.axis:axisName;update();}
+ panel.addEventListener('pointerdown',e=>e.stopPropagation());
  const toggle=()=>set({enabled:!enabled}),slide=()=>set({ratio:Number(range.value)/100}),changeAxis=()=>set({axis:axis.value});
  button.addEventListener('click',toggle);range.addEventListener('input',slide);axis.addEventListener('change',changeAxis);
  return {refresh:update,set,setViewMode:mode=>{view=mode;update();},state:()=>({enabled,active:enabled&&view==='axonometric',axis:axisName,ratio,height,capColour:'#222222',caps,meshCount:targets.length}),dispose:()=>{disposed=true;release();scene.remove(overlays);button.removeEventListener('click',toggle);range.removeEventListener('input',slide);axis.removeEventListener('change',changeAxis);}};

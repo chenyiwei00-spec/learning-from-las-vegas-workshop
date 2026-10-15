@@ -49,7 +49,7 @@ async function makePlan(excluded=new Set(),surface=ExhibitionStudio.state().sour
    const generic=/depicted signboards? \d|buildings? \d|signboards? \d|building mask|signboard mask/i.test(c.o.name)?3:0;
    return {c,score:c.quality+shape+(theme.terms.test(c.text)?5:0)+named-generic-(recent.has(c.o.key)?8:0)+random()*3};
   }).sort((a,b)=>b.score-a.score);
-  if(!ranked.length)continue;const c=ranked[0].c;
+  if(!ranked.length)continue;const picked=await ExhibitionColourPreference.pick(ranked.slice(0,18).map(r=>({c:r.c,score:ranked[0].score-r.score,url:r.c.o.url})),'vivid',random),c=picked.c;
   selected.push({...slot,key:c.o.key,sourceId:c.o.sourceId,name:c.o.name,rotation:slot.role==='base'?0:Math.round((random()-.5)*12),flipX:false});usedPhotos.add(c.o.sourceId);usedNames.add(c.o.name.toLowerCase());
  }
  if(selected.length<5)throw Error('Choose a collection with more distinct cutout photographs.');
@@ -62,7 +62,7 @@ function denseSlots(count){return [
  {role:'accent',x:350,y:340,boxW:410,boxH:430},{role:'accent',x:700,y:350,boxW:410,boxH:430}].slice(0,count);}
 async function makeSculpturePlan(excluded){
  const parts=ExhibitionStudio.sculptureParts(),used=new Set(),pieces=[],slots=denseSlots(5+Math.floor(random()*6));
- for(const slot of slots){const kind=slot.role==='base'?'torso':slot.role==='crown'?'head':slot.role==='sign'?'torso':'arm';const candidates=parts.filter(p=>!used.has(p.id)).map(p=>({p,rank:(p.kind===kind?9:0)+(recent.has(p.id)?-5:0)+Math.min(3,p.width/p.height*2)+Math.min(2,Math.log2(Math.max(1,(p.maskPixels||5000)/5000)))+random()*4})).sort((a,b)=>b.rank-a.rank);const p=candidates[0]?.p;if(!p)throw Error('Not enough V&A fragments for this composition.');const match=await ExhibitionStudio.recommendVividCity(p.id,new Set([...excluded,...pieces.map(p=>p.key)]));pieces.push({...slot,key:match.key,cityRotation:match.cityRotation,partId:p.id,vaPartId:p.id,name:p.name,rotation:Math.round((random()-.5)*8),flipX:false});used.add(p.id);}
+ for(const slot of slots){const kind=slot.role==='base'?'torso':slot.role==='crown'?'head':slot.role==='sign'?'torso':'arm';const candidates=parts.filter(p=>!used.has(p.id)).map(p=>({p,rank:(p.kind===kind?9:0)+(recent.has(p.id)?-5:0)+Math.min(3,p.width/p.height*2)+Math.min(2,Math.log2(Math.max(1,(p.maskPixels||5000)/5000)))+random()*4})).sort((a,b)=>b.rank-a.rank);const picked=await ExhibitionColourPreference.pick(candidates.slice(0,18).map(r=>({p:r.p,score:candidates[0].rank-r.rank,url:r.p.url})),'light',random),p=picked?.p;if(!p)throw Error('Not enough V&A fragments for this composition.');const match=await ExhibitionStudio.recommendVividCity(p.id,new Set([...excluded,...pieces.map(p=>p.key)]));pieces.push({...slot,key:match.key,cityRotation:match.cityRotation,partId:p.id,vaPartId:p.id,name:p.name,rotation:Math.round((random()-.5)*8),flipX:false});used.add(p.id);}
  return {id:crypto.randomUUID(),title:'Borrowed body',theme:'sculpture-to-city',themeIndex:-1,sourceSurface:'sculpture',planner:'dense-portrait-collage-v2',createdAt:Date.now(),pieces};
 }
 async function run(){

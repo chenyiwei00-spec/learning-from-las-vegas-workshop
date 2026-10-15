@@ -575,3 +575,6 @@ body[data-archive-agent-busy=true] .agent-library-control{display:none}
 @media(max-width:760px){.exhibition-space-feedback{bottom:48px}}
 
 .walk-section-panel{display:inline-flex;align-items:center;gap:7px;font:10px/1.2 Arial,sans-serif}.walk-section-panel[hidden]{display:none}.walk-section-panel input{width:92px;accent-color:#222}.walk-section-panel select{background:#fff;border:1px solid #ddd;padding:5px;font:inherit}.walk-section-panel output{min-width:42px}
+
+/* Native section controls must receive input instead of hitting the scene underneath. */
+.walk-section-panel,.walk-section-panel input,.walk-section-panel select{pointer-events:auto;touch-action:none}.walk-section-panel{padding:5px 8px;background:#fffffff0;cursor:default}

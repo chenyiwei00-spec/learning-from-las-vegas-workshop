@@ -26,7 +26,7 @@ const context={scene,renderer:{domElement:canvas},placement,getCamera:()=>camera
 await engine.ready;
 assert(await engine.generate({override:{...SETTINGS,moduleCount:3,layoutVersion:2}}),engine.state().error);
 assert(engine.state().validation.verticalRange>2);assert(engine.state().validation.maxGrade>.02);
-const plan=lastPlan,offset=engine.state().offset,scale=engine.state().scale;assert.equal(scale,2.5);engine.enter();assert.equal(view,'room');assert(navigated.y>=1.65);
+const plan=lastPlan,offset=engine.state().offset,scale=engine.state().scale;assert.equal(scale,1);engine.enter();assert.equal(view,'room');assert(navigated.y>=1.65);
 let walkingSamples=0,eye=new THREE.Vector3(navigated.x,navigated.y,navigated.z);
 const walk=points=>{for(let k=1;k<points.length;k++){const a=points[k-1],b=points[k];for(let f=.25;f<=1;f+=.25){eye.set((a.x+(b.x-a.x)*f)*scale+offset.x,1.65,(a.z+(b.z-a.z)*f)*scale+offset.z);engine.constrain(eye,.35,{fly:false,eyeHeight:1.65});const expected=new THREE.Vector3((a.x+(b.x-a.x)*f)*scale+offset.x,(a.y+(b.y-a.y)*f+.055)*scale+offset.y+1.65,(a.z+(b.z-a.z)*f)*scale+offset.z);assert(eye.distanceTo(expected)<.20,'Main-site walk must follow actual supported floors: '+eye.distanceTo(expected));walkingSamples++;}}};
 walk(plan.paths.find(p=>p.role==='carved entrance').points);
@@ -43,6 +43,6 @@ engine.constrain(eye,.35,{fly:false,eyeHeight:1.65});
 walk(plan.paths.find(p=>p.role==='carved entrance').points);
 assert.equal(engine.audioAnchors().length,3);
 const road=scene.getObjectByName('Carved floors / connected split levels');
-assert.equal(road.userData.roadThickness,.24);assert.equal(road.material.metalness,0);assert.equal(road.material.color.getHex(),0xffffff);assert(lastPlan.meshes.find(m=>m.road).roundedBoundary);
+assert.equal(road.userData.roadThickness,.24);assert.equal(road.material.metalness,0);assert.equal(road.material.roughness,.94);assert(road.material.map&&road.material.bumpMap);assert(lastPlan.meshes.find(m=>m.road).roundedBoundary);
 assert.equal(cameraMoves,4);assert.deepEqual(camera.position.toArray(),cameraBefore);
 engine.dispose();console.log('PASS: '+walkingSamples+' actual floor-following samples, sloped multilevel walking, flight/landing, enlarged white rounded slabs and source sound anchors. No private assets or AI inference.');

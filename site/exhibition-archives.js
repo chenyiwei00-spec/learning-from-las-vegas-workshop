@@ -12,9 +12,9 @@ async function saveSpace(source){
  if(!(source?.glb instanceof Blob)||await source.glb.slice(0,4).text()!=='glTF')throw Error('This space has no valid GLB.');
  const fingerprint=[...new Uint8Array(await crypto.subtle.digest('SHA-256',await source.glb.arrayBuffer()))].map(n=>n.toString(16).padStart(2,'0')).join('');
  const rows=await spaces(),old=rows.find(r=>r.record.id===fingerprint);
- if(old)return old;
+ if(old){Object.assign(old,{runtime:source.runtime||old.runtime,renderCamera:source.renderCamera||old.renderCamera,updatedAt:Date.now()});await transaction("readwrite",s=>s.put(old));await render();return old;}
  const id='space:'+crypto.randomUUID(),number=rows.length+1;
- const entry={id,title:'Space '+String(number).padStart(2,'0'),group:'Generated spaces',savedAt:Date.now(),ephemeral:true,glb:source.glb,obj:null,preview:source.preview,camera:source.camera||null,composition:null,layout:source.layout||[],signature:source.signature,record:{id:fingerprint,fingerprint,modelUrl:'assets/generated-sculptures/'+fingerprint+'/sculpture.glb',objUrl:'assets/generated-sculptures/'+fingerprint+'/sculpture.obj',target:'space',triangles:source.triangles||0,localOnly:true,linkedMedia:{version:2,video:null,audio:null}}};
+ const entry={id,title:'Space '+String(number).padStart(2,'0'),group:'Generated spaces',savedAt:Date.now(),ephemeral:true,runtime:source.runtime||null,renderCamera:source.renderCamera||null,glb:source.glb,obj:null,preview:source.preview,camera:source.camera||null,composition:null,layout:source.layout||[],signature:source.signature,record:{id:fingerprint,fingerprint,modelUrl:'assets/generated-sculptures/'+fingerprint+'/sculpture.glb',objUrl:'assets/generated-sculptures/'+fingerprint+'/sculpture.obj',target:'space',triangles:source.triangles||0,localOnly:true,linkedMedia:{version:2,video:null,audio:null}}};
  await transaction('readwrite',s=>s.put(entry));await render();return entry;
 }
 async function overwriteSpace(id,viewer,metadata={}){
@@ -36,6 +36,12 @@ $('archive-item-edit-form').onsubmit=async e=>{
  try{if(editing.type==='collage')await ExhibitionAgentDrafts.update(editing.id,metadata);else{const row=await getSpace(editing.id);if(!row)throw Error('This space was removed.');Object.assign(row,metadata);await transaction('readwrite',s=>s.put(row));}await render();$('archive-item-edit').close();}
  catch(error){report(error);}
 };
+async function openSpace(id){
+ const row=await getSpace(id);if(!row)throw Error('This saved space was removed.');
+ await window.ExhibitionBrowse?.close();window.ExhibitionWorkspace?.closePanel();
+ await ExhibitionWalk.space.openSaved(row);document.getElementById('walk-surface').scrollIntoView({behavior:'smooth',block:'start'});
+}
+window.addEventListener('saved-sculpture-open',e=>{if(String(e.detail?.id).startsWith('space:')){e.stopImmediatePropagation();openSpace(e.detail.id).catch(report);}},true);
 function card(row,type){
  const article=document.createElement('article');article.className='saved-model-card';article.dataset.saved=row.id;
  const button=document.createElement('button');button.type='button';button.className='saved-model-image';button.setAttribute('aria-label',(type==='collage'?'Edit ':'View ')+row.title);
@@ -48,7 +54,7 @@ function card(row,type){
  date.textContent+=' / '+(type==='collage'?(row.document?.layers?.length||0)+' objects':Number(row.record?.triangles||0).toLocaleString('en-GB')+' triangles');
  const actions=document.createElement('div');actions.className='saved-model-actions';
  function action(label,fn){const b=document.createElement('button');b.type='button';b.textContent=label;b.onclick=e=>{e.stopPropagation();Promise.resolve().then(fn).catch(report);};actions.append(b);return b;}
- const open=()=>type==='collage'?ExhibitionAgentDrafts.load(row.id):window.dispatchEvent(new CustomEvent('saved-sculpture-open',{detail:{id:row.id}}));
+ const open=()=>type==='collage'?ExhibitionAgentDrafts.load(row.id):openSpace(row.id);
  button.onclick=()=>Promise.resolve().then(open).catch(report);
  article.onclick=e=>{if(!e.target.closest('button,a,input'))Promise.resolve().then(open).catch(report);};
  action('Name / group',()=>edit(row,type));
@@ -82,6 +88,6 @@ document.querySelector('.archive-library-tabs').addEventListener('keydown',e=>{
 });
 window.addEventListener('exhibition-draft-library-change',()=>render());
 window.addEventListener('focus',()=>render());window.addEventListener('pagehide',()=>{urls.forEach(u=>URL.revokeObjectURL(u));urls.clear();});
-window.ExhibitionArchives=Object.freeze({spaces,getSpace,saveSpace,overwriteSpace,render,select,state:()=>({kind,spaces:spacesCache.length,collages:draftsCache.length})});
+window.ExhibitionArchives=Object.freeze({spaces,getSpace,saveSpace,openSpace,overwriteSpace,render,select,state:()=>({kind,spaces:spacesCache.length,collages:draftsCache.length})});
 syncTabs();render();
 })();

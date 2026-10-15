@@ -4,7 +4,7 @@
 const $=id=>document.getElementById(id),surface=$('walk-surface'),browser=$('exhibition-model-browser'),body=$('exhibition-browser-body'),panel=$('model-panel'),dock=$('workspace-model-pane'),inline=$('exhibition-inline-model'),inlineBody=$('exhibition-inline-body'),stage=$('model-stage'),info=panel.querySelector('.model-info');
 let active=false,mode='inline',aliases=new Map();
 async function entries(){
- const saved=await SavedSculptures.list(),floor=window.ExhibitionWalk?.placement.browseEntries()||[],result=[...saved,...(await window.ExhibitionArchives?.spaces()||[])];aliases=new Map();
+ const saved=await SavedSculptures.list(),floor=window.ExhibitionWalk?.placement.browseEntries()||[],result=[...saved];aliases=new Map();
  for(const entry of floor){const match=saved.find(s=>s.id===entry.libraryId||s.record.id===entry.record.id);if(match)aliases.set(entry.id,match.id);else result.push(entry);}
  return result;
 }

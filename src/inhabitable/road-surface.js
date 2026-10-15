@@ -23,16 +23,24 @@ export function roundRoad(mesh,topOffsets,step){
  // Shared corner positions and shared top normals make the union visually seamless.
  const smooth=new Float64Array(points.length);
  for(let k=0;k<tops.length;k+=3){const a=tops[k]*3,b=tops[k+1]*3,c=tops[k+2]*3,ux=points[b]-points[a],uy=points[b+1]-points[a+1],uz=points[b+2]-points[a+2],vx=points[c]-points[a],vy=points[c+1]-points[a+1],vz=points[c+2]-points[a+2],n=[uy*vz-uz*vy,uz*vx-ux*vz,ux*vy-uy*vx];for(const at of [a,b,c])for(let j=0;j<3;j++)smooth[at+j]+=n[j];}
- const positions=[],normals=[],index=[],walkIndex=[];
+ const positions=[],normals=[],index=[],sectionIndex=[],walkIndex=[];
  for(let k=0;k<tops.length;k+=6){
   const source=tops.slice(k,k+6),unique=[...new Set(source)],map=new Map(),base=positions.length/3,n=unique.length;
   for(let j=0;j<n;j++){const id=unique[j];map.set(id,base+j);positions.push(...points.slice(id*3,id*3+3));const v=Array.from(smooth.slice(id*3,id*3+3)),L=Math.hypot(...v)||1;normals.push(...v.map(x=>x/L));}
   for(let j=0;j<n;j++){const id=unique[j],at=id*3;positions.push(points[at],points[at+1]-mesh.thickness,points[at+2]);normals.push(-normals[(base+j)*3],-normals[(base+j)*3+1],-normals[(base+j)*3+2]);}
   const local=source.map(id=>map.get(id)),rim=new Map();
-  for(let q=0;q<local.length;q+=3){const tri=local.slice(q,q+3);index.push(...tri);walkIndex.push(...tri);index.push(tri[2]+n,tri[1]+n,tri[0]+n);for(let j=0;j<3;j++){const a=tri[j],b=tri[(j+1)%3],key=Math.min(a,b)+','+Math.max(a,b);if(rim.has(key))rim.delete(key);else rim.set(key,{a,b});}}
-  for(const {a,b} of rim.values())index.push(b,a,a+n,b,a+n,b+n);
+  for(let q=0;q<local.length;q+=3){const tri=local.slice(q,q+3);index.push(...tri);sectionIndex.push(...tri);walkIndex.push(...tri);index.push(tri[2]+n,tri[1]+n,tri[0]+n);sectionIndex.push(tri[2]+n,tri[1]+n,tri[0]+n);for(let j=0;j<3;j++){const a=tri[j],b=tri[(j+1)%3],key=Math.min(a,b)+','+Math.max(a,b);if(rim.has(key))rim.delete(key);else rim.set(key,{a,b});}}
+  const reverse=new Map([...map].map(([source,local])=>[local,source]));
+  for(const {a,b} of rim.values()){
+   sectionIndex.push(b,a,a+n,b,a+n,b+n);
+   const A=reverse.get(a),B=reverse.get(b),shared=edges.get(Math.min(A,B)+','+Math.max(A,B));
+   if(shared.count!==1)continue;
+   const start=positions.length/3,verts=[b,a,a+n,b+n],u=[positions[a*3]-positions[b*3],positions[a*3+1]-positions[b*3+1],positions[a*3+2]-positions[b*3+2]],v=[u[0],u[1]-mesh.thickness,u[2]],normal=[u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]],L=Math.hypot(...normal)||1;
+   for(const id of verts){positions.push(...positions.slice(id*3,id*3+3));normals.push(...normal.map(x=>x/L));}
+   index.push(start,start+1,start+2,start,start+2,start+3);
+  }
  }
- mesh.positions=Float32Array.from(positions);mesh.normals=Float32Array.from(normals);mesh.index=Uint32Array.from(index);mesh.colors=new Float32Array(positions.length).fill(1);mesh.walkIndex=Uint32Array.from(walkIndex);mesh.roundedBoundary=true;
+ mesh.positions=Float32Array.from(positions);mesh.normals=Float32Array.from(normals);mesh.index=Uint32Array.from(index);mesh.colors=new Float32Array(positions.length).fill(1);mesh.sectionIndex=Uint32Array.from(sectionIndex);mesh.walkIndex=Uint32Array.from(walkIndex);mesh.roundedBoundary=true;
  return mesh;
 }
 /** Bin the rendered top triangles, so rounded edges and walking cannot disagree. */
