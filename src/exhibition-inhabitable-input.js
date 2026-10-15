@@ -31,7 +31,7 @@ export async function preparePlacedSources(placed,settings,onProgress=()=>{}){
   onProgress(Math.round((k+1)/measured.length*100),'Reading source model '+(k+1)+' / '+measured.length);
   await new Promise(resolve=>typeof requestAnimationFrame==='function'?requestAnimationFrame(resolve):setTimeout(resolve,0));
  }
- return {items,sources,settings:{...checkSettings(settings),layoutDriven:true,moduleCount:items.length,seed:layoutSeed(placed)},centre:{x:0,z:0},layoutScale,attribution};
+ return {items,sources,settings:{...checkSettings(settings),layoutDriven:true,moduleCount:Math.max(items.length,settings.moduleCount||9),seed:layoutSeed(placed)},centre:{x:0,z:0},layoutScale,attribution};
 }
 export function locateInHall(group,centre,half=20){
  group.updateMatrixWorld(true);const local=new THREE.Box3().setFromObject(group),margin=.6;

@@ -18,7 +18,7 @@ async function get(id){
   const responseMesh=await fetch(root+'sculpture.glb',{cache:'no-store'});if(!responseMesh.ok)throw Error('Legacy colour mesh unavailable.');const glb=await responseMesh.blob();if(await glb.slice(0,4).text()!=='glTF')throw Error('Legacy colour mesh invalid.');
   const db=await database();await new Promise((resolve,reject)=>{const tx=db.transaction(STORE,'readwrite'),s=tx.objectStore(STORE),r=s.get(id);r.onsuccess=()=>{const current=r.result;if(current){current.glb=glb;current.colourVersion='inferred-v2';delete current.textureVersion;s.put(current);entry.glb=glb;entry.colourVersion='inferred-v2';delete entry.textureVersion;entry.title=current.title;entry.group=current.group;}};tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);});
  }catch{/* The stored mesh remains available if its local source cache is absent. */}
- if(entry.colourVersion!==ModelColour.version){entry.glb=await ModelColour.enhance(entry.glb);entry.obj=entry.obj?await ModelColour.obj(entry.obj):null;entry.colourVersion=ModelColour.version;await transaction('readwrite',s=>s.put(entry));}
+ const finished=await ModelColour.enhance(entry.glb);if(entry.colourVersion!==ModelColour.version||finished!==entry.glb){entry.glb=finished;entry.obj=entry.obj?await ModelColour.obj(entry.obj):null;entry.colourVersion=ModelColour.version;await transaction('readwrite',s=>s.put(entry));}
  return entry;
 }
 async function remove(id){await transaction('readwrite',s=>s.delete(id));notify();}

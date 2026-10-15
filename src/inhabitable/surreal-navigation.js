@@ -25,10 +25,15 @@ export function bodyClear(g,surfaces,x,floor,z,radius=.23,outsideClear=false){
 export function buildNavigation(nodes,paths,g,surfaces,bounds){
  const step=.28,nx=Math.ceil((bounds.maxX-bounds.minX)/step)+1,nz=Math.ceil((bounds.maxZ-bounds.minZ)/step)+1,layers=12,heights=new Float32Array(nx*nz*layers),counts=new Uint8Array(nx*nz);
  heights.fill(NaN);
- const candidates=(x,z)=>{const out=[];
-  for(const n of nodes)if(Math.hypot(x-n.center.x,z-n.center.z)<n.radius*.72)out.push(n.floor+.055);
-  for(const path of paths)for(let k=1;k<path.points.length;k++){const a=path.points[k-1],b=path.points[k],dx=b.x-a.x,dz=b.z-a.z,t=clamp(((x-a.x)*dx+(z-a.z)*dz)/(dx*dx+dz*dz||1),0,1);
-   if(Math.hypot(x-a.x-dx*t,z-a.z-dz*t)<path.width/2+.34)out.push(a.y+(b.y-a.y)*t+.055);
+ // Bin candidate rooms/segments once instead of scanning every ramp for every empty cell.
+ const bins=new Map(),binSize=2;
+ const add=(part,minX,maxX,minZ,maxZ)=>{for(let z=Math.floor(minZ/binSize);z<=Math.floor(maxZ/binSize);z++)for(let x=Math.floor(minX/binSize);x<=Math.floor(maxX/binSize);x++){const key=x+','+z;if(!bins.has(key))bins.set(key,[]);bins.get(key).push(part);}};
+ for(const n of nodes){const r=n.radius*.72;add({n,r},n.center.x-r,n.center.x+r,n.center.z-r,n.center.z+r);}
+ for(const path of paths)for(let k=1;k<path.points.length;k++){const a=path.points[k-1],b=path.points[k],r=path.width/2+.34,dx=b.x-a.x,dz=b.z-a.z;add({a,b,r,dx,dz,L:dx*dx+dz*dz||1},Math.min(a.x,b.x)-r,Math.max(a.x,b.x)+r,Math.min(a.z,b.z)-r,Math.max(a.z,b.z)+r);}
+ const candidates=(x,z)=>{
+  const out=[];for(const p of bins.get(Math.floor(x/binSize)+','+Math.floor(z/binSize))||[]){
+   if(p.n){if(Math.hypot(x-p.n.center.x,z-p.n.center.z)<p.r)out.push(p.n.floor+.055);}
+   else{const t=clamp(((x-p.a.x)*p.dx+(z-p.a.z)*p.dz)/p.L,0,1);if(Math.hypot(x-p.a.x-p.dx*t,z-p.a.z-p.dz*t)<p.r)out.push(p.a.y+(p.b.y-p.a.y)*t+.055);}
   }return out;
  };
  // Only candidate cells near the room / ramp union are considered; routes and
@@ -60,7 +65,7 @@ export function renderedFloor(nav,id,k,x,z){
 export function floorClear(nav,x,z,floor,radius=.23){
  for(const [dx,dz] of [[0,0],[radius,0],[-radius,0],[0,radius],[0,-radius]]){
   const px=x+dx,pz=z+dz,ix=Math.round((px-nav.minX)/nav.step),iz=Math.round((pz-nav.minZ)/nav.step);if(ix<0||iz<0||ix>=nav.nx||iz>=nav.nz)continue;
-  const id=iz*nav.nx+ix;for(let k=0;k<nav.counts[id];k++){const h=renderedFloor(nav,id,k,px,pz);if(h>floor+.4&&h<floor+2.55)return false;}
+  const id=iz*nav.nx+ix;for(let k=0;k<nav.counts[id];k++){const h=renderedFloor(nav,id,k,px,pz);if(h>floor+.4&&h<floor+2.79)return false;}
  }return true;
 }
 
