@@ -63,6 +63,11 @@ function card(row,type){
  const del=action('Delete',async()=>{if(type==='collage')await ExhibitionAgentDrafts.remove(row.id);else await transaction('readwrite',s=>s.delete(row.id));await render();});del.className='delete-saved';del.setAttribute('aria-label','Delete '+row.title);
  meta.append(title,group,date,actions);article.append(button,meta);return article;
 }
+function syncActiveDraft(){
+ const active=window.ExhibitionAgentDrafts?.state().activeId;
+ for(const card of $('archive-collage-grid').children){const locked=!!active&&card.dataset.saved===active;card.inert=locked;card.setAttribute('aria-busy',String(locked));}
+}
+window.addEventListener('exhibition-draft-active-change',syncActiveDraft);
 function syncTabs(){
  for(const k of ['models','collages','spaces']){$('archive-tab-'+k).setAttribute('aria-selected',String(k===kind));$('archive-tab-'+k).tabIndex=k===kind?0:-1;}
  $('archive-model-pane').hidden=kind!=='models';$('archive-collage-pane').hidden=kind!=='collages';$('archive-space-pane').hidden=kind!=='spaces';
@@ -76,7 +81,7 @@ async function render(){
   $('archive-collage-grid').replaceChildren(...drafts.map(r=>card(r,'collage')));
   $('archive-space-grid').replaceChildren(...saved.map(r=>card(r,'space')));
   $('archive-collage-empty').hidden=!!drafts.length;$('archive-space-empty').hidden=!!saved.length;
-  ExhibitionCardImages.attach($('archive-space-grid'),saved);syncTabs();window.dispatchEvent(new Event('exhibition-space-library-change'));
+  ExhibitionCardImages.attach($('archive-space-grid'),saved);syncTabs();syncActiveDraft();window.dispatchEvent(new Event('exhibition-space-library-change'));
  }catch(e){report(e);}
 }
 function select(next){kind=next;try{localStorage.setItem('learning-vegas-library-kind',kind);}catch{}syncTabs();render();}

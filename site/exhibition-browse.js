@@ -25,7 +25,6 @@ function moveTo(next){
 }
 function presentInline(){moveTo('inline');}
 function open(){
- if(window.ExhibitionAgent?.state().busy||window.ExhibitionAgentDrafts?.state().busy)return;
  const desired=document.fullscreenElement===surface?'overlay':'inline';
  window.ExhibitionWorkspace.closePanel();ExhibitionWalk.suspendNavigation();active=true;moveTo(desired);
  const target=desired==='overlay'?browser:inline;target.setAttribute('tabindex','0');target.focus({preventScroll:true});
