@@ -155,7 +155,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
   function reset() {
     clearInput(); teleport = null;
     if (viewMode === 'axonometric') {
-      axonCamera.position.set(48,48,48); axonCamera.zoom = 1;
+      axonCamera.position.set(48,48,48); axonCamera.zoom = 1.08;
       axonControls.target.set(0,0,0); axonCamera.updateProjectionMatrix(); axonControls.update();
     } else {
       if(space?.state().active){space.enter();return;}
@@ -192,10 +192,11 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
   }
   try {
     scene = new THREE.Scene();
-    scene.background = new THREE.Color('#8e8e8e');
+    scene.background = new THREE.Color('#f2f2f2');
     roomCamera = new THREE.PerspectiveCamera(62,1,0.05,180);
     axonCamera = new THREE.OrthographicCamera(-40,40,22,-22,0.05,350);
     axonCamera.position.set(48,48,48);
+    axonCamera.zoom = 1.08;
     axonCamera.lookAt(0,0,0);
     camera = roomCamera;
     renderer = new THREE.WebGLRenderer({antialias:true,powerPreference:'low-power'});
@@ -240,7 +241,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
 
     // A separate exact 40m floor avoids exposing the room's wall thickness in plan.
     axonGroup = new THREE.Group();axonGroup.name='axonometric-floor-view';axonGroup.visible=false;scene.add(axonGroup);
-    const planFloor = new THREE.Mesh(new THREE.PlaneGeometry(40,40),new THREE.MeshBasicMaterial({color:0xf7f8f9,side:THREE.DoubleSide,toneMapped:false}));
+    const planFloor = new THREE.Mesh(new THREE.PlaneGeometry(40,40),new THREE.MeshBasicMaterial({color:0xf7f7f7,side:THREE.DoubleSide,toneMapped:false}));
     planFloor.name='axonometric-floor';planFloor.rotation.x=-Math.PI/2;axonGroup.add(planFloor);
     floorGrid = new THREE.GridHelper(40,20,0xadb5bd,0xadb5bd);
     floorGrid.name='two-metre-grid';floorGrid.position.y=0.004;
@@ -274,8 +275,8 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
   const canvas = renderer.domElement;
   const placement=createExhibitionPlacement({scene,canvas,getCamera:()=>camera,getRoomMeshes:()=>roomMeshes,isRoom:()=>viewMode==='room',orient,invalidate:invalidateScene,previewInvalidate:requestFrame,suspend:suspendNavigation,getMaxHeight:()=>23});
   space=createExhibitionSpace({scene,renderer,placement,getCamera:()=>camera,onSpaceLight:(result,active)=>skylight.updateCanopy(result,active),onSpaceBounds:frameSpace,getView:()=>viewMode,setView:setViewMode,navigate:value=>{clearInput();teleport=null;fly=false;eye.set(value.x,value.y,value.z);yaw=value.yaw;pitch=value.pitch||0;constrain(eye);ui();requestFrame();focusView();},invalidate:invalidateScene});
-  // Enter at the parent capture phase; the entry click must not also edit an exhibit.
-  surface.addEventListener('pointerdown',event=>{
+  // Enter at the parent capture phase; the entry double-click must not also edit an exhibit.
+  surface.addEventListener('dblclick',event=>{
     if(event.target===canvas&&!immersive&&event.button===0){
       event.preventDefault();event.stopPropagation();enterImmersive();
     }
@@ -297,7 +298,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
   function setViewMode(mode) {
     if(!['room','axonometric'].includes(mode))throw new TypeError('Unknown gallery view.');
     clearInput();teleport=null;viewMode=mode;
-    const axon=mode==='axonometric';scene.background.set('#8e8e8e');
+    const axon=mode==='axonometric';scene.background.set(axon?'#ffffff':'#f2f2f2');
     roomMeshes.forEach(mesh=>mesh.visible=!axon);
     factoryRoom.setVisible(!axon);roomDetailGroup.visible=!axon;axonGroup.visible=axon;skylight.setRoomMode(!axon);
     camera=axon?axonCamera:roomCamera;placement.setViewMode(mode);

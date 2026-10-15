@@ -286,8 +286,8 @@ body[data-archive-agent-busy=true] #workspace-collage-pane{opacity:.65}
 .exhibition-rotate-handle::after{content:"";position:absolute;left:50%;top:100%;height:12px;width:1px;background:#535f68;pointer-events:none}
 .exhibition-rotate-handle:active{cursor:grabbing;background:#f2d86b}
 .exhibition-model-media{position:static;margin:14px 0 16px;width:100%;pointer-events:auto}
-.exhibition-video-card{position:relative;width:100%;aspect-ratio:16/9;background:#8e8e8e;overflow:hidden;cursor:pointer}
-.exhibition-video-card video{display:block;width:100%;height:100%;object-fit:contain;background:#8e8e8e}
+.exhibition-video-card{position:relative;width:100%;aspect-ratio:16/9;background:#f2f2f2;overflow:hidden;cursor:pointer}
+.exhibition-video-card video{display:block;width:100%;height:100%;object-fit:contain;background:#f2f2f2}
 .exhibition-video-card #exhibition-play-video{position:absolute;inset:0;width:100%;height:100%;border:0;background:#0000000a;color:#fff;font:25px/1 Arial,sans-serif;cursor:pointer;text-shadow:0 1px 4px #0007}
 .exhibition-video-card #exhibition-play-video:disabled{color:#929ba2;cursor:default}
 .exhibition-video-card[data-playing=true] #exhibition-play-video{display:none}
@@ -330,7 +330,7 @@ html.exhibition-immersive,html.exhibition-immersive body{overflow:hidden;overscr
 .walk-surface.is-immersive .workspace-preview-image{max-height:clamp(55px,calc((100dvh - 270px)/2),148px)}
 
 /* Inactive exhibition aligns with archive gutters; active mode retains the full page. */
-.exhibition-page{--exhibition-grey:#8e8e8e;--exhibition-line:#c6cbd0}
+.exhibition-page{--exhibition-grey:#f2f2f2;--exhibition-line:#c6cbd0}
 .exhibition-page .walk-panel{width:100%;max-width:1440px;margin-inline:auto;padding-inline:clamp(24px,5vw,80px)}
 .walk-caption,.walk-notice{padding-inline:0}
 .walk-surface{border:1px solid var(--exhibition-line)}
@@ -469,8 +469,8 @@ body[data-collage-queue-busy=true] .workspace-preview-card{pointer-events:none}
 .agent-libraries-menu button{width:100%;min-height:28px;text-align:left;padding:7px;font:9px/1.4 Arial,sans-serif;background:#fff;border:1px solid var(--exhibition-line);cursor:pointer}
 body[data-archive-agent-busy=true] .agent-library-control{display:none}
 
-/* Neutral RGB 142 stages, square saved views and one aligned agent disclosure column. */
-.exhibition-page{--exhibition-grey:rgb(142,142,142);--exhibition-line:#707070}
+/* Neutral RGB 242 stages, square saved views and one aligned agent disclosure column. */
+.exhibition-page{--exhibition-grey:rgb(242,242,242);--exhibition-line:#707070}
 .exhibition-page .saved-model-card,.exhibition-page .saved-model-meta{background:#fff}
 .exhibition-page .exhibition-model-library button.saved-model-image{aspect-ratio:1;overflow:hidden;background:var(--exhibition-grey)}
 .exhibition-page .exhibition-model-library .saved-model-image img{display:block;position:absolute;inset:0;width:100%;height:100%;aspect-ratio:1;object-fit:contain;background:var(--exhibition-grey)}
@@ -494,6 +494,60 @@ body[data-archive-agent-busy=true] .agent-library-control{display:none}
 @media(max-width:760px){.exhibition-inline-model .model-layout .model-frame,.exhibition-inline-model .model-layout,.exhibition-inline-placeholder{height:100dvh;min-height:0}.exhibition-inline-model .model-layout .model-info{top:auto;bottom:38px;left:24px;right:24px;max-height:43%;overflow:auto}.exhibition-inline-model .exhibition-browser-title{font-size:clamp(24px,4vw,30px)}}
 
 .exhibition-space-card .space-secondary-actions:has(.space-options-empty:not([hidden])){display:flex}
+
+.exhibition-model-marquee{position:absolute;z-index:16;border:1px solid #535f68;background:#7b94aa26;pointer-events:none}
+.exhibition-page .saved-model-image img{object-fit:cover!important;object-position:center bottom}
+#workspace-collage-library,#workspace-model-library{display:none!important}
+.exhibition-page{--exhibition-line:#c6c6c6}
+
+.exhibition-page .saved-model-image img[data-preview-pending=true]{visibility:hidden}
+
+/* Two compact previews: one reversible collage and one 3D model. */
+#mini-sculpture,#exhibition-box-select{display:none!important}
+.exhibition-page .exhibition-model-library .saved-model-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:22px}
+.exhibition-page .exhibition-model-library button.saved-model-image{aspect-ratio:4/3}
+.exhibition-page .exhibition-model-library .saved-model-image img{object-fit:contain!important;object-position:center bottom}
+.exhibition-model-library .saved-model-meta h3{font:400 24px/1.1 var(--display-font)}
+.workspace-previews{--mini-size:clamp(124px,calc((100dvh - 230px)/2),160px)}
+.exhibition-page .workspace-expanded,.exhibition-page .workspace-generate-actions,.exhibition-page .workspace-expanded-heading{background:#fff}
+.workspace-expanded[data-panel=collage] .workspace-expanded-body,.workspace-expanded[data-panel=model] .workspace-expanded-body{overflow:hidden;display:flex;flex-direction:column}
+.workspace-expanded[data-panel=collage] #workspace-collage-pane{display:flex;flex-direction:column;flex:1;min-height:0}
+.workspace-expanded[data-panel=collage] .exhibition-paper{flex:1;min-height:0;height:auto;margin:0;background:rgb(242,242,242)}
+.workspace-expanded[data-panel=collage] #exhibition-canvas{background:transparent}
+.workspace-expanded[data-panel=collage] .exhibition-tool-row,.workspace-expanded[data-panel=collage] .exhibition-transforms,.workspace-expanded[data-panel=collage] .exhibition-mapping,.workspace-expanded[data-panel=collage] .exhibition-layer-details,.workspace-expanded[data-panel=collage] .exhibition-agent-actions,.workspace-expanded[data-panel=collage] .workspace-message{display:none!important}
+#workspace-production-actions{display:none!important}
+.exhibition-view-conversion{position:absolute;left:calc(var(--paper-left,0px) + 10px);bottom:calc(var(--paper-bottom,0px) + 10px);z-index:4;background:#fff;border:1px solid #c6c6c6;font:9px/1.4 Arial,sans-serif;cursor:pointer}
+.exhibition-view-conversion:disabled{opacity:.5;cursor:default}
+.exhibition-view-conversion[aria-pressed=true]{background:#222;color:#fff;border-color:#222}
+.workspace-expanded[data-panel=model] #workspace-model-pane{display:flex;flex-direction:column;flex:1;min-height:0}
+.workspace-expanded[data-panel=model] #model-panel{display:flex;flex-direction:column;flex:1;min-height:0;padding:0;border:0}
+.workspace-expanded[data-panel=model] .workspace-model-placement,.workspace-expanded[data-panel=model] .workspace-model-meta{display:none}
+.workspace-expanded[data-panel=model] .model-layout{height:auto!important;min-height:0!important;flex:1}
+.workspace-expanded[data-panel=model] .model-info{flex:none;width:100%;padding:12px 0 0;transform:none;position:static;background:#fff}
+.workspace-expanded[data-panel=model] .model-info>:not(.sculpture-actions){display:none!important}
+.workspace-expanded[data-panel=model] .sculpture-actions{margin:0}
+.agent-batch-slider{display:flex;align-items:center;gap:10px;padding:9px 2px 3px}
+.agent-batch-slider input{flex:1;width:0;min-width:0;margin:0;accent-color:#222}
+.agent-batch-slider output{flex:none;width:20px;text-align:right;font:10px/1.4 Arial,sans-serif;color:#222}
+@media(max-width:1050px){.exhibition-page .exhibition-model-library .saved-model-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:760px){.exhibition-page .exhibition-model-library .saved-model-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.workspace-expanded[data-panel=model] .model-info{max-height:none;overflow:visible}.workspace-previews{--mini-size:124px}}
+
+/* Square, uncut saved views with room around labels and actions. */
+.exhibition-page .exhibition-model-library button.saved-model-image{aspect-ratio:1}
+.exhibition-page .exhibition-model-library .saved-model-image img{object-fit:contain!important;object-position:center}
+.exhibition-model-library .saved-model-meta{padding:22px 20px 32px}
+.exhibition-model-library .saved-model-meta h3{margin-bottom:10px}
+.exhibition-model-library .saved-model-meta p{margin-bottom:14px}
+.exhibition-model-library .saved-model-actions{gap:8px}
+.exhibition-model-library .saved-model-actions button,.exhibition-model-library .saved-model-actions a{padding:8px 11px;margin:0;min-height:30px;line-height:1.4;background:#fff;cursor:pointer}
+.exhibition-model-library .saved-model-actions button:hover{background:#f2f2f2;border-color:#888}
+.archive-library-tabs{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 24px}
+.archive-library-tabs button{padding:9px 16px;border:1px solid #c6c6c6;background:#fff;font:10px/1.4 Arial,sans-serif;cursor:pointer}
+.archive-library-tabs button[aria-selected=true]{background:#222;color:#fff;border-color:#222}
+.archive-library-pane[hidden]{display:none!important}
+#archive-collage-grid .saved-model-image,#archive-space-grid .saved-model-image{aspect-ratio:1}
+#archive-collage-grid .saved-model-image,#archive-collage-grid .saved-model-image img{background:#fff}
+#model-stage:fullscreen #model-fullscreen{display:none}
 
 /* MAKE SPACE tools stay in the existing third agent menu. */
 .exhibition-space-card .space-secondary-actions:has(.space-generation-settings){width:220px;max-height:65vh;overflow:auto}

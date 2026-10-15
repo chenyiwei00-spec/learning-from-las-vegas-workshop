@@ -7,7 +7,7 @@ import {layoutSnapshot,layoutSignature,preparePlacedSources,locateInHall,checkSe
 import {FLOOR_HALF} from './exhibition-dimensions.js';
 export function createInhabitableSpace({scene,renderer,placement,getView,getCamera,setView,navigate,invalidate,onSpaceBounds,onSpaceLight}){
  const $=id=>document.getElementById(id),surface=$('walk-surface'),KEY='learning-vegas-inhabitable-space-v1';
- let result=null,active=false,busy=false,stale=false,error='',signature='',settings={...SETTINGS},generatedSettings=null,worker=null,ticket=0,cancelPending=null,disposed=false,lastSafe=null,progress=0,sourceSelection=null,settingsRevision=0,wasFlying=false,lastWalkSafe=null;
+ let result=null,active=false,busy=false,stale=false,error='',signature='',settings={...SETTINGS},generatedSettings=null,worker=null,ticket=0,cancelPending=null,disposed=false,lastSafe=null,progress=0,sourceSelection=null,settingsRevision=0,wasFlying=false,lastWalkSafe=null,archiveBlob=null;
  const ray=new THREE.Raycaster(),pointer=new THREE.Vector2();let pointerDown=null,feedbackTimer;
  const feedback=$('exhibition-space-feedback');
  const say=text=>{$('exhibition-space-status').textContent=text;feedback.textContent=text;feedback.hidden=false;clearTimeout(feedbackTimer);};
@@ -37,7 +37,7 @@ export function createInhabitableSpace({scene,renderer,placement,getView,getCame
   const visiblePlan={...plan,meshes:plan.meshes.filter(m=>m.name!=='Surrounding ground')},group=createArchitecture(visiblePlan);group.name='Inhabitable architecture / placed sculpture aggregation';
   try{const {offset,bounds}=locateInHall(group,input.centre,FLOOR_HALF);const meshes=[];group.traverse(o=>{if(o.isMesh)meshes.push(o);});
    group.userData={engine:'inhabitable-v1',snapshot:true,settings:plan.settings,sources:input.attribution,validation:plan.validation};
-   return {group,meshes,plan,offset,bounds,attribution:input.attribution,triangles:plan.meshes.reduce((n,m)=>n+(m.index?.length||m.positions.length/3)/3,0)};
+   return {group,meshes,plan,offset,bounds,attribution:input.attribution,layout:Object.entries(input.attribution).map(([id,a])=>({id,modelId:a.modelId,name:a.name,...a.layout})),triangles:plan.meshes.reduce((n,m)=>n+(m.index?.length||m.positions.length/3)/3,0)};
   }catch(e){disposeResult({group});throw e;}
  }
  async function generate({restore=false,override=null}={}){
@@ -48,9 +48,11 @@ export function createInhabitableSpace({scene,renderer,placement,getView,getCame
    const input=await preparePlacedSources(placement.spaceSources(),chosen,(p,m)=>{progress=p*.05;say(m);ui();});if(disposed)throw Error('The exhibition was closed.');
    const plan=await compute(input);if(disposed)throw Error('The exhibition was closed.');if(key!==layoutSignature(placement))throw Error('The placed models changed during generation. Click Make space again.');
    next=candidate(plan,input);onSpaceBounds?.(next.bounds);disposeResult(result);result=next;next=null;scene.add(result.group);
-   signature=key;settings=settingsRevision!==revisionAtStart?settings:restore?pendingAtStart:{...chosen};generatedSettings={...chosen};stale=JSON.stringify(settings)!==JSON.stringify(generatedSettings);lastSafe=null;wasFlying=false;lastWalkSafe=null;sourceSelection=null;progress=100;visibility(true);
+   archiveBlob=null;signature=key;settings=settingsRevision!==revisionAtStart?settings:restore?pendingAtStart:{...chosen};generatedSettings={...chosen};stale=JSON.stringify(settings)!==JSON.stringify(generatedSettings);lastSafe=null;wasFlying=false;lastWalkSafe=null;sourceSelection=null;progress=100;visibility(true);
    surface.dataset.spaceSeed=String(chosen.seed);surface.dataset.spaceRoutesClear=String(plan.validation.routesClear);surface.dataset.spaceTriangles=String(result.triangles);
-   say(stale?'SPACE READY / CHANGES STAGED FOR UPDATE':'SPACE READY / '+plan.nodes.length+' FRAGMENTS / '+chosen.corridorWidth.toFixed(1)+' M ROUTE');return true;
+   say(stale?'SPACE READY / CHANGES STAGED FOR UPDATE':'SPACE READY / '+plan.nodes.length+' FRAGMENTS / '+chosen.corridorWidth.toFixed(1)+' M ROUTE');
+   if(window.ExhibitionArchives){try{await window.ExhibitionArchives.saveSpace(await captureArchive());surface.dataset.spaceArchived='true';}catch(e){surface.dataset.spaceArchived='false';say('SPACE READY / COULD NOT SAVE: '+e.message);}}
+   return true;
   }catch(e){disposeResult(next);error=e.message;say(error);return false;}finally{busy=false;ui();}
  }
  function localPoint(position){return {x:position.x-result.offset.x,z:position.z-result.offset.z};}
@@ -104,6 +106,24 @@ export function createInhabitableSpace({scene,renderer,placement,getView,getCame
   }
   lastSafe=safe;if(!fly)lastWalkSafe={...safe};position.set(safe.x,safe.foot+eyeHeight,safe.z);surface.dataset.spaceFootHeight=String(safe.foot);return position;
  }
+ async function captureArchive(){
+  if(!result)throw Error('Generate a space first.');
+  const previous=result.group.visible;result.group.visible=true;
+  try{
+   if(!archiveBlob)archiveBlob=new Blob([await new GLTFExporter().parseAsync(result.group,{binary:true})],{type:'model/gltf-binary'});
+   const b=result.bounds,size=b.getSize(new THREE.Vector3()),centre=b.getCenter(new THREE.Vector3()),radius=size.length(),cam=new THREE.PerspectiveCamera(35,1,.01,radius*10+100);
+   cam.position.copy(centre).add(new THREE.Vector3(radius*.95,radius*.7,radius*.95));cam.lookAt(centre);
+   const captureScene=new THREE.Scene();captureScene.background=new THREE.Color(0xf2f2f2);captureScene.environment=scene.environment;
+   captureScene.add(new THREE.HemisphereLight(0xffffff,0x929da8,2));const light=new THREE.DirectionalLight(0xffffff,2);light.position.set(30,40,25);captureScene.add(light);captureScene.add(result.group.clone(true));
+   const target=new THREE.WebGLRenderTarget(640,640);target.texture.colorSpace=THREE.SRGBColorSpace;const old=renderer.getRenderTarget(),pixels=new Uint8Array(640*640*4);
+   try{renderer.setRenderTarget(target);renderer.render(captureScene,cam);renderer.readRenderTargetPixels(target,0,0,640,640,pixels);}finally{renderer.setRenderTarget(old);target.dispose();}
+   const canvas=document.createElement('canvas');canvas.width=canvas.height=640;const ctx=canvas.getContext('2d'),data=ctx.createImageData(640,640);
+   for(let y=0;y<640;y++)data.data.set(pixels.subarray((639-y)*640*4,(640-y)*640*4),y*640*4);ctx.putImageData(data,0,0);
+   const preview=await new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(Error('Space preview unavailable')),'image/png'));
+   return {glb:archiveBlob,preview,signature,triangles:result.triangles,camera:{orbit:{theta:Math.PI/4,phi:Math.atan2(Math.sqrt(2)*.95,.7),radius:cam.position.distanceTo(centre)},target:{x:centre.x,y:centre.y,z:centre.z},fieldOfView:35},layout:result.layout};
+  }finally{result.group.visible=previous;invalidate();}
+ }
+
  async function exportGLB(){
   if(!result||busy)return false;busy=true;ui();say('Preparing GLB...');const value=result,visible=value.group.visible;
   try{value.group.visible=true;const buffer=await new GLTFExporter().parseAsync(value.group,{binary:true});download(new Blob([buffer],{type:'model/gltf-binary'}),'learning-vegas-inhabitable-space.glb');say('SPACE EXPORTED / GLB SNAPSHOT');return true;}catch(e){error=e.message;say(error);return false;}finally{value.group.visible=visible;busy=false;ui();invalidate();}
@@ -125,7 +145,7 @@ export function createInhabitableSpace({scene,renderer,placement,getView,getCame
  handlers.forEach(([id,fn])=>$(id).addEventListener('click',fn));$('exhibition-space-recipe').addEventListener('change',loadRecipe);
  window.addEventListener('exhibition-placement-change',placementChange);window.addEventListener('exhibition-draft-queue-change',ui);renderer.domElement.addEventListener('pointerdown',down);renderer.domElement.addEventListener('pointerup',up);
  const ready=placement.ready.then(async()=>{ui();try{const saved=JSON.parse(localStorage.getItem(KEY)||'null');if(saved?.version===1){settings=checkSettings(saved.settings);generatedSettings=saved.generatedSettings;if(saved.active&&saved.signature===layoutSignature(placement))await generate({restore:true,override:generatedSettings||settings});ui();}}catch(e){say('Previous space could not reopen: '+e.message);}});
- return Object.freeze({ready,generate,enter,showOriginal:()=>visibility(false),showSpace:()=>visibility(true),constrain,collisionMeshes:()=>active&&result?result.meshes:[],exportGLB,
+ return Object.freeze({ready,generate,captureArchive,enter,showOriginal:()=>visibility(false),showSpace:()=>visibility(true),constrain,collisionMeshes:()=>active&&result?result.meshes:[],exportGLB,
   state:()=>({engine:'inhabitable-v1',active,busy,stale,error,signature,settings:{...settings},generatedSettings,progress,connected:!!result?.plan.validation.routesClear,minimumClearance:result?.plan.validation.headroom||0,triangles:result?.triangles||0,validation:result?.plan.validation||null,bounds:result?{min:result.bounds.min.toArray(),max:result.bounds.max.toArray()}:null,offset:result?.offset||null,sourceSelection}),
   dispose:()=>{disposed=true;clearTimeout(feedbackTimer);cancelPending?.();worker?.terminate();handlers.forEach(([id,fn])=>$(id).removeEventListener('click',fn));$('exhibition-space-recipe').removeEventListener('change',loadRecipe);for(const el of document.querySelectorAll('[data-space-setting]')){el.removeEventListener('input',settingChange);el.removeEventListener('change',settingChange);}window.removeEventListener('exhibition-placement-change',placementChange);window.removeEventListener('exhibition-draft-queue-change',ui);renderer.domElement.removeEventListener('pointerdown',down);renderer.domElement.removeEventListener('pointerup',up);onSpaceLight?.(null,false);disposeResult(result);result=null;}
  });

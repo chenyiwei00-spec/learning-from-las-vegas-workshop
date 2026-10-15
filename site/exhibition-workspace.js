@@ -1,6 +1,10 @@
 /* Floating making tools. Preview cards remain passive; editors overlap the cards at the upper right. */
 (() => {
 'use strict';
+document.addEventListener('pointerdown',e=>{
+ for(const details of document.querySelectorAll('.exhibition-agents .agent-library-control[open],#exhibition-space-options[open]'))if(!details.contains(e.target))details.open=false;
+},true);
+
 const $=id=>document.getElementById(id),surface=$('walk-surface'),panel=$('workspace-expanded');
 if(!surface||!panel)return;
 const thumbnail=$('workspace-model-thumbnail'),viewer=$('generated-sculpture-viewer');
@@ -10,8 +14,8 @@ function syncCollagePreview(){
  previewFrame=0;
  const studio=window.ExhibitionStudio;
  if(!studio)return;
- studio.renderPreview($('workspace-collage-preview'),'city');studio.renderPreview($('workspace-sculpture-preview'),'sculpture');
- const count=studio.state().layers,reverse=studio.state().sourceSurface==='sculpture';$('mini-city').style.order=reverse?'2':'1';$('mini-sculpture').style.order=reverse?'1':'2';$('mini-model').style.order='3';$('mini-city-title').textContent=(reverse?'02':'01')+' / LAS VEGAS';$('mini-sculpture-title').textContent=(reverse?'01':'02')+' / V&A';
+ studio.renderPreview($('workspace-collage-preview'),studio.state().editingView);studio.renderPreview($('workspace-sculpture-preview'),'sculpture');
+ const count=studio.state().layers,state=studio.state(),reverse=state.sourceSurface==='sculpture',converted=state.editingView!==state.sourceSurface;$('mini-city').style.order='1';$('mini-model').style.order='2';$('mini-city-title').textContent='01 / COLLAGE';$('mini-model-title').textContent='02 / 3D MODEL';$('exhibition-view-conversion').setAttribute('aria-pressed',String(converted));$('exhibition-view-conversion').textContent=converted?'Show source':'View conversion';$('exhibition-view-conversion').disabled=count===0;if(currentPanel==='collage')$('workspace-expanded-title').textContent=(state.editingView==='sculpture'?'V&A':'LAS VEGAS')+(converted?' INTERPRETATION':' COLLAGE');
  $('workspace-collage-placeholder').hidden=count>0;
  $('workspace-collage-preview').hidden=count===0;$('workspace-sculpture-preview').hidden=count===0;$('workspace-sculpture-placeholder').hidden=count>0;$('workspace-sculpture-caption').textContent=count?count+' LINKED V&A FRAGMENTS':'CITY / SCULPTURE COUNTERPARTS';
  $('workspace-collage-caption').textContent=count?count+' OBJECT'+(count===1?'':'S')+' / COMPOSITION':'OBJECT COMPOSITION';
@@ -36,9 +40,10 @@ function syncModelPreview(){
  }
 }
 function openPanel(kind){
+ if(kind==='sculpture')kind='collage';window.ExhibitionMedia?.stop();
  if(!['collage','sculpture','model','drafts','agent-models','placement'].includes(kind))return;const library=['drafts','agent-models','placement'].includes(kind);
- window.ExhibitionBrowse?.dock({preserve:kind==='model'});suspendScene();currentPanel=kind;panel.hidden=false;surface.dataset.workspaceOpen=kind;$('workspace-shade').hidden=false;
- $('workspace-drafts-pane').hidden=kind!=='drafts';$('workspace-agent-models-pane').hidden=kind!=='agent-models';$('workspace-placement-pane').hidden=kind!=='placement';$('place-model-footer').hidden=kind!=='placement';$('agent-model-toggle').setAttribute('aria-expanded',String(kind==='agent-models'));$('place-model-toggle').setAttribute('aria-expanded',String(kind==='placement'));$('workspace-collage-library').hidden=library;$('workspace-model-library').hidden=library;$('workspace-production-actions').hidden=library;$('agent-draft-footer').hidden=kind!=='drafts';panel.querySelector('.workspace-tabs').hidden=library;$('agent-draft-toggle').setAttribute('aria-expanded',String(kind==='drafts'));$('workspace-collage-pane').hidden=kind==='model'||library;if(kind==='collage'||kind==='sculpture')window.ExhibitionStudio?.setSurface(kind==='sculpture'?'sculpture':'city');$('workspace-model-pane').hidden=kind!=='model';
+ window.ExhibitionBrowse?.dock({preserve:kind==='model'});suspendScene();currentPanel=kind;panel.hidden=false;panel.dataset.panel=kind;surface.dataset.workspaceOpen=kind;$('workspace-shade').hidden=false;
+ $('workspace-drafts-pane').hidden=kind!=='drafts';$('workspace-agent-models-pane').hidden=kind!=='agent-models';$('workspace-placement-pane').hidden=kind!=='placement';$('place-model-footer').hidden=kind!=='placement';$('agent-model-toggle').setAttribute('aria-expanded',String(kind==='agent-models'));$('place-model-toggle').setAttribute('aria-expanded',String(kind==='placement'));$('workspace-collage-library').hidden=true;$('workspace-model-library').hidden=true;$('workspace-production-actions').hidden=true;$('agent-draft-footer').hidden=kind!=='drafts';panel.querySelector('.workspace-tabs').hidden=true;$('agent-draft-toggle').setAttribute('aria-expanded',String(kind==='drafts'));$('workspace-collage-pane').hidden=kind==='model'||library;if(kind==='collage'||kind==='sculpture')window.ExhibitionStudio?.setSurface(window.ExhibitionStudio.state().sourceSurface);$('workspace-model-pane').hidden=kind!=='model';
  $('workspace-expanded-title').textContent=kind==='collage'?'LAS VEGAS COLLAGE':kind==='sculpture'?'V&A SCULPTURE COLLAGE':kind==='drafts'?'COLLAGE LIBRARY':kind==='agent-models'?'MODEL LIBRARY':kind==='placement'?'PLACEMENT COLLECTION':'GENERATED MODEL';
  $('exhibition-export').hidden=kind==='model'||kind==='drafts';
  $('workspace-tab-collage').setAttribute('aria-pressed',String(kind==='collage'));
@@ -67,6 +72,8 @@ $('workspace-tab-collage').addEventListener('click',()=>openPanel('collage'));
 $('workspace-tab-sculpture').addEventListener('click',()=>openPanel('sculpture'));
 $('workspace-tab-model').addEventListener('click',()=>openPanel('model'));
 $('workspace-close').addEventListener('click',closePanel);
+$('exhibition-view-conversion').onclick=()=>{const state=ExhibitionStudio.state();ExhibitionStudio.setSurface(state.editingView==='city'?'sculpture':'city');$('exhibition-canvas').focus({preventScroll:true});};
+new ResizeObserver(()=>{const r=$('exhibition-paper').getBoundingClientRect(),scale=Math.min(r.width/1050,r.height/1400);$('exhibition-paper').style.setProperty('--paper-left',(r.width-1050*scale)/2+'px');$('exhibition-paper').style.setProperty('--paper-bottom',(r.height-1400*scale)/2+'px');}).observe($('exhibition-paper'));
 panel.addEventListener('pointerdown',suspendScene,true);
 panel.addEventListener('wheel',event=>event.stopPropagation(),{passive:true});
 document.addEventListener('keydown',event=>{

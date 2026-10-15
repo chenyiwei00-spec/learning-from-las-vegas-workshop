@@ -35,7 +35,10 @@ plus `getView`, `setView`, `navigate`, `invalidate`, `onSpaceBounds` and
 - Await `placement.ready` before reading inputs.
 - `placement.spaceSources()` returns the actual placed models: placement ID,
   model ID, name, world-space Object3D and grid layout (col, row, span, scale,
-  rotation). Rotation is radians. Read/clone the objects; preserve the originals.
+  rotation, optional offsetX/offsetZ). Rotation is radians and offsets are metres.
+  Group edits can position exhibits between grid centres; read the actual world
+  Object3D transform rather than rebuilding a snapped position from col/row alone.
+  Read/clone the objects; preserve the originals.
 - `placement.browseEntries()` returns original GLB blobs, records, compositions,
   saved camera and linked media. Match `exhibit:<modelId>` to the placement model ID.
 - Use `src/exhibition-dimensions.js` for dimensions. The current hall is 40 m square,
@@ -98,3 +101,10 @@ submit the replacement through the normal pull request into main.
 
 ## Current local integration
 The inhabitable adapter now uses this seam as the default. See [MAKE_SPACE_INTEGRATION.md](MAKE_SPACE_INTEGRATION.md). The host additionally supplies optional getCamera() and passes {fly, eyeHeight} as the third constrain argument; existing API-1 providers may ignore these additions.
+
+
+## Saving generated spaces in the shared library
+
+The optional device-local window.ExhibitionArchives service is loaded after the exhibition UI. A replacement engine can call await ExhibitionArchives.saveSpace({glb, preview, camera, triangles, signature, layout}) after a successful generation. glb must be a binary GLB Blob and preview a PNG Blob. camera uses the saved viewer schema: {orbit:{theta,phi,radius}, target:{x,y,z}, fieldOfView} (angles in radians, field of view in degrees). layout can retain the source placement records. The service stores actual bytes in IndexedDB, deduplicates identical GLBs, and exposes preview, export and deletion in the lower Spaces tab.
+
+The fallback canopy implements optional captureArchive() and automatically calls this service. These are not new required engine methods: API version 1 and the replacement priority remain unchanged. The context also exposes getCamera() for a replacement that needs the current scene camera. Keep source and camera snapshots independent; saving a space must not reframe the exhibition view.

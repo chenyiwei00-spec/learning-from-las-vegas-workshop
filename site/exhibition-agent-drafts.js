@@ -39,7 +39,7 @@ async function render(){
  for(const [id,url]of urls)if(!valid.has(id)){URL.revokeObjectURL(url);urls.delete(id);}
  rows=next;const grid=$('workspace-collage-grid');grid.replaceChildren();
  for(const row of rows){const card=document.createElement('div'),remove=document.createElement('button');card.className='workspace-draft-card';remove.type='button';remove.className='text-button';remove.textContent='Delete';remove.onclick=async()=>{if(busy||ExhibitionAgent.state().busy)return;await transact('readwrite',s=>s.delete(row.id));await render();};card.append(thumbnail(row,false),remove);grid.append(card);}
- renderSmall();
+ renderSmall();window.dispatchEvent(new Event('exhibition-draft-library-change'));
 }
 async function save(number=1){const document=ExhibitionStudio.getDocument(),preview=await ExhibitionStudio.exportAgentPreview(),row={id:crypto.randomUUID(),title:(document.modelTarget==='sculpture'?'Sculpture':'City')+' / '+new Date().toLocaleTimeString('en-GB')+' / '+number,createdAt:Date.now(),document,preview};await transact('readwrite',s=>s.put(row));await render();return row;}
 async function restoreRow(row){await ExhibitionBrowse.close();await ExhibitionStudio.prepareAgent();ExhibitionStudio.clear();await ExhibitionStudio.restore(row.document);}
@@ -85,6 +85,6 @@ $('agent-draft-stop').onclick=()=>{stop=true;$('agent-draft-status').textContent
 $('agent-draft-toggle').onclick=()=>{$('agent-draft-toggle').closest('details').open=false;if(ExhibitionWorkspace.state().panel==='drafts')ExhibitionWorkspace.closePanel();else ExhibitionWorkspace.openPanel('drafts');};
 window.addEventListener('exhibition-draft-queue-change',updateSelection);window.addEventListener('exhibition-studio-ready',updateSelection);
 new MutationObserver(updateSelection).observe($('model-frame'),{attributes:true,attributeFilter:['aria-busy']});
-window.ExhibitionAgentDrafts=Object.freeze({list,save,load,render,generateSelected,deleteSelected,state:()=>({busy,completed,failures:structuredClone(failures),selected:[...selected],count:rows.length,stopRequested:stop})});
+window.ExhibitionAgentDrafts=Object.freeze({list,save,load,remove:async id=>{if(busy||window.ExhibitionAgent?.state().busy)throw Error('Finish generation before deleting a collage.');await transact('readwrite',s=>s.delete(id));await render();},render,generateSelected,deleteSelected,state:()=>({busy,completed,failures:structuredClone(failures),selected:[...selected],count:rows.length,stopRequested:stop})});
 render().catch(report);window.addEventListener('pagehide',()=>urls.forEach(u=>URL.revokeObjectURL(u)));
 })();
