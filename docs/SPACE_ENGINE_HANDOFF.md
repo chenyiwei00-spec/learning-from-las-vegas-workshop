@@ -35,7 +35,10 @@ plus `getView`, `setView`, `navigate`, `invalidate`, `onSpaceBounds` and
 - Await `placement.ready` before reading inputs.
 - `placement.spaceSources()` returns the actual placed models: placement ID,
   model ID, name, world-space Object3D and grid layout (col, row, span, scale,
-  rotation). Rotation is radians. Read/clone the objects; preserve the originals.
+  rotation, optional offsetX/offsetZ). Rotation is radians and offsets are metres.
+  Group edits can position exhibits between grid centres; read the actual world
+  Object3D transform rather than rebuilding a snapped position from col/row alone.
+  Read/clone the objects; preserve the originals.
 - `placement.browseEntries()` returns original GLB blobs, records, compositions,
   saved camera and linked media. Match `exhibit:<modelId>` to the placement model ID.
 - Use `src/exhibition-dimensions.js` for dimensions. The current hall is 40 m square,
