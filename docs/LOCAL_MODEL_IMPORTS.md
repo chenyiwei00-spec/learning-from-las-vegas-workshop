@@ -19,3 +19,9 @@ Use the same PLAYWRIGHT_ANCHOR and CHROME_PATH configuration as the repository's
 Imports support the local 3D viewer, camera saving, GLB export, Place and Make space. A GLB alone does not include the old collage project, linked audio/video, saved camera or OBJ; these are not invented. Embedded colours and geometry remain in the model.
 
 The bundle and binary files are private local assets ignored by Git. Source updates on main do not transfer models to teammates; share this asset directory separately if needed. Their browsers import the bundle on their next visit.
+
+## Upright, floor-grounded presentations
+
+Run py -3 scripts/prepare_upright_imports.py, then the preview renderer, to prepare the second archive batch. These OBJ exports use Z as their up axis, so their presentation rotates -90 degrees around X into the website's Y-up coordinates. All presentations translate their lowest vertex to Y=0. Source exports, mesh data and colours remain unchanged in their original files; corrected GLB/OBJ files are separate assets.
+
+On reload, the library replaces corrected model bytes and previews in place without adding models. Names, groups and media stay intact. Old sideways camera views reset for rotated models; cameras on translation-only corrections shift with the model. Placed copies refresh from the corrected library and retain their floor centres and layout rotation.

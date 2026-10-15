@@ -258,7 +258,51 @@ export function createExhibitionPlacement({scene,canvas,getCamera,getRoomMeshes,
  window.addEventListener('blur',()=>{if(scaleDrag||rotateDrag){scaleDrag=null;rotateDrag=null;save();}moving=false;hideGhost();stopHover();if(drag){try{canvas.releasePointerCapture(drag.pointerId);}catch{}drag=null;}});
  document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(scaleDrag||rotateDrag){scaleDrag=null;rotateDrag=null;save();}moving=false;stopHover();hideGhost();if(drag){try{canvas.releasePointerCapture(drag.pointerId);}catch{}drag=null;} }});
  function textureCount(){const textures=new Set();for(const m of models.values())m.template.traverse(o=>{for(const material of o.material?(Array.isArray(o.material)?o.material:[o.material]):[])for(const value of Object.values(material))if(value?.isTexture)textures.add(value);});return textures.size;}
- const ready=(async()=>{try{const data=await read(),byId=new Map(data.models.map(m=>[m.id,m]));for(const record of data.layout){const previousCell=record.cellSize||2;if(previousCell!==CELL_SIZE){for(const k of ["offsetX","offsetZ"])if(Number.isFinite(record[k]))record[k]*=CELL_SIZE/previousCell;record.cellSize=CELL_SIZE;}if(!Number.isInteger(record.col)||record.col<0||record.col+cellShape(record).spanX>20||!Number.isInteger(record.row)||record.row<0||record.row+cellShape(record).spanZ>20)continue;const desc=byId.get(record.modelId);if(desc){try{const m=await template(desc);insert(record,m);}catch(error){notice('Some stored models could not reopen: '+error.message);}}}}catch(error){notice('Previous room layout could not load: '+error.message);}finally{restored=true;committed=historySnapshot();}})();
+ const correctedImportIds=new Set(),correctedImportFiles=[];
+ async function refreshImportedFiles(files){
+  if(!window.SavedSculptures||!files.some(m=>m.libraryId?.startsWith('import:')))return files;
+  const corrected=[];
+  for(const file of files){
+   if(!file.libraryId?.startsWith('import:'))continue;
+   const row=await window.SavedSculptures.get(file.libraryId);
+   if(!row?.record?.presentationRevision||file.record?.presentationSha256===row.record.presentationSha256)continue;
+   file.blob=row.glb;file.preview=row.preview;file.obj=row.obj;file.camera=row.camera;
+   file.record={...file.record,presentationRevision:row.record.presentationRevision,presentationSha256:row.record.presentationSha256};
+   corrected.push(file);correctedImportIds.add(file.id);
+  }
+  correctedImportFiles.push(...corrected);
+  return files;
+ }
+ const ready=(async()=>{
+  try{
+   const data=await read(),byId=new Map((await refreshImportedFiles(data.models)).map(m=>[m.id,m]));
+   for(const record of data.layout){
+    const previousCell=record.cellSize||2;
+    if(previousCell!==CELL_SIZE){for(const k of ['offsetX','offsetZ'])if(Number.isFinite(record[k]))record[k]*=CELL_SIZE/previousCell;record.cellSize=CELL_SIZE;}
+    if(!Number.isInteger(record.col)||record.col<0||record.col+cellShape(record).spanX>20||!Number.isInteger(record.row)||record.row<0||record.row+cellShape(record).spanZ>20)continue;
+    const desc=byId.get(record.modelId);if(!desc)continue;
+    try{
+     const m=await template(desc);
+     if(correctedImportIds.has(desc.id)){
+      const before=cellShape(record),cx=worldCell(record.col,before.spanX)+(record.offsetX||0),cz=worldCell(record.row,before.spanZ)+(record.offsetZ||0),after=modelFootprint(m,record.span,record.rotation||0,placementRange(record).minSpan);
+      record.col=Math.min(record.col,20-after.spanX);record.row=Math.min(record.row,20-after.spanZ);Object.assign(record,after);
+      record.offsetX=cx-worldCell(record.col,after.spanX);record.offsetZ=cz-worldCell(record.row,after.spanZ);
+     }
+     insert(record,m);
+    }catch(error){notice('Some stored models could not reopen: '+error.message);}
+   }
+   // Persist corrected files and their adjusted footprints together.
+   if(correctedImportFiles.length){
+    const d=await db();try{
+     await new Promise((resolve,reject)=>{const tx=d.transaction(['models','layout'],'readwrite');
+      for(const file of correctedImportFiles)tx.objectStore('models').put(file);
+      tx.objectStore('layout').put(data.layout,'current');tx.oncomplete=resolve;tx.onerror=tx.onabort=()=>reject(tx.error);
+     });
+    }finally{d.close();}
+   }
+  }catch(error){notice('Previous room layout could not load: '+error.message);}
+  finally{restored=true;committed=historySnapshot();}
+ })();
  return Object.freeze({ready,undo:()=>travelHistory(false),redo:()=>travelHistory(true),beginDragPreview:beginExternal,updateDragPreview:updatePreview,endDragPreview:hideGhost,updateHandles,audioSources:()=>[...entries.values()].map(e=>{const m=models.get(e.record.modelId);return {id:e.record.id,modelId:e.record.modelId,name:e.record.name,x:e.object.position.x,z:e.object.position.z,width:e.footprint,audio:m?.record?.linkedMedia?.audio||null,composition:m?.composition||null};}),spaceSources:()=>[...entries.values()].map(e=>({id:e.record.id,modelId:e.record.modelId,name:e.record.name,target:models.get(e.record.modelId)?.record?.target||(e.record.kind==='space'?'space':'model'),object:e.object,layout:{col:e.record.col,row:e.record.row,span:e.record.span,...cellShape(e.record),scale:e.record.scale||1,rotation:e.record.rotation||0,offsetX:e.record.offsetX||0,offsetZ:e.record.offsetZ||0}})),showSources:(value,options={})=>{group.visible=!!value;keepFootprints=!!options.keepFootprints;if(!value)select(null);cells.visible=!isRoom()&&(group.visible||keepFootprints);cells.material.depthTest=true;cells.renderOrder=0;invalidate();},setViewMode:mode=>{cells.visible=mode==='axonometric'&&(group.visible||keepFootprints);updateHandles();invalidate();},measureModels:async descriptors=>{const out=[];for(const desc of descriptors){const m=await template(desc);out.push({sourceWidth:m.width,sourceDepth:m.depth});}return out;},cellAt,hitModelAt:(x,y)=>pickExact({clientX:x,clientY:y}),hover,stopHover,place,select,selectMany:ids=>multi.selectMany(ids),selectionBounds:id=>multi.screenBounds(id),transformSelection:values=>multi.transform(values),move,resize,rotate,applyLayout,replaceCollection,browseEntries,openModel,clearSelection:()=>select(null),state:()=>({history:{undo:past.length,redo:future.length,busy:historyBusy},liveDrag:{active:!!previewObject,floorVisible:!!previewObject?.visible,sourceView:previewSourceView},restored,sourcesVisible:group.visible,footprintsVisible:cells.visible,footprintsThroughSpace:false,footprintsPreserved:keepFootprints,selected,selectedIds:multi.state().ids,multiSelection:multi.state(),models:[...entries.values()].map(e=>({...e.record,x:e.object.position.x,z:e.object.position.z,height:e.height,footprint:e.footprint,footprintWidth:e.footprintWidth,footprintDepth:e.footprintDepth,sourceWidth:models.get(e.record.modelId).width,sourceDepth:models.get(e.record.modelId).depth,colour:models.get(e.record.modelId)?.colour})),modelCount:entries.size,uniqueMeshes:models.size,textureCount:textureCount(),occupiedCells:[...cellCounts].map(([cell,count])=>({col:cell%20,row:Math.floor(cell/20),count})),occupiedColour:'#f6dfa0',scaling:!!scaleDrag,rotating:!!rotateDrag,dragging:!!drag?.started,pendingDrag:!!drag}),dispose:()=>{multi?.dispose();livePreview.dispose();handleLayer.remove();cells.geometry.dispose();cells.material.dispose();models.forEach(m=>release(m.template));marker.geometry.dispose();marker.material.dispose();if(outline){outline.geometry.dispose();outline.material.dispose();}}});
 }
 

@@ -8,7 +8,8 @@ await page.route('**/*',async route=>{const u=new URL(route.request().url());if(
  const file=path.join(root,'site',decodeURIComponent(u.pathname).slice(1));if(fs.existsSync(file)&&fs.statSync(file).isFile())return route.fulfill({body:fs.readFileSync(file),contentType:file.endsWith('.js')?'text/javascript':file.endsWith('.json')?'application/json':file.endsWith('.png')?'image/png':file.endsWith('.glb')?'model/gltf-binary':undefined});return route.continue();});
 try{
  await page.goto(base+'__import-preview.html');
- for(const row of catalog.items){
+ for(const item of catalog.items){
+  const row={...item,...(item.presentation?{modelUrl:item.presentation.modelUrl,previewUrl:item.presentation.previewUrl}:{})};
   if(fs.existsSync(path.join('site',row.previewUrl))&&!process.argv.includes('--force'))continue;
   await page.reload();
   const b64=await page.evaluate(async row=>{
