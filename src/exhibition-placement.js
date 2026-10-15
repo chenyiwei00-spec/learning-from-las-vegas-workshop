@@ -15,7 +15,7 @@ export function createExhibitionPlacement({scene,canvas,getCamera,getRoomMeshes,
  marker.rotation.x=-Math.PI/2;marker.position.y=.012;marker.visible=false;scene.add(marker);
  group.name='exhibition-placed-models';scene.add(group);
  let multi=null,selected=null,outline=null,moving=false,drag=null,scaleDrag=null,rotateDrag=null,queue=Promise.resolve(),restored=false,ghostUrl='',keepFootprints=false;
- const cells=new THREE.InstancedMesh(new THREE.PlaneGeometry(CELL_SIZE*.994,CELL_SIZE*.994),new THREE.MeshBasicMaterial({color:0xffd21f,transparent:true,opacity:.82,depthWrite:false,toneMapped:false}),400);
+ const cells=new THREE.InstancedMesh(new THREE.PlaneGeometry(CELL_SIZE*.994,CELL_SIZE*.994),new THREE.MeshBasicMaterial({color:0xffdc57,transparent:true,opacity:.78,depthWrite:false,toneMapped:false}),400);
  cells.name='occupied-yellow-cells';cells.count=0;cells.visible=false;cells.frustumCulled=false;scene.add(cells);
  const cellCounts=new Map(),cellMatrix=new THREE.Matrix4(),cellRotation=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),-Math.PI/2);
  const handleLayer=document.createElement('div');handleLayer.className='exhibition-scale-handles';canvas.parentElement.append(handleLayer);
@@ -39,7 +39,36 @@ export function createExhibitionPlacement({scene,canvas,getCamera,getRoomMeshes,
  const notice=s=>{$('exhibition-placement-status').textContent=s;};
  function db(){return new Promise((resolve,reject)=>{const r=indexedDB.open('learning-vegas-exhibition-floor-v1',1);r.onupgradeneeded=()=>{r.result.createObjectStore('models',{keyPath:'id'});r.result.createObjectStore('layout');};r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});}
  async function read(){const d=await db();try{return await new Promise((resolve,reject)=>{const tx=d.transaction(['models','layout'],'readonly');const m=tx.objectStore('models').getAll(),l=tx.objectStore('layout').get('current');tx.oncomplete=()=>resolve({models:m.result,layout:l.result||[]});tx.onerror=()=>reject(tx.error);});}finally{d.close();}}
+ let past=[],future=[],committed=null,replaying=false,historyBusy=false;
+ function historySnapshot(){
+  const layout=[...entries.values()].map(e=>({...e.record})),used=new Set(layout.map(e=>e.modelId));
+  return {layout,files:[...models.values()].filter(m=>used.has(m.id)).map(m=>({id:m.id,blob:m.blob,name:m.name,preview:m.preview||null,record:m.record||null,composition:m.composition||null,camera:m.camera||null,libraryId:m.libraryId||null,obj:m.obj||null}))};
+ }
+ function rememberLayout(){
+  const next=historySnapshot();
+  if(committed&&!replaying&&JSON.stringify(next.layout)!==JSON.stringify(committed.layout)){past.push(committed);if(past.length>40)past.shift();future=[];}
+  committed=next;
+ }
+ async function travelHistory(redo=false){
+  if(!restored)await ready;if(historyBusy||drag||scaleDrag||rotateDrag||multi?.state().transform)return false;
+  const from=redo?future:past,to=redo?past:future,target=from.at(-1);if(!target)return false;
+  historyBusy=true;$('walk-surface').dataset.historyBusy='true';
+  try{
+   const prepared=new Map();for(const file of target.files)prepared.set(file.id,await template(file));
+   const before=historySnapshot();hideGhost(true);select(null);for(const e of entries.values())group.remove(e.object);entries.clear();
+   for(const record of target.layout)insert({...record},prepared.get(record.modelId));
+   from.pop();to.push(before);prune();updateCells();replaying=true;await save();notice(redo?'Layout redone.':'Layout undone.');return true;
+  }catch(error){prune();notice('Could not restore layout: '+error.message);return false;}
+  finally{replaying=false;historyBusy=false;delete $('walk-surface').dataset.historyBusy;}
+ }
+ document.addEventListener('pointerdown',event=>{if(historyBusy&&$('walk-surface').contains(event.target)){event.preventDefault();event.stopImmediatePropagation();}},true);
+ document.addEventListener('keydown',event=>{
+  const surface=$('walk-surface'),target=event.target;
+  if(!(event.ctrlKey||event.metaKey)||event.key.toLowerCase()!=='z'||event.altKey||surface.dataset.immersive!=='true'||surface.dataset.modelBrowse==='true'||(surface.dataset.workspaceOpen&&surface.dataset.workspaceOpen!=='none')||document.querySelector('dialog[open]')||target?.closest('input,textarea,select,[contenteditable=true]')||(target!==document.body&&!surface.contains(target)))return;
+  event.preventDefault();event.stopImmediatePropagation();travelHistory(event.shiftKey);
+ },true);
  function save(){
+  rememberLayout();
   window.dispatchEvent(new Event('exhibition-placement-change'));
   const snapshot=[...entries.values()].map(e=>({...e.record})),used=new Set(snapshot.map(e=>e.modelId)),files=[...models.values()].filter(m=>used.has(m.id)).map(m=>({id:m.id,blob:m.blob,name:m.name,preview:m.preview||null,record:m.record||null,composition:m.composition||null,camera:m.camera||null,libraryId:m.libraryId||null,obj:m.obj||null}));
   queue=queue.catch(()=>{}).then(async()=>{const d=await db();try{await new Promise((resolve,reject)=>{const tx=d.transaction(['models','layout'],'readwrite'),store=tx.objectStore('models');const keys=store.getAllKeys();keys.onsuccess=()=>{const existing=new Set(keys.result);files.forEach(m=>{if(!existing.has(m.id))store.put(m);else if(m.record){const previous=store.get(m.id);previous.onsuccess=()=>{if(previous.result?.record?.id!==m.record.id||(!previous.result?.composition&&m.composition)||previous.result?.libraryId!==m.libraryId||JSON.stringify(previous.result?.record?.linkedMedia)!==JSON.stringify(m.record.linkedMedia))store.put(m);};}});keys.result.forEach(id=>{if(!used.has(id))store.delete(id);});};tx.objectStore('layout').put(snapshot,'current');tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);tx.onabort=()=>reject(tx.error);});}finally{d.close();}}).catch(error=>notice('Layout is available this session, but could not save: '+error.message));
@@ -111,28 +140,33 @@ export function createExhibitionPlacement({scene,canvas,getCamera,getRoomMeshes,
  }
  function validCell(cell){const n=cell?.span||1;return cell?.valid&&[1,2,3].includes(n)&&Number.isInteger(cell.col)&&cell.col>=0&&cell.col+n<=20&&Number.isInteger(cell.row)&&cell.row>=0&&cell.row+n<=20;}
  async function place(desc,cell){
+  if(historyBusy)throw Error('Wait for the layout to finish restoring.');
   const n=cell?.span||1;if(!validCell(cell))throw Error('Choose an area within the exhibition floor.');
   const m=await template(desc);
   const id=insert({id:crypto.randomUUID(),modelId:m.id,col:cell.col,row:cell.row,span:n,scale:Number.isFinite(cell.scale)?cell.scale:1,rotation:Number.isFinite(cell.rotation)?cell.rotation:0,name:desc.name||'Generated model'},m);
   select(id);await save();notice('Model placed. Drag to move; double-click to view in 3D.');return id;
  }
  function move(id,cell){
+  if(historyBusy)return false;
   const e=entries.get(id),n=e?.record.span||1;if(!e||!validCell({...cell,span:n}))return false;
   e.record.col=cell.col;e.record.row=cell.row;delete e.record.offsetX;delete e.record.offsetZ;delete e.record.scaleCentreX;delete e.record.scaleCentreZ;fit(e);updateCells();select(id);save();notice('Moved to cell '+(cell.row*20+cell.col+1)+'.');return true;
  }
  function resize(id,n,scale=1,persist=true){
+  if(historyBusy)return false;
   const e=entries.get(id);if(!e||![1,2,3].includes(n))return false;
   const before=e.record.span||1,centreX=e.record.scaleCentreX??(e.object.position.x+FLOOR_HALF)/CELL_SIZE,centreZ=e.record.scaleCentreZ??(e.object.position.z+FLOOR_HALF)/CELL_SIZE;
   const col=Math.max(0,Math.min(20-n,Math.round(centreX-n/2))),row=Math.max(0,Math.min(20-n,Math.round(centreZ-n/2)));
   Object.assign(e.record,{col,row,span:n,scale,scaleCentreX:centreX,scaleCentreZ:centreZ,offsetX:(centreX-10)*CELL_SIZE-worldCell(col,n),offsetZ:(centreZ-10)*CELL_SIZE-worldCell(row,n)});fit(e);updateCells();select(id);if(persist)save();notice('Model fills '+n+' × '+n+' cells.');return true;
  }
  async function applyLayout(layout){
+  if(historyBusy)throw Error('Wait for the layout to finish restoring.');
   if(!Array.isArray(layout)||layout.length!==entries.size||new Set(layout.map(r=>r.id)).size!==entries.size)throw Error('The floor changed. Try arranging again.');const occupied=new Set();
   for(const r of layout){if(!entries.has(r.id)||!validCell(r)||!Number.isFinite(r.rotation)||!Number.isFinite(r.scale)||r.scale<=0||r.scale>1)throw Error('Invalid exhibition layout.');for(let row=r.row;row<r.row+r.span;row++)for(let col=r.col;col<r.col+r.span;col++){const cell=row*20+col;if(occupied.has(cell))throw Error('The proposed model footprints overlap.');occupied.add(cell);}}
   for(let i=0;i<layout.length;i++)for(let j=i+1;j<layout.length;j++){const a=layout[i],b=layout[j];if(!(a.col+a.span+1<=b.col||b.col+b.span+1<=a.col||a.row+a.span+1<=b.row||b.row+b.span+1<=a.row))throw Error('Leave one white cell between yellow footprints.');}
   for(const r of layout){const entry=entries.get(r.id);Object.assign(entry.record,{col:r.col,row:r.row,span:r.span,scale:r.scale,rotation:r.rotation});delete entry.record.scaleCentreX;delete entry.record.scaleCentreZ;delete entry.record.offsetX;delete entry.record.offsetZ;fit(entry);}select(null);updateCells();await save();notice(layout.length+' models rearranged.');return true;
  }
  async function replaceCollection(descriptors,layout){
+  if(historyBusy)throw Error('Wait for the layout to finish restoring.');
   if(descriptors.length!==layout.length||layout.some(r=>!validCell(r)))throw Error('Invalid placement collection.');
   const prepared=[];try{for(const desc of descriptors)prepared.push(await template(desc));}catch(e){prune();throw e;}
   hideGhost(true);select(null);for(const entry of entries.values())group.remove(entry.object);entries.clear();
@@ -165,7 +199,7 @@ export function createExhibitionPlacement({scene,canvas,getCamera,getRoomMeshes,
  async function beginExternal(desc,view){const ticket=++previewEpoch,m=await template(desc);if(ticket!==previewEpoch)return;const object=clone(m.template),factor=Math.min(.98*CELL_SIZE/Math.max(m.width,m.depth),getMaxHeight()/m.height);object.scale.copy(m.template.scale).multiplyScalar(factor);startPreview(object,view);}
  function updatePreview(e,ignore=null){if(!previewObject)return;const cell=hover(e.clientX,e.clientY,ignore),host=$('exhibition-drag-ghost');if(cell?.valid){host.hidden=true;previewObject.position.set(cell.x,.015,cell.z);previewObject.visible=true;}else{previewObject.visible=false;host.hidden=false;livePreview.update(e);}previewInvalidate();return cell;}
  function showGhost(e,entry){if(!previewObject){const camera=getCamera();startPreview(entry.object,{orthographic:camera.isOrthographicCamera,fov:camera.fov||35,quaternion:camera.quaternion.toArray()},entry.object);}updatePreview(e,entry.record.id);}
- multi=createMultiSelection({scene,canvas,entries,group,getCamera,orient,pick,fit,selectLegacy:select,updateCells,save,suspend,invalidate,handles,rotateHandle,moveHandle,handleLayer,getMaxHeight,prune});
+ multi=createMultiSelection({scene,canvas,entries,group,getCamera,orient,pick,fit,selectLegacy:select,updateCells,save,suspend,invalidate,handles,rotateHandle,moveHandle,handleLayer,getMaxHeight,prune,isLocked:()=>historyBusy});
  canvas.addEventListener('pointerdown',event=>{
   if(event.button!==0)return;
   const id=pick(event);
@@ -194,7 +228,7 @@ export function createExhibitionPlacement({scene,canvas,getCamera,getRoomMeshes,
  for(const button of handles){button.addEventListener('pointerdown',e=>{if(e.button!==0||!selected)return;e.preventDefault();e.stopPropagation();suspend();const entry=entries.get(selected),box=new THREE.Box3().setFromObject(entry.object),c=box.getCenter(new THREE.Vector3()).project(getCamera()),r=canvas.getBoundingClientRect(),cx=r.left+(c.x+1)*r.width/2,cy=r.top+(1-c.y)*r.height/2;scaleDrag={id:selected,pointerId:e.pointerId,cx,cy,distance:Math.max(20,Math.hypot(e.clientX-cx,e.clientY-cy)),units:entry.record.span*(entry.record.scale||1)};button.setPointerCapture(e.pointerId);});
   button.addEventListener('keydown',e=>{if(e.key==='ArrowUp'||e.key==='ArrowRight'){e.preventDefault();resize(selected,Math.min(3,entries.get(selected).record.span+1));}if(e.key==='ArrowDown'||e.key==='ArrowLeft'){e.preventDefault();resize(selected,Math.max(1,entries.get(selected).record.span-1));}});
  }
- function rotate(id,angle,persist=true){const e=entries.get(id);if(!e||!Number.isFinite(angle))return false;e.record.rotation=snapAngle(angle);if(selected===id)$('exhibition-model-angle').value=String(Math.round(e.record.rotation*180/Math.PI));fit(e);updateOutline();if(persist)save();return true;}
+ function rotate(id,angle,persist=true){if(historyBusy)return false;const e=entries.get(id);if(!e||!Number.isFinite(angle))return false;e.record.rotation=snapAngle(angle);if(selected===id)$('exhibition-model-angle').value=String(Math.round(e.record.rotation*180/Math.PI));fit(e);updateOutline();if(persist)save();return true;}
  rotateHandle.addEventListener('pointerdown',e=>{if(e.button!==0||!selected)return;e.preventDefault();e.stopPropagation();suspend();const entry=entries.get(selected),v=new THREE.Box3().setFromObject(entry.object).getCenter(new THREE.Vector3()).project(getCamera()),r=canvas.getBoundingClientRect(),cx=r.left+(v.x+1)*r.width/2,cy=r.top+(1-v.y)*r.height/2;rotateDrag={id:selected,pointerId:e.pointerId,cx,cy,last:Math.atan2(e.clientY-cy,e.clientX-cx),angle:entry.record.rotation||0};rotateHandle.setPointerCapture(e.pointerId);});
  rotateHandle.addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight'].includes(e.key)){e.preventDefault();rotate(selected,(entries.get(selected)?.record.rotation||0)+(e.key==='ArrowLeft'?-1:1)*Math.PI/2);}});
  document.addEventListener('pointermove',e=>{if(!rotateDrag||rotateDrag.pointerId!==e.pointerId)return;e.preventDefault();e.stopImmediatePropagation();const d=rotateDrag,a=Math.atan2(e.clientY-d.cy,e.clientX-d.cx),delta=Math.atan2(Math.sin(a-d.last),Math.cos(a-d.last));d.angle+=delta;d.last=a;rotate(d.id,d.angle,false);},{capture:true,passive:false});
@@ -214,7 +248,7 @@ export function createExhibitionPlacement({scene,canvas,getCamera,getRoomMeshes,
  window.addEventListener('blur',()=>{if(scaleDrag||rotateDrag){scaleDrag=null;rotateDrag=null;save();}moving=false;hideGhost();stopHover();if(drag){try{canvas.releasePointerCapture(drag.pointerId);}catch{}drag=null;}});
  document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(scaleDrag||rotateDrag){scaleDrag=null;rotateDrag=null;save();}moving=false;stopHover();hideGhost();if(drag){try{canvas.releasePointerCapture(drag.pointerId);}catch{}drag=null;} }});
  function textureCount(){const textures=new Set();for(const m of models.values())m.template.traverse(o=>{for(const material of o.material?(Array.isArray(o.material)?o.material:[o.material]):[])for(const value of Object.values(material))if(value?.isTexture)textures.add(value);});return textures.size;}
- const ready=(async()=>{try{const data=await read(),byId=new Map(data.models.map(m=>[m.id,m]));for(const record of data.layout){if(!Number.isInteger(record.col)||record.col<0||record.col+(record.span||1)>20||!Number.isInteger(record.row)||record.row<0||record.row+(record.span||1)>20)continue;const desc=byId.get(record.modelId);if(desc){try{const m=await template(desc);insert(record,m);}catch(error){notice('Some stored models could not reopen: '+error.message);}}}}catch(error){notice('Previous room layout could not load: '+error.message);}finally{restored=true;}})();
- return Object.freeze({ready,beginDragPreview:beginExternal,updateDragPreview:updatePreview,endDragPreview:hideGhost,updateHandles,audioSources:()=>[...entries.values()].map(e=>{const m=models.get(e.record.modelId);return {id:e.record.id,modelId:e.record.modelId,name:e.record.name,x:e.object.position.x,z:e.object.position.z,width:e.footprint,audio:m?.record?.linkedMedia?.audio||null,composition:m?.composition||null};}),spaceSources:()=>[...entries.values()].map(e=>({id:e.record.id,modelId:e.record.modelId,name:e.record.name,object:e.object,layout:{col:e.record.col,row:e.record.row,span:e.record.span,scale:e.record.scale||1,rotation:e.record.rotation||0,offsetX:e.record.offsetX||0,offsetZ:e.record.offsetZ||0}})),showSources:(value,options={})=>{group.visible=!!value;keepFootprints=!!options.keepFootprints;if(!value)select(null);cells.visible=!isRoom()&&(group.visible||keepFootprints);cells.material.depthTest=true;cells.renderOrder=0;invalidate();},setViewMode:mode=>{cells.visible=mode==='axonometric'&&(group.visible||keepFootprints);updateHandles();invalidate();},cellAt,hitModelAt:(x,y)=>pickExact({clientX:x,clientY:y}),hover,stopHover,place,select,selectMany:ids=>multi.selectMany(ids),selectionBounds:id=>multi.screenBounds(id),transformSelection:values=>multi.transform(values),move,resize,rotate,applyLayout,replaceCollection,browseEntries,openModel,clearSelection:()=>select(null),state:()=>({liveDrag:{active:!!previewObject,floorVisible:!!previewObject?.visible,sourceView:previewSourceView},restored,sourcesVisible:group.visible,footprintsVisible:cells.visible,footprintsThroughSpace:false,footprintsPreserved:keepFootprints,selected,selectedIds:multi.state().ids,multiSelection:multi.state(),models:[...entries.values()].map(e=>({...e.record,x:e.object.position.x,z:e.object.position.z,height:e.height,footprint:e.footprint,colour:models.get(e.record.modelId)?.colour})),modelCount:entries.size,uniqueMeshes:models.size,textureCount:textureCount(),occupiedCells:[...cellCounts].map(([cell,count])=>({col:cell%20,row:Math.floor(cell/20),count})),occupiedColour:'#ffd21f',scaling:!!scaleDrag,rotating:!!rotateDrag,dragging:!!drag?.started,pendingDrag:!!drag}),dispose:()=>{multi?.dispose();livePreview.dispose();handleLayer.remove();cells.geometry.dispose();cells.material.dispose();models.forEach(m=>release(m.template));marker.geometry.dispose();marker.material.dispose();if(outline){outline.geometry.dispose();outline.material.dispose();}}});
+ const ready=(async()=>{try{const data=await read(),byId=new Map(data.models.map(m=>[m.id,m]));for(const record of data.layout){if(!Number.isInteger(record.col)||record.col<0||record.col+(record.span||1)>20||!Number.isInteger(record.row)||record.row<0||record.row+(record.span||1)>20)continue;const desc=byId.get(record.modelId);if(desc){try{const m=await template(desc);insert(record,m);}catch(error){notice('Some stored models could not reopen: '+error.message);}}}}catch(error){notice('Previous room layout could not load: '+error.message);}finally{restored=true;committed=historySnapshot();}})();
+ return Object.freeze({ready,undo:()=>travelHistory(false),redo:()=>travelHistory(true),beginDragPreview:beginExternal,updateDragPreview:updatePreview,endDragPreview:hideGhost,updateHandles,audioSources:()=>[...entries.values()].map(e=>{const m=models.get(e.record.modelId);return {id:e.record.id,modelId:e.record.modelId,name:e.record.name,x:e.object.position.x,z:e.object.position.z,width:e.footprint,audio:m?.record?.linkedMedia?.audio||null,composition:m?.composition||null};}),spaceSources:()=>[...entries.values()].map(e=>({id:e.record.id,modelId:e.record.modelId,name:e.record.name,object:e.object,layout:{col:e.record.col,row:e.record.row,span:e.record.span,scale:e.record.scale||1,rotation:e.record.rotation||0,offsetX:e.record.offsetX||0,offsetZ:e.record.offsetZ||0}})),showSources:(value,options={})=>{group.visible=!!value;keepFootprints=!!options.keepFootprints;if(!value)select(null);cells.visible=!isRoom()&&(group.visible||keepFootprints);cells.material.depthTest=true;cells.renderOrder=0;invalidate();},setViewMode:mode=>{cells.visible=mode==='axonometric'&&(group.visible||keepFootprints);updateHandles();invalidate();},cellAt,hitModelAt:(x,y)=>pickExact({clientX:x,clientY:y}),hover,stopHover,place,select,selectMany:ids=>multi.selectMany(ids),selectionBounds:id=>multi.screenBounds(id),transformSelection:values=>multi.transform(values),move,resize,rotate,applyLayout,replaceCollection,browseEntries,openModel,clearSelection:()=>select(null),state:()=>({history:{undo:past.length,redo:future.length,busy:historyBusy},liveDrag:{active:!!previewObject,floorVisible:!!previewObject?.visible,sourceView:previewSourceView},restored,sourcesVisible:group.visible,footprintsVisible:cells.visible,footprintsThroughSpace:false,footprintsPreserved:keepFootprints,selected,selectedIds:multi.state().ids,multiSelection:multi.state(),models:[...entries.values()].map(e=>({...e.record,x:e.object.position.x,z:e.object.position.z,height:e.height,footprint:e.footprint,colour:models.get(e.record.modelId)?.colour})),modelCount:entries.size,uniqueMeshes:models.size,textureCount:textureCount(),occupiedCells:[...cellCounts].map(([cell,count])=>({col:cell%20,row:Math.floor(cell/20),count})),occupiedColour:'#ffdc57',scaling:!!scaleDrag,rotating:!!rotateDrag,dragging:!!drag?.started,pendingDrag:!!drag}),dispose:()=>{multi?.dispose();livePreview.dispose();handleLayer.remove();cells.geometry.dispose();cells.material.dispose();models.forEach(m=>release(m.template));marker.geometry.dispose();marker.material.dispose();if(outline){outline.geometry.dispose();outline.material.dispose();}}});
 }
 

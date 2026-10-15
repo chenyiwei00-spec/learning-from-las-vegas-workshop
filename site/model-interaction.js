@@ -13,6 +13,10 @@ function attach(stage,viewer,{fullscreenButton,zoomButton,note}={}){
   catch{if(note)note.textContent='Fullscreen is unavailable in this browser.';}
  }
  fullscreenButton?.addEventListener('click',toggleFullscreen);
+ if(document.body.classList.contains('exhibition-page'))stage.addEventListener('dblclick',e=>{
+  if(!stage.closest('#exhibition-inline-model')||e.target.closest('button,a,input,select,summary,.model-info'))return;
+  e.preventDefault();e.stopPropagation();if(document.fullscreenElement!==stage)toggleFullscreen();
+ });
  function fullscreenChanged(){const full=document.fullscreenElement===stage;stage.dataset.fullscreen=String(full);if(fullscreenButton){fullscreenButton.textContent=full?'Exit fullscreen ↙':'Fullscreen ↗';fullscreenButton.setAttribute('aria-pressed',String(full));}setActive(full);window.dispatchEvent(new Event('resize'));}
  document.addEventListener('fullscreenchange',fullscreenChanged);
  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.fullscreenElement===stage){e.preventDefault();document.exitFullscreen().catch(()=>{});}});

@@ -1,6 +1,10 @@
 /* Floating making tools. Preview cards remain passive; editors overlap the cards at the upper right. */
 (() => {
 'use strict';
+document.addEventListener('pointerdown',e=>{
+ for(const details of document.querySelectorAll('.exhibition-agents .agent-library-control[open],#exhibition-space-options[open]'))if(!details.contains(e.target))details.open=false;
+},true);
+
 const $=id=>document.getElementById(id),surface=$('walk-surface'),panel=$('workspace-expanded');
 if(!surface||!panel)return;
 const thumbnail=$('workspace-model-thumbnail'),viewer=$('generated-sculpture-viewer');

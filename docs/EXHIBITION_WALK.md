@@ -42,7 +42,7 @@ The scene renders on demand with pixel density capped at 1.5. Media catalogs/mas
 
 Local browser checks cover object alpha selection, Las Vegas-only filtering, transparent cutout copy/paste, board transformations, overlapping/dimmed tools, returned-model previews, cursor ghosts, placement in both views, occupied-cell rejection, moving/rotating/removing placed models, independent persistence after refresh and clear, fullscreen and responsive bounds. Navigation and projection/grid checks are rerun after the placement changes. The original Collage Studio and public website are separate and remain available.
 
-Validation covers stage ordering, five-card rows, single-click opening, unchanged shared viewer count, real MP4 playback with video mute, independent WAV playback, media associations following carousel selection, overwriting the saved camera, fullscreen/Esc, workspace/inline/immersive host transitions and narrow viewport bounds. These checks use isolated saved records and existing GLB fixtures; no inference is started.
+Validation covers stage ordering, four-card rows, single-click card opening, unchanged shared viewer count, real MP4 playback with video mute, independent WAV playback, media associations following carousel selection, overwriting the saved camera, fullscreen/Esc, workspace/inline/immersive host transitions and narrow viewport bounds. These checks use isolated saved records and existing GLB fixtures; no inference is started.
 
 ## Multi-model selection
 
@@ -55,3 +55,16 @@ Group transforms preserve relative positions and model proportions. Sub-cell off
 Expanded agent/library panels have white backgrounds. The first collage panel has a white portrait canvas inside a neutral RGB242 surround and no vertical scrollbar. Lower move/eraser/transform/mapping/layer tools are hidden; direct manipulation and existing keyboard shortcuts remain available. Choose objects, swap source direction, clear and Generate 3D remain above the canvas. Its lower-left View conversion button toggles between the editable source collage and linked counterparts without overwriting the source or changing the generation target; Show source reverses it. The separate V&A mini preview and workspace tabs are hidden.
 
 The model mini preview is numbered 02. Its expanded panel fits the available height and leaves only Save model, Download GLB and OBJ below the model canvas. The page-bottom model gallery retains its full typography, media, naming and viewing controls. The first agent menu shows the 0-50 range slider directly, with the slider on the left and current number on the right.
+
+
+## Undo, saved libraries and fullscreen entry
+
+Double-click the main canvas to enter immersive fullscreen; one click no longer enters it. The bottom inline 3D stage also enters native fullscreen on double-click. Escape and the browser's top fullscreen exit return to the page; the original exhibition fallback exit is unchanged. The initial/reset axonometric zoom is 1.08. The plan floor is #f7f7f7 and occupied cells use #ffdc57 at 0.78 opacity.
+
+Ctrl/Command Z undoes and Ctrl/Command Shift Z redoes floor edits in either camera. History records one committed move, resize, quarter-turn, group transform, deletion or automatic arrangement per step. It keeps up to 40 undo steps using layout records and references to immutable model Blobs; it does not keep extra mesh copies. Restoring a deleted model reparses its Blob. Layout restoration briefly locks exhibit gestures to prevent overlapping edits, preserves the camera, and saves the restored floor. History itself is session-local; the current floor remains persistent. Text inputs, dialogs, model browsing and collage editors retain their own keyboard ownership.
+
+The collage editor's existing undo/redo now also works when focus is on another control inside the collage panel. Card images are square and rendered sequentially only near the visible viewport from stored GLBs using the saved orbit direction and a fitted full-object camera. The isolated square renderer is removed after each capture; raster reframing is the fallback if a mesh cannot load. A small margin prevents hard edge clipping while preserving proportions. Metadata is white with increased lower padding and spaced buttons. Four columns remain at desktop widths.
+
+The lower Saved library switches between Models, Collages and Spaces. Collages reuse the first agent's editable draft store; deleting a collage keeps its generated models. The current canopy engine automatically archives successful generated spaces as real GLBs with independent previews and camera records. Opening a space uses the shared bottom 3D stage; GLB export and deletion are available on its card, and Save changes updates its stored camera instead of making a model-library duplicate. Libraries remain local to this browser and can be exported. Clicking outside the compact agent dropdowns closes them.
+
+Verification used an isolated browser, an existing textured GLB, and a small fixed geometry fixture for canopy archive capture/export. No inference or production space generation was started.

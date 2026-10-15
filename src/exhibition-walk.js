@@ -62,7 +62,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
     $('walk-view-toggle').textContent=axon?'Axonometric / switch':'Eye level / switch';$('walk-view-toggle').setAttribute('aria-pressed',String(axon));
     $('walk-status').textContent = axon ? 'AXONOMETRIC / 2 M GRID' : (fly ? 'FLY' : 'WALK') + ' / EYE ' + eye.y.toFixed(2) + ' M';
     $('walk-view-label').textContent = axon ? 'FLOOR PLAN' : 'WHITE ROOM';
-    $('walk-caption-text').textContent = axon ? 'Drag to rotate · Wheel to zoom · Right / middle drag to pan' : 'Click to explore · Drag to look · WASD to walk · Shift to move faster';
+    $('walk-caption-text').textContent = axon ? 'Drag to rotate · Wheel to zoom · Right / middle drag to pan' : 'Double-click to explore · Drag to look · WASD to walk · Shift to move faster';
     $('walk-dimensions').textContent = axon ? '40 \u00d7 40 M / 400 CELLS' : '40 \u00d7 40 \u00d7 '+ROOM.height.toFixed(1)+' M';
     surface.setAttribute('aria-label',axon ? 'Orthographic floor view with four hundred two metre grid cells. Drag to rotate; wheel to zoom; right or middle drag to pan.' : 'Walk through a forty by forty metre white studio hall with windows');
     surface.dataset.view = viewMode;
@@ -154,7 +154,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
   function reset() {
     clearInput(); teleport = null;
     if (viewMode === 'axonometric') {
-      axonCamera.position.set(48,48,48); axonCamera.zoom = 1;
+      axonCamera.position.set(48,48,48); axonCamera.zoom = 1.08;
       axonControls.target.set(0,0,0); axonCamera.updateProjectionMatrix(); axonControls.update();
     } else {
       fly = false; eye.set(0,EYE_HEIGHT,7); yaw = 0; pitch = 0;
@@ -194,6 +194,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
     roomCamera = new THREE.PerspectiveCamera(62,1,0.05,180);
     axonCamera = new THREE.OrthographicCamera(-40,40,22,-22,0.05,350);
     axonCamera.position.set(48,48,48);
+    axonCamera.zoom = 1.08;
     axonCamera.lookAt(0,0,0);
     camera = roomCamera;
     renderer = new THREE.WebGLRenderer({antialias:true,powerPreference:'low-power'});
@@ -238,7 +239,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
 
     // A separate exact 40m floor avoids exposing the room's wall thickness in plan.
     axonGroup = new THREE.Group();axonGroup.name='axonometric-floor-view';axonGroup.visible=false;scene.add(axonGroup);
-    const planFloor = new THREE.Mesh(new THREE.PlaneGeometry(40,40),new THREE.MeshBasicMaterial({color:0xf2f2f2,side:THREE.DoubleSide,toneMapped:false}));
+    const planFloor = new THREE.Mesh(new THREE.PlaneGeometry(40,40),new THREE.MeshBasicMaterial({color:0xf7f7f7,side:THREE.DoubleSide,toneMapped:false}));
     planFloor.name='axonometric-floor';planFloor.rotation.x=-Math.PI/2;axonGroup.add(planFloor);
     floorGrid = new THREE.GridHelper(40,20,0xadb5bd,0xadb5bd);
     floorGrid.name='two-metre-grid';floorGrid.position.y=0.004;
@@ -271,9 +272,9 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
 
   const canvas = renderer.domElement;
   const placement=createExhibitionPlacement({scene,canvas,getCamera:()=>camera,getRoomMeshes:()=>roomMeshes,isRoom:()=>viewMode==='room',orient,invalidate:invalidateScene,previewInvalidate:requestFrame,suspend:suspendNavigation,getMaxHeight:()=>23});
-  space=createExhibitionSpace({scene,renderer,placement,onSpaceLight:(result,active)=>skylight.updateCanopy(result,active),onSpaceBounds:frameSpace,getView:()=>viewMode,setView:setViewMode,navigate:value=>{clearInput();teleport=null;fly=false;eye.set(value.x,value.y,value.z);yaw=value.yaw;pitch=value.pitch||0;constrain(eye);ui();requestFrame();focusView();},invalidate:invalidateScene});
-  // Enter at the parent capture phase; the entry click must not also edit an exhibit.
-  surface.addEventListener('pointerdown',event=>{
+  space=createExhibitionSpace({scene,renderer,placement,getCamera:()=>camera,onSpaceLight:(result,active)=>skylight.updateCanopy(result,active),onSpaceBounds:frameSpace,getView:()=>viewMode,setView:setViewMode,navigate:value=>{clearInput();teleport=null;fly=false;eye.set(value.x,value.y,value.z);yaw=value.yaw;pitch=value.pitch||0;constrain(eye);ui();requestFrame();focusView();},invalidate:invalidateScene});
+  // Enter at the parent capture phase; the entry double-click must not also edit an exhibit.
+  surface.addEventListener('dblclick',event=>{
     if(event.target===canvas&&!immersive&&event.button===0){
       event.preventDefault();event.stopPropagation();enterImmersive();
     }

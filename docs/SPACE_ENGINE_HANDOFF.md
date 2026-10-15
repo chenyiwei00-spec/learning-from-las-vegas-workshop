@@ -98,3 +98,10 @@ py -3 scripts/check_project.py
 
 Commit source and generated bundles. Verify on an independent work branch, then
 submit the replacement through the normal pull request into main.
+
+
+## Saving generated spaces in the shared library
+
+The optional device-local window.ExhibitionArchives service is loaded after the exhibition UI. A replacement engine can call await ExhibitionArchives.saveSpace({glb, preview, camera, triangles, signature, layout}) after a successful generation. glb must be a binary GLB Blob and preview a PNG Blob. camera uses the saved viewer schema: {orbit:{theta,phi,radius}, target:{x,y,z}, fieldOfView} (angles in radians, field of view in degrees). layout can retain the source placement records. The service stores actual bytes in IndexedDB, deduplicates identical GLBs, and exposes preview, export and deletion in the lower Spaces tab.
+
+The fallback canopy implements optional captureArchive() and automatically calls this service. These are not new required engine methods: API version 1 and the replacement priority remain unchanged. The context also exposes getCamera() for a replacement that needs the current scene camera. Keep source and camera snapshots independent; saving a space must not reframe the exhibition view.
