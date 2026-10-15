@@ -587,3 +587,6 @@ body[data-archive-agent-busy=true] .agent-library-control{display:none}
 .walk-lighting-panel label{display:grid;grid-template-columns:1fr auto;gap:7px 16px;margin-top:12px}
 .walk-lighting-panel input{grid-column:1/-1;display:block;width:100%;margin:0;accent-color:#222;cursor:ew-resize}
 .walk-lighting-panel output{font-variant-numeric:tabular-nums}
+
+.place-source-kind{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:12px;margin-bottom:12px;font:10px/1.4 Arial,sans-serif}
+.place-source-kind select{min-width:0;padding:6px 8px;border:1px solid var(--exhibition-line,#ddd);background:#fff;font:inherit;color:inherit}

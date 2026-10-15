@@ -20,4 +20,5 @@ for(const axis of ['x','y','z']){
  assert(segments.length>=24);for(let i=0;i<segments.length;i+=3)assert(Math.abs(plane.distanceToPoint(new THREE.Vector3(...segments.slice(i,i+3))))<1e-5);
 }
 assert.equal(sectionSegments(mesh,new THREE.Plane(new THREE.Vector3(0,-1,0),1000)).length,0);
+await assert.rejects(()=>preparePlacedSources(make(1).map(p=>({...p,target:'space'})),SETTINGS),/display-only/);
 console.log('PASS: 400m plan / 20m cells; exact 4x physical conversion without multiplying the solver volume; world-aligned opaque cut contours for all section axes.');

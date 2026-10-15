@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import {placementRange} from './exhibition-placement-size.js';
 import {FLOOR_HALF,CELL_SIZE,worldCell} from './exhibition-dimensions.js';
 /* Shared screen selection and world-space transforms for both exhibition cameras. */
 export function createMultiSelection({scene,canvas,entries,group,getCamera,orient,pick,fit,selectLegacy,updateCells,save,suspend,invalidate,handles,rotateHandle,moveHandle,handleLayer,getMaxHeight,prune,isLocked=()=>false}){
@@ -25,12 +26,12 @@ export function createMultiSelection({scene,canvas,entries,group,getCamera,orien
  const plane=new THREE.Plane(new THREE.Vector3(0,1,0),0),ray=new THREE.Raycaster(),point=new THREE.Vector3();
  function ground(x,y){const r=canvas.getBoundingClientRect();orient();ray.setFromCamera(new THREE.Vector2((x-r.left)/r.width*2-1,-(y-r.top)/r.height*2+1),getCamera());return ray.ray.intersectPlane(plane,point)?point.clone():null;}
  function snapshot(){const bounds=box(),centre=bounds.getCenter(new THREE.Vector3());centre.y=0;return{centre,bounds,rows:selected().map(e=>({id:e.record.id,record:structuredClone(e.record),position:e.object.position.clone(),height:e.height}))};}
- function write(e,p,units,rotation){const n=Math.max(1,Math.min(3,Math.ceil(units-1e-6))),col=Math.max(0,Math.min(20-n,Math.floor((p.x+FLOOR_HALF)/CELL_SIZE-n/2))),row=Math.max(0,Math.min(20-n,Math.floor((p.z+FLOOR_HALF)/CELL_SIZE-n/2)));Object.assign(e.record,{col,row,span:n,scale:units/n,rotation,offsetX:p.x-worldCell(col,n),offsetZ:p.z-worldCell(row,n)});delete e.record.scaleCentreX;delete e.record.scaleCentreZ;fit(e);}
+ function write(e,p,units,rotation){const limits=placementRange(e);units=Math.max(limits.minUnits,Math.min(limits.maxSpan,units));const n=Math.max(limits.minSpan,Math.min(limits.maxSpan,Math.ceil(units-1e-6))),col=Math.max(0,Math.min(20-n,Math.floor((p.x+FLOOR_HALF)/CELL_SIZE-n/2))),row=Math.max(0,Math.min(20-n,Math.floor((p.z+FLOOR_HALF)/CELL_SIZE-n/2)));Object.assign(e.record,{col,row,span:n,scale:units/n,rotation,offsetX:p.x-worldCell(col,n),offsetZ:p.z-worldCell(row,n)});delete e.record.scaleCentreX;delete e.record.scaleCentreZ;fit(e);}
  function transform(snapshot,{dx=0,dz=0,scale=1,angle=0},persist=false){
   if(isLocked())return false;
   if(!snapshot.rows.length||snapshot.rows.some(r=>!entries.has(r.id)))return false;
   const turn=Math.round(angle/(Math.PI/2))*Math.PI/2;
-  const units=snapshot.rows.map(r=>r.record.span*(r.record.scale||1));if(scale!==1)scale=Math.max(.35/Math.min(...units),Math.min(3/Math.max(...units),getMaxHeight()/Math.max(...snapshot.rows.map(r=>r.height)),scale));
+  const units=snapshot.rows.map(r=>r.record.span*(r.record.scale||1));if(scale!==1)scale=Math.max(Math.max(...snapshot.rows.map((r,i)=>placementRange(r.record).minUnits/units[i])),Math.min(Math.min(...snapshot.rows.map((r,i)=>placementRange(r.record).maxSpan/units[i])),getMaxHeight()/Math.max(...snapshot.rows.map(r=>r.height)),scale));
   if(scale===1&&turn===0){dx=Math.max(-FLOOR_HALF-snapshot.bounds.min.x,Math.min(FLOOR_HALF-snapshot.bounds.max.x,dx));dz=Math.max(-FLOOR_HALF-snapshot.bounds.min.z,Math.min(FLOOR_HALF-snapshot.bounds.max.z,dz));}
   const previous=selected().map(e=>({e,record:structuredClone(e.record)}));
   for(const row of snapshot.rows){const x=(row.position.x-snapshot.centre.x)*scale,z=(row.position.z-snapshot.centre.z)*scale,p=new THREE.Vector3(snapshot.centre.x+x*Math.cos(turn)+z*Math.sin(turn)+dx,0,snapshot.centre.z-x*Math.sin(turn)+z*Math.cos(turn)+dz);write(entries.get(row.id),p,row.record.span*(row.record.scale||1)*scale,(row.record.rotation||0)+turn);}

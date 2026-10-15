@@ -67,13 +67,21 @@ export function createExhibitionSection({scene,renderer,getMeshes,invalidate}){
     // Custom alpha blending keeps this in the opaque queue so each stencil
     // volume is immediately capped/cleared, after the surviving geometry.
     const mat=new THREE.MeshBasicMaterial({color:0x222222,opacity:.22,transparent:false,blending:THREE.CustomBlending,blendSrc:THREE.SrcAlphaFactor,blendDst:THREE.OneMinusSrcAlphaFactor,blendEquation:THREE.AddEquation,depthWrite:false,toneMapped:false,side:THREE.DoubleSide,stencilWrite:true,stencilRef:0,stencilFunc:THREE.NotEqualStencilFunc,stencilFail:THREE.ReplaceStencilOp,stencilZFail:THREE.ReplaceStencilOp,stencilZPass:THREE.ReplaceStencilOp,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1});
-    // A world-space stipple distinguishes wall cuts from the road's slab grid.
-    // Soft fill remains see-through; dots do not replace the opaque contour.
-    if(!mesh.userData.road){mat.onBeforeCompile=shader=>{
-     shader.uniforms.sectionPitch={value:Math.max(.6,side/180)};
+    // Drafting marks are opaque #222, while the continuous fill stays translucent.
+    mat.onBeforeCompile=shader=>{
+     shader.uniforms.sectionPitch={value:Math.max(.6,side/(mesh.userData.road?80:180))};
+     shader.uniforms.sectionRoad={value:mesh.userData.road?1:0};
      shader.vertexShader='varying vec2 cutPatternUV;\n'+shader.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\ncutPatternUV=position.xy;');
-     shader.fragmentShader='uniform float sectionPitch;varying vec2 cutPatternUV;\n'+shader.fragmentShader.replace('#include <opaque_fragment>','float dotDistance=length(fract(cutPatternUV/sectionPitch)-.5);float dotMask=1.-smoothstep(.09,.15,dotDistance);diffuseColor.a=mix(.13,.46,dotMask);\n#include <opaque_fragment>');
-    };mat.customProgramCacheKey=()=> 'wall-cut-stipple-v1';}
+     shader.fragmentShader='uniform float sectionPitch,sectionRoad;varying vec2 cutPatternUV;\n'+shader.fragmentShader.replace('#include <opaque_fragment>',[
+      'vec2 q=cutPatternUV/sectionPitch;',
+      'float dotDistance=length(fract(q)-.5);',
+      'float dotMask=step(dotDistance,.23);',
+      'vec2 gridDistance=abs(fract(q-.5)-.5)/max(fwidth(q),vec2(.0001));',
+      'float gridMask=1.-smoothstep(.55,1.0,min(gridDistance.x,gridDistance.y));',
+      'float inkMask=mix(dotMask,gridMask,sectionRoad);diffuseColor.a=mix(.13,1.,inkMask);outgoingLight=diffuse;',
+      '#include <opaque_fragment>'
+     ].join('\n'));
+    };mat.customProgramCacheKey=()=> 'section-opaque-drafting-v3';
     const cap=new THREE.Mesh(new THREE.PlaneGeometry(side,side),mat);cap.name='Translucent cut surface';cap.userData.ownsGeometry=true;cap.userData.sectionCap=true;cap.renderOrder=order+1;cap.frustumCulled=false;cap.onAfterRender=()=>renderer.clearStencil();overlays.add(cap);caps++;
    }
   }
@@ -88,5 +96,5 @@ export function createExhibitionSection({scene,renderer,getMeshes,invalidate}){
  panel.addEventListener('pointerdown',e=>e.stopPropagation());
  const toggle=()=>set({enabled:!enabled}),slide=()=>set({ratio:Number(range.value)/100}),changeAxis=()=>set({axis:axis.value});
  button.addEventListener('click',toggle);range.addEventListener('input',slide);axis.addEventListener('change',changeAxis);
- return {refresh:update,set,setViewMode:mode=>{view=mode;update();},state:()=>({enabled,active:enabled&&view==='axonometric',axis:axisName,ratio,height,capColour:'#222222',capOpacity:.22,contourOpacity:1,contourWidth:2,wallPattern:'stipple',roadPattern:'slab-grid',lineSegments,caps,meshCount:targets.length}),dispose:()=>{disposed=true;release();scene.remove(overlays);button.removeEventListener('click',toggle);range.removeEventListener('input',slide);axis.removeEventListener('change',changeAxis);}};
+ return {refresh:update,set,setViewMode:mode=>{view=mode;update();},state:()=>({enabled,active:enabled&&view==='axonometric',axis:axisName,ratio,height,capColour:'#222222',capOpacity:.22,contourOpacity:1,contourWidth:2,wallPattern:'stipple',roadPattern:'grid',patternColour:'#222222',patternOpacity:1,lineSegments,caps,meshCount:targets.length}),dispose:()=>{disposed=true;release();scene.remove(overlays);button.removeEventListener('click',toggle);range.removeEventListener('input',slide);axis.removeEventListener('change',changeAxis);}};
 }

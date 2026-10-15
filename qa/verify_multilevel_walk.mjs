@@ -49,4 +49,7 @@ assert.equal(engine.audioAnchors().length,3);
 const road=scene.getObjectByName('Carved floors / connected split levels');
 assert.equal(road.userData.roadThickness,.24);assert.equal(road.material.metalness,0);assert.equal(road.material.roughness,.94);assert(road.material.map&&road.material.bumpMap);assert(lastPlan.meshes.find(m=>m.road).roundedBoundary);
 assert.equal(cameraMoves,4);assert.deepEqual(camera.position.toArray(),cameraBefore);
+input=placed.map(p=>({...p,target:'space'}));const previousPlan=lastPlan;
+assert.equal(await engine.generate(),false);assert.equal(lastPlan,previousPlan,'Display-only spaces never start a worker');assert.equal(engine.state().canGenerate,false);assert(elements.get('exhibition-make-space').disabled);assert.match(engine.state().error,/cannot be used/);
+input=placed;assert.equal(engine.state().canGenerate,true);
 engine.dispose();console.log('PASS: '+walkingSamples+' actual floor-following samples, sloped multilevel walking, flight/landing, enlarged white rounded slabs and source sound anchors. No private assets or AI inference.');

@@ -10,6 +10,7 @@ export function layoutSeed(placed){let hash=2166136261;for(const c of JSON.strin
 export function checkSettings(settings){return validateComposition({format:'borrowed-worlds-model-architecture',version:1,items:[],settings:{...SETTINGS,...settings}},[]).settings;}
 /** Read the current placed objects without changing original geometry, transforms or materials. */
 export async function preparePlacedSources(placed,settings,onProgress=()=>{}){
+ if(placed.some(s=>s.target==='space'))throw Error('Saved spaces are display-only and cannot be fused into another space.');
  if(!placed.length)throw Error('Place at least one model before making a space.');
  if(placed.length>50)throw Error('Use up to 50 placed models for this space. Keep other models in the library.');
  placed=[...placed].sort((a,b)=>JSON.stringify({modelId:a.modelId,...a.layout}).localeCompare(JSON.stringify({modelId:b.modelId,...b.layout})));
