@@ -48,7 +48,7 @@ try:
   update('meshing','Building the mesh at a resolution suited to available GPU memory…')
   with torch.inference_mode():mesh=model.extract_mesh(codes,has_vertex_color=True,resolution=resolution)[0]
  original_faces=len(mesh.faces);components=mesh.split(only_watertight=False)
- if components:
+ if len(components)>0:
   largest=max(len(m.faces) for m in components);kept=[m for m in components if len(m.faces)>=max(16,int(largest*.0001))];mesh=trimesh.util.concatenate(kept)
  else:kept=[]
  mesh.fix_normals(multibody=True)
