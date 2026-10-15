@@ -98,7 +98,7 @@ async function create(options){
  }
  async function json(url,init){
   const response=await fetch(url,init);let value;try{value=await response.json();}catch{throw Error('The local 3D service did not return a valid response.');}
-  if(!response.ok)throw Error(value.error||'Local 3D request failed.');return value;
+  if(!response.ok){const error=Error(value.error||'Local 3D request failed.');error.status=response.status;throw error;}return value;
  }
  function sourceImage(snapshot){return renderSourceImage(snapshot,options.drawModel);}
  async function generateModel(forcedSnapshot=null){
@@ -108,7 +108,8 @@ async function create(options){
   try{
    const snapshot=structuredClone(forcedSnapshot?.format==='borrowed-worlds-collage'?forcedSnapshot:options.getComposition());activeRecipe=snapshot;const image=sourceImage(snapshot);const fingerprint=await digest(snapshot);
    status.textContent=snapshot.modelTarget==='city'?'Sending the Las Vegas collage to the local generator…':'Sending the assembled sculpture to the local generator…';
-   const result=await json('/api/sculpture3d/jobs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image,composition:snapshot,fingerprint})});
+   const request={method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image,composition:snapshot,fingerprint})};let result;const queuedAt=Date.now();
+   for(;;){if(ticket!==epoch)return;try{result=await json('/api/sculpture3d/jobs',request);break;}catch(e){if(e.status!==409||Date.now()-queuedAt>900000)throw e;status.textContent='Waiting for the current local model to finish...';await new Promise(r=>setTimeout(r,1500));}}
    if(ticket!==epoch)return;job=result;let activeWait=0,lastPoll=Date.now();
    while(job.status!=='complete'&&job.status!=='failed'){
     if(ticket!==epoch)return;

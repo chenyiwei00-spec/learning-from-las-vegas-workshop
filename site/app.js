@@ -4,6 +4,7 @@
   if(!data?.items?.length||!data.collections){$('result-count').textContent='The catalog could not be loaded.';return;}
   const items=data.items,collections=data.collections,index=ArchiveSearch.createIndex(items),PAGE_SIZE=50;
   const collectionMap=new Map(collections.map(c=>[c.key,c])),itemMap=new Map(items.map(i=>[i.id,i]));
+  for(const [alias,id]of Object.entries(data.modelAliases||{}))if(itemMap.has(id))itemMap.set(alias,itemMap.get(id));
   const mediaTypes=[{key:'image',name:'Images'},{key:'video',name:'Videos'},{key:'audio',name:'Audio'},{key:'model',name:'Models'}];
   const mediaTotals=Object.fromEntries(mediaTypes.map(t=>[t.key,items.filter(i=>i.type===t.key).length]));
   const countries=[...new Set(items.map(i=>i.referenceCountry))].sort((a,b)=>a==='Unspecified'?1:b==='Unspecified'?-1:a.localeCompare(b));
@@ -40,11 +41,11 @@
   function renderMedia(result){
     const all=Object.values(result.media).reduce((a,b)=>a+b,0);
     const types=[{key:'',name:'All media'},...mediaTypes];
-    const notes={'':'The complete collection',image:'Photographs & printed works',video:'Clips & moving images',audio:'Recordings & soundscapes',model:'Objects & spatial studies'};
+    const notes={'':'The complete collection',image:'Photographs & printed works',video:'Clips & moving images',audio:'Recordings & soundscapes',model:'One model per repeated subject'};
     $('media-tabs').innerHTML=types.map((t,n)=>{
       const count=t.key?(result.media[t.key]||0):all;
       return '<button class="media-entry" data-media="'+t.key+'" aria-pressed="'+(state.media===t.key)+'"><span class="media-number" aria-hidden="true">'+String(n).padStart(2,'0')+'</span><span class="media-copy"><span class="media-name">'+t.name.toUpperCase()+'</span><span class="media-count">'+format(count)+' '+(count===1?'ITEM':'ITEMS')+'</span><span class="media-note">'+notes[t.key]+'</span></span></button>';
-    }).join('')+'<a class="media-entry collage-entry" href="collage.html" aria-label="05 Collage studio"><span class="media-number" aria-hidden="true">05</span><span class="media-copy"><span class="media-name">COLLAGE</span><span class="media-count">BUILDINGS &amp; SIGNS</span><span class="media-note">Compose your own Vegas</span></span></a>';
+    }).join('');
   }
   function renderSubjects(){
     const result=ArchiveSearch.run(index,{q:state.q,media:state.media,archive:state.archive,collection:state.collection,country:state.country,sort:state.sort});

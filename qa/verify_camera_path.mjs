@@ -1,0 +1,5 @@
+import assert from 'node:assert/strict';import{validateCameraPath,sampleCameraPath}from'../src/exhibition-export.js';
+const pose=(x,yaw=0)=>({x,y:2,z:5,yaw,pitch:0,fly:true}),keys=[{time:0,pose:pose(0,179*Math.PI/180),light:{time:8}},{time:2,pose:pose(10,-179*Math.PI/180),light:{time:10}},{time:7,pose:pose(20,-170*Math.PI/180),light:{time:15}}];
+assert.equal(validateCameraPath(keys).length,3);for(const k of keys){const p=sampleCameraPath(keys,k.time);assert.ok(Math.abs(p.pose.x-k.pose.x)<1e-8);assert.ok(Math.abs(p.light.time-k.light.time)<1e-8);}
+const p=sampleCameraPath(keys,1,false);assert.equal(p.pose.x,5);assert.ok(Math.abs(Math.abs(p.pose.yaw)-Math.PI)<.03);assert.equal(p.light.time,9);assert.throws(()=>validateCameraPath([{time:1,pose:pose(0)},{time:2,pose:pose(1)}]));assert.throws(()=>validateCameraPath([{time:0,pose:pose(0)},{time:0,pose:pose(1)}]));assert.throws(()=>validateCameraPath([{time:0,pose:pose(0)},{time:601,pose:pose(1)}]));assert.deepEqual(sampleCameraPath(keys,-2).pose,sampleCameraPath(keys,0).pose);
+console.log('PASS: camera keyframes, unequal segment timings, sun interpolation, shortest rotation and invalid-path guards.');

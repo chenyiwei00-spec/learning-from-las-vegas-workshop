@@ -6,7 +6,7 @@ try{const v=JSON.parse(localStorage.getItem(KEY)||'{}');generated=Array.isArray(
 const identity=r=>r.record?.id||r.id;
 const unique=list=>[...new Map(list.map(r=>[identity(r),r])).values()];
 function persist(){localStorage.setItem(KEY,JSON.stringify({generated,collection,manualPool,placementKind}));}
-function busy(){return placing||!!window.ExhibitionAgent?.state().busy||!!window.ExhibitionAgentDrafts?.state().busy||!!window.ExhibitionStudio?.state().model.busy;}
+function busy(){return placing||!!window.ExhibitionWalk?.space?.state().busy;}
 function generatedRows(){const ids=new Set(generated);return unique(rows.filter(r=>ids.has(r.id)));}
 const availableRows=()=>placementKind==='spaces'?spaces:rows;
 const noun=()=>placementKind==='spaces'?'spaces':'models';
@@ -53,6 +53,14 @@ async function saveCurrent(number,metadata={}){
  const saved=await SavedSculptures.save(result.record,null,{title:(result.record.target==='city'?'City':'Sculpture')+' / '+new Date().toLocaleTimeString('en-GB')+' / '+number,group:'Agent batch',...metadata});
  generated.push(saved.entry.id);persist();await render();return saved.entry;
 }
+async function placeSaved(id){
+ await ExhibitionWalk.placement.ready;const row=await SavedSculptures.get(id);if(!row)throw Error('This model was removed.');
+ const existing=ExhibitionWalk.placement.state().models,occupied=new Set(ExhibitionWalk.placement.state().occupiedCells.map(c=>c.row*20+c.col));
+ const cells=Array.from({length:400},(_,i)=>({col:i%20,row:Math.floor(i/20)})).sort((a,b)=>(a.col-9.5)**2+(a.row-9.5)**2-((b.col-9.5)**2+(b.row-9.5)**2));
+ const cell=cells.find(c=>!occupied.has(c.row*20+c.col));if(!cell)throw Error('There is no free floor cell.');
+ ExhibitionWalk.space.showOriginal();await ExhibitionWalk.placement.place({id:row.record.id,blob:row.glb,name:row.title,preview:row.preview,record:row.record,composition:row.composition,camera:row.camera,libraryId:row.id,obj:row.obj}, {...cell,span:1,valid:true});
+ document.getElementById('walk-surface').scrollIntoView({behavior:'smooth',block:'start'});
+}
 const random=()=>crypto.getRandomValues(new Uint32Array(1))[0]/4294967296;
 async function arrange(){if(busy())return;placing=true;refreshLayoutButton();let done=0;
  try{await ExhibitionWalk.placement.ready;await render();const count=Math.max(0,Math.min(50,Math.round(Number($('exhibition-place-count').value)||0))),pool=manualPool?collectionRows():unique(availableRows());if(!count)return;if(!pool.length)throw Error('Save '+noun()+' in the lower library first.');
@@ -94,6 +102,6 @@ for(const name of ['exhibition-draft-queue-change','exhibition-placement-change'
 SavedSculptures.subscribe(()=>render().catch(e=>$('workspace-library-status').textContent=e.message));
 new MutationObserver(refreshLayoutButton).observe($('model-frame'),{attributes:true,attributeFilter:['aria-busy']});
 window.addEventListener('pagehide',()=>urls.forEach(u=>URL.revokeObjectURL(u)));
-window.ExhibitionLibrary=Object.freeze({render,saveCurrent,arrange,setPlacementKind,state:()=>({placementKind,spaces:spaces.length,placing,count:rows.length,generated:generatedRows().map(r=>r.id),collection:collectionRows().map(r=>r.id),sourceMode,manualPool,requested:Number($('exhibition-place-count').value)})});
+window.ExhibitionLibrary=Object.freeze({render,saveCurrent,placeSaved,arrange,setPlacementKind,state:()=>({placementKind,spaces:spaces.length,placing,count:rows.length,generated:generatedRows().map(r=>r.id),collection:collectionRows().map(r=>r.id),sourceMode,manualPool,requested:Number($('exhibition-place-count').value)})});
 render().catch(e=>$('workspace-library-status').textContent=e.message);
 })();

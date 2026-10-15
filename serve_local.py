@@ -115,6 +115,8 @@ class Handler(BaseHTTPRequestHandler):
    return self.send_json(200,{'version':hashlib.sha256(json.dumps(signatures).encode()).hexdigest()})
   if name=='/api/sculpture3d/capabilities':
    return self.send_json(200,{'ready':jobs.ready(),'generator':'TripoSR','localOnly':True,'activeJob':jobs.ACTIVE})
+  if name=='/api/sculpture3d/completed':
+   return self.send_json(200,{'jobs':jobs.completed()})
   if name.startswith('/api/sculpture3d/jobs/'):
    try:
     record=jobs.read(name.split('/')[-1])

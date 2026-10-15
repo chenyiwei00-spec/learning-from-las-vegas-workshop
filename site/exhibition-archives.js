@@ -3,7 +3,7 @@
 const $=id=>document.getElementById(id),DB='learning-vegas-saved-spaces-v1',urls=new Set();
 let dbPromise,revision=0,kind='models',spacesCache=[],draftsCache=[],editing=null;
 try{kind=localStorage.getItem('learning-vegas-library-kind')||kind;}catch{}
-if(!['models','collages','spaces'].includes(kind))kind='models';
+if(!['models','collages','spaces','renders'].includes(kind))kind='models';
 function database(){return dbPromise||(dbPromise=new Promise((resolve,reject)=>{const r=indexedDB.open(DB,1);r.onupgradeneeded=()=>r.result.createObjectStore('spaces',{keyPath:'id'});r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);}));}
 async function transaction(mode,action){const d=await database();return new Promise((resolve,reject)=>{const tx=d.transaction('spaces',mode),r=action(tx.objectStore('spaces'));tx.oncomplete=()=>resolve(r?.result);tx.onerror=tx.onabort=()=>reject(tx.error||Error('Space storage failed.'));});}
 const spaces=async()=>((await transaction('readonly',s=>s.getAll()))||[]).sort((a,b)=>b.savedAt-a.savedAt);
@@ -69,8 +69,8 @@ function syncActiveDraft(){
 }
 window.addEventListener('exhibition-draft-active-change',syncActiveDraft);
 function syncTabs(){
- for(const k of ['models','collages','spaces']){$('archive-tab-'+k).setAttribute('aria-selected',String(k===kind));$('archive-tab-'+k).tabIndex=k===kind?0:-1;}
- $('archive-model-pane').hidden=kind!=='models';$('archive-collage-pane').hidden=kind!=='collages';$('archive-space-pane').hidden=kind!=='spaces';
+ for(const k of ['models','collages','spaces','renders']){$('archive-tab-'+k).setAttribute('aria-selected',String(k===kind));$('archive-tab-'+k).tabIndex=k===kind?0:-1;}
+ $('archive-model-pane').hidden=kind!=='models';$('archive-collage-pane').hidden=kind!=='collages';$('archive-space-pane').hidden=kind!=='spaces';$('archive-renders-pane').hidden=kind!=='renders';
  $('saved-model-count').hidden=kind!=='models';
 }
 async function render(){
@@ -85,9 +85,9 @@ async function render(){
  }catch(e){report(e);}
 }
 function select(next){kind=next;try{localStorage.setItem('learning-vegas-library-kind',kind);}catch{}syncTabs();render();}
-for(const k of ['models','collages','spaces'])$('archive-tab-'+k).onclick=()=>select(k);
+for(const k of ['models','collages','spaces','renders'])$('archive-tab-'+k).onclick=()=>select(k);
 document.querySelector('.archive-library-tabs').addEventListener('keydown',e=>{
- const keys=['models','collages','spaces'],index=keys.indexOf(kind);
+ const keys=['models','collages','spaces','renders'],index=keys.indexOf(kind);
  if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;
  e.preventDefault();select(keys[e.key==='Home'?0:e.key==='End'?2:(index+(e.key==='ArrowRight'?1:2))%3]);$('archive-tab-'+kind).focus();
 });

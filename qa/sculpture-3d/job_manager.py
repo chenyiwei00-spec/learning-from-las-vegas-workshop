@@ -15,6 +15,19 @@ def read(job):
  p=job_path(job)/'status.json'
  if not p.is_file():return None
  return json.loads(p.read_text(encoding='utf-8'))
+def completed():
+ rows=[]
+ for path in sorted(OUTPUT.glob('*/status.json'),key=lambda p:p.stat().st_mtime,reverse=True)[:100]:
+  try:
+   state=json.loads(path.read_text(encoding='utf-8'))
+   if state.get('status')!='complete' or not (path.parent/'sculpture.glb').is_file():continue
+   composition=json.loads((path.parent/'composition.json').read_text(encoding='utf-8'))
+   state['target']=composition.get('modelTarget','sculpture')
+   state['title']=composition.get('agentPlan',{}).get('title','Recovered model')
+   rows.append(state)
+  except (OSError,ValueError,KeyError):continue
+ return rows
+
 def write(folder,value):
  value['updatedAt']=time.time();temp=folder/'status-writing.tmp';temp.write_text(json.dumps(value),encoding='utf-8');temp.replace(folder/'status.json')
 def supervise(process,folder,log):

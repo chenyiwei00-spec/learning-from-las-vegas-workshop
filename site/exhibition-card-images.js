@@ -1,7 +1,8 @@
 /* Reframe saved raster views without regenerating models or changing their cameras. */
 (()=>{'use strict';const cache=new Map(),urls=new Map(),observers=new WeakMap();let queue=Promise.resolve();
 async function modelPreview(row,mode){
- while(document.hidden||window.ExhibitionAgent?.state().busy||window.ExhibitionAgentDrafts?.state().busy||window.ExhibitionMedia?.state().videoPlaying||window.ExhibitionMedia?.state().audioPlaying||(()=>{const v=document.getElementById('generated-sculpture-viewer'),r=v?.getBoundingClientRect();return v?.autoRotate&&r?.bottom>0&&r.top<innerHeight;})())await new Promise(r=>setTimeout(r,400));
+ // One queued renderer is shared by all cards, including while Tripo runs.
+
 
  if(!(row.glb instanceof Blob))return row.preview;
  if(row.record?.target==='space'&&window.ExhibitionWalk?.previewSpaceCard)return ExhibitionWalk.previewSpaceCard(row);
@@ -37,7 +38,9 @@ function attach(grid,rows,options={}){
  function prepare(card){
   const row=byId.get(card.dataset.saved),im=card.querySelector('img');if(!row?.preview||!im)return;
 
-  preview(row,options).then(blob=>{if(!im.isConnected)return;const url=URL.createObjectURL(blob);urls.set(im,url);im.src=url;delete im.dataset.previewPending;im.dataset.savedViewReady='true';im.dataset.previewMode=options.mode||'saved';}).catch(()=>{delete im.dataset.previewPending;});
+  if(row.previewVersion===(window.ModelPreviewFinish?.version||'')&&options.mode!=='reset'){im.src=URL.createObjectURL(row.preview);urls.set(im,im.src);return;}
+  if(!row.camera&&row.previewType!=='model'){im.removeAttribute('src');im.alt='Preparing model preview';}
+  preview(row,options).then(blob=>{if(!im.isConnected)return;const url=URL.createObjectURL(blob);urls.set(im,url);im.src=url;delete im.dataset.previewPending;im.dataset.savedViewReady='true';im.dataset.previewMode=options.mode||'saved';if(options.mode!=='reset'&&row.record?.target!=='space')window.SavedSculptures?.setPreview(row.id,blob,row.camera).catch(()=>{});}).catch(()=>{delete im.dataset.previewPending;});
  }
  if(!window.IntersectionObserver){for(const card of grid.children)prepare(card);return;}
  const observer=new IntersectionObserver(entries=>{for(const entry of entries)if(entry.isIntersecting){observer.unobserve(entry.target);prepare(entry.target);}},{rootMargin:'180px'});
