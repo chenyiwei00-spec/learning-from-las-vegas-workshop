@@ -564,3 +564,8 @@ body[data-archive-agent-busy=true] .agent-library-control{display:none}
 .space-generation-settings summary{cursor:pointer;padding:6px 0}.space-generation-settings label{display:block;font:9px Arial,sans-serif;margin:12px 0}.space-generation-settings label>span{display:flex;align-items:center;gap:6px;margin-top:5px}.space-generation-settings input{min-width:0;width:145px;accent-color:#161616}.space-generation-settings input[type=number]{border:1px solid var(--exhibition-line);padding:4px}.space-generation-settings output{font-size:8px;color:#666;min-width:30px;text-align:right}
 .exhibition-space-feedback{position:absolute;bottom:34px;left:18px;z-index:8;max-width:min(470px,calc(100% - 220px));padding:10px 13px;border:1px solid var(--exhibition-line);background:#fffffff0;color:#222;font:10px/1.6 Arial,sans-serif;pointer-events:none}
 @media(max-width:760px){.exhibition-space-card .space-secondary-actions:has(.space-generation-settings){width:190px}.space-generation-settings input{width:120px}.exhibition-space-feedback{left:10px;bottom:25px;max-width:calc(100% - 155px);font-size:9px}}
+
+/* PLACE uses reset-camera previews with an edge-to-edge white caption. */
+.exhibition-page #place-model-grid .agent-model-item{padding:0;display:flex;flex-direction:column;background:white;overflow:hidden}
+.exhibition-page #place-model-grid .agent-model-item img{aspect-ratio:4/3;object-fit:cover;flex:none}
+.exhibition-page #place-model-grid .agent-model-item span{display:block;flex:1;width:100%;box-sizing:border-box;background:white;padding:12px 10px 16px;min-height:42px}
