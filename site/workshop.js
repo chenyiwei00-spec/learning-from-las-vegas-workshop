@@ -22,5 +22,6 @@ window.addEventListener('message',async e=>{
 current=valid(location.hash.slice(1)||new URLSearchParams(location.search).get('view'));
 if(sessionStorage.getItem('learning-vegas-workshop-entered')==='yes')document.getElementById('workshop-enter').click();
 window.addEventListener('hashchange',()=>{if(entered)switchTo(location.hash.slice(1));});
+document.addEventListener('fullscreenchange',()=>{document.documentElement.dataset.workshopFullscreen=String(!!document.fullscreenElement);});
 window.Workshop=Object.freeze({switchTo,state:()=>({entered,current,loaded:[...frames.keys()]})});
 })();

@@ -307,3 +307,17 @@ button.saved-model-image{display:block;width:100%;padding:0;border:0;text-align:
 #model-stage .model-gallery-hint,
 #model-stage:has(#model-frame[data-gallery-phase]:not([data-gallery-phase="idle"])) .model-wheel-note{display:none!important}
 
+
+/* The saved library precedes a viewport-height final model stage. */
+.collage-page .studio-main{padding-bottom:0}
+.collage-page #model-panel{margin-bottom:0}
+.collage-page #model-stage,.collage-page #model-stage .model-frame{height:100dvh;min-height:0;max-height:none}
+.collage-page #model-stage .model-stage-controls{position:absolute;top:18px;right:24px;height:auto;padding:0}
+.collage-page #model-stage .model-info{max-height:calc(100% - 110px);overflow:auto;scrollbar-width:thin}
+@media(max-width:760px){
+ .collage-page #model-stage .model-frame{height:55%}
+ .collage-page #model-stage .model-info{position:absolute;top:auto;bottom:24px;left:24px;right:24px;transform:none;width:auto;max-height:40%;padding:0}
+ .collage-page #model-stage:fullscreen .model-frame{height:100%}
+}
+
+.collage-page.model-stage-focused .studio-controls{visibility:hidden;pointer-events:none}

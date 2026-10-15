@@ -17,13 +17,14 @@ try{
  await arch.locator('#walk-surface').dblclick({position:{x:35,y:300}});
  await page.waitForFunction(()=>!!document.fullscreenElement);
  await arch.waitForFunction(()=>!!document.fullscreenElement);
- assert.equal(await arch.locator('.workshop-fullscreen-nav a').count(),3);
- assert.ok((await arch.locator('#walk-toolbar').boundingBox()).y>=58);
- await arch.locator('.workshop-fullscreen-nav [data-workshop-view=archive]').click();
- await page.waitForFunction(()=>!document.fullscreenElement&&Workshop.state().current==='archive');
+ assert.equal(await page.locator('#workshop-nav').isVisible(),false);
+ assert.equal(await arch.locator('.workshop-child-nav').isVisible(),false);
+ await page.evaluate(()=>document.exitFullscreen());
+ await page.waitForFunction(()=>!document.fullscreenElement);
+ await page.locator('#workshop-nav [data-view=archive]').click();
  await page.locator('#workshop-nav [data-view=architecture]').click();
  assert.equal(await arch.evaluate(()=>workshopTestToken),uid);
- console.log('PASS: fullscreen keeps all three navigation links visible, avoids the toolbar, and switches workspace without losing its state.');
+ console.log('PASS: fullscreen hides navigation and restores workspace switching after exit without losing state.');
  
  await arch.evaluate(async()=>{const blob=await(await fetch('assets/exhibition-desert/models/sign_01_preview.glb')).blob();window.testMeshBlob=blob;const id='e'.repeat(64),row={id:'workshop-fixture',title:'Fixture exhibit',group:'QA',savedAt:Date.now(),colourVersion:ModelColour.version,glb:blob,obj:new Blob(['o test']),preview:new Blob([],{type:'image/png'}),composition:null,camera:null,record:{id,fingerprint:id,modelUrl:'assets/generated-sculptures/'+id+'/sculpture.glb',objUrl:'assets/generated-sculptures/'+id+'/sculpture.obj',target:'city',triangles:1000,linkedMedia:{version:2,video:null,audio:null}}};const db=await new Promise(resolve=>{const r=indexedDB.open('borrowed-worlds-saved-sculptures-v1');r.onsuccess=()=>resolve(r.result)});await new Promise(resolve=>{const t=db.transaction('models','readwrite');t.objectStore('models').put(row);t.oncomplete=resolve});db.close();await SavedSculptures.update(row.id,{title:row.title});await ExhibitionLibrary.render();await ExhibitionLibrary.placeSaved(row.id);});
  assert.equal(await arch.evaluate(()=>ExhibitionWalk.placement.state().modelCount),1);

@@ -405,6 +405,13 @@ document.addEventListener('keydown',e=>{
  else if(e.key.toLowerCase()==='v')setTool('move');else if(e.key.toLowerCase()==='e')setTool('erase');
 },true);
 function syncPreviewWidth(){document.documentElement.style.setProperty('--preview-width',document.documentElement.clientWidth+'px');document.documentElement.style.setProperty('--studio-controls-height',Math.ceil(document.querySelector('.studio-controls').getBoundingClientRect().height)+'px');schedule();}
+function syncModelStageFocus(){
+ const stage=$('model-stage'),r=stage.getBoundingClientRect();
+ document.body.classList.toggle('model-stage-focused',!$('model-panel').hidden&&r.top<=1&&r.bottom>0);
+}
+window.addEventListener('scroll',syncModelStageFocus,{passive:true});
+window.addEventListener('resize',syncModelStageFocus);
+new ResizeObserver(syncModelStageFocus).observe($('model-panel'));
 window.addEventListener('resize',syncPreviewWidth);syncPreviewWidth();new ResizeObserver(syncPreviewWidth).observe(document.querySelector('.studio-controls'));
 window.addEventListener('pagehide',()=>{if(db){try{db.transaction('drafts','readwrite').objectStore('drafts').put(JSON.parse(draftSerial()),'current');}catch{}}});
 
@@ -594,14 +601,18 @@ async function openSavedPreview(id,direction=0){
  $('saved-composition-banner').textContent='Opening a saved composition. Your working collage is kept.';syncSavedPreview();reconstruction.beginBrowse();
  try{
   const entry=await SavedSculptures.get(id);if(ticket!==previewRevision)return;if(!entry)throw Error('This saved model was removed.');
-  const candidate=validate(entry.composition);
+  // Only this studio's recipes may replace its boards. Shared exhibition models
+  // still open in this viewer while the current collage stays intact.
+  const candidate=entry.composition?.format==='borrowed-worlds-collage'?validate(entry.composition):null;
   await reconstruction.prepareSaved(entry,direction);if(ticket!==previewRevision)return;
-  for(const key of new Set(candidate.layers.map(keyFor))){await loadAsset(key);if(ticket!==previewRevision)return;}
+  for(const key of new Set((candidate?.layers||[]).map(keyFor))){await loadAsset(key);if(ticket!==previewRevision)return;}
   await reconstruction.transitionOut(direction);if(ticket!==previewRevision)return;reconstruction.suspend(true);
-  doc=candidate;selected=null;selectedIds.clear();groupBox=null;rasters.clear();
-  for(const [,panel]of panels)$(panel).hidden=false;syncPanels();renderLayers();syncSavedPreview();
+  if(candidate){doc=candidate;selected=null;selectedIds.clear();groupBox=null;rasters.clear();
+   for(const [,panel]of panels)$(panel).hidden=false;
+  }else $('model-panel').hidden=false;
+  syncPanels();renderLayers();syncSavedPreview();
   await reconstruction.openSaved(entry,direction);if(ticket!==previewRevision)return;
-  $('saved-composition-banner').textContent='Saved composition / '+entry.title+' — Return to work to resume your current collage.';
+  $('saved-composition-banner').textContent=(candidate?'Saved composition / ':'Saved model / ')+entry.title+' — Return to work to resume your current collage.';
   if(!direction)$('model-panel').scrollIntoView({behavior:'smooth',block:'start'});
  }catch(error){if(ticket===previewRevision){await cancelSavedPreview();message(error.message);}}
  finally{if(ticket===previewRevision)restoring=false;}
