@@ -10,8 +10,8 @@ function updateSelection(){
  for(const button of document.querySelectorAll('[data-collage-id]')){const active=selected.has(button.dataset.collageId);button.setAttribute('aria-pressed',String(active));button.classList.toggle('is-selected',active);}
  $('agent-draft-selection').textContent=selected.size+' selected';
  $('agent-draft-generate').disabled=busy||!selected.size||!!window.ExhibitionAgent?.state().busy||!!window.ExhibitionStudio?.state().model.busy;
- $('agent-draft-stop').hidden=!busy;
- $('agent-draft-toggle').hidden=!rows.length;
+ $('agent-draft-stop').hidden=!busy;$('agent-draft-delete').disabled=busy||!selected.size||!!window.ExhibitionAgent?.state().busy;
+ $('agent-draft-toggle').hidden=false;
  $('workspace-collage-count').textContent=rows.length;
 }
 function choose(id,event={}){
@@ -78,11 +78,13 @@ async function generateSelected(){
  }catch(e){report(e);}
  finally{busy=false;lock(false);signal();await render();await ExhibitionLibrary.render();}
 }
+async function deleteSelected(){if(busy||window.ExhibitionAgent?.state().busy)return;const ids=[...selected];if(!ids.length)return;await transact('readwrite',s=>{ids.forEach(id=>s.delete(id));});selected.clear();anchor=null;await render();$('agent-draft-status').textContent=ids.length+' collages deleted. Generated models are kept.';}
+$('agent-draft-delete').onclick=()=>deleteSelected().catch(report);
 $('agent-draft-generate').onclick=generateSelected;
 $('agent-draft-stop').onclick=()=>{stop=true;$('agent-draft-status').textContent='Finishing and saving the current model, then stopping...';};
-$('agent-draft-toggle').onclick=()=>{if(ExhibitionWorkspace.state().panel==='drafts')ExhibitionWorkspace.closePanel();else ExhibitionWorkspace.openPanel('drafts');};
+$('agent-draft-toggle').onclick=()=>{$('agent-draft-toggle').closest('details').open=false;if(ExhibitionWorkspace.state().panel==='drafts')ExhibitionWorkspace.closePanel();else ExhibitionWorkspace.openPanel('drafts');};
 window.addEventListener('exhibition-draft-queue-change',updateSelection);window.addEventListener('exhibition-studio-ready',updateSelection);
 new MutationObserver(updateSelection).observe($('model-frame'),{attributes:true,attributeFilter:['aria-busy']});
-window.ExhibitionAgentDrafts=Object.freeze({list,save,load,render,generateSelected,state:()=>({busy,completed,failures:structuredClone(failures),selected:[...selected],count:rows.length,stopRequested:stop})});
+window.ExhibitionAgentDrafts=Object.freeze({list,save,load,render,generateSelected,deleteSelected,state:()=>({busy,completed,failures:structuredClone(failures),selected:[...selected],count:rows.length,stopRequested:stop})});
 render().catch(report);window.addEventListener('pagehide',()=>urls.forEach(u=>URL.revokeObjectURL(u)));
 })();

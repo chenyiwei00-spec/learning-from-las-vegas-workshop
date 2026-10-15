@@ -10,13 +10,14 @@ async function create(){
   const task=(async()=>{const image=new Image();image.decoding='async';image.src=p.url;try{await image.decode();}catch{throw Error('V&A cutout unavailable: '+p.name+'. Install the team media pack.');}const canvas=document.createElement('canvas');canvas.width=image.naturalWidth;canvas.height=image.naturalHeight;canvas.getContext('2d').drawImage(image,0,0);images.set(id,canvas);metrics.set(id,SculptureLink.shape(canvas));return canvas;})();pending.set(id,task);try{return await task;}finally{pending.delete(id);}
  }
  function measure(image){if(!image)return null;if(cityMetrics.has(image))return cityMetrics.get(image);const c=document.createElement('canvas');c.width=image.naturalWidth||image.width;c.height=image.naturalHeight||image.height;c.getContext('2d').drawImage(image,0,0);const value=SculptureLink.shape(c);cityMetrics.set(image,value);return value;}
- async function prepare(layers,cityInfo,context=layers){
+ async function prepare(layers,cityInfo,context=layers,preference=null){
   for(const l of layers){
    if(byId.has(l.vaPartId)){await load(l.vaPartId);continue;}
    const info=cityInfo(l),measured=measure(info.image),excluded=new Set();let success=false,last;
    for(let attempt=0;attempt<3;attempt++){
     const matcher=SculptureLink.createMatcher(parts.filter(p=>!excluded.has(p.id)),()=>context,id=>metrics.get(id)||byId.get(id)?.shape);
-    const match=matcher(l,info.object,measured);if(!match)break;
+    let match=matcher(l,info.object,measured);if(!match)break;
+    if(preference){const candidates=[],skip=new Set(excluded);for(let i=0;i<5;i++){const next=SculptureLink.createMatcher(parts.filter(p=>!skip.has(p.id)),()=>context,id=>metrics.get(id)||byId.get(id)?.shape)(l,info.object,measured);if(!next)break;candidates.push({...next,url:byId.get(next.id).url});skip.add(next.id);}match=await ExhibitionColourPreference.pick(candidates,preference)||match;}
     try{await load(match.id);l.vaPartId=match.id;l.vaRotation=match.angle;l.vaMatchReason=match.reason;success=true;break;}
     catch(e){last=e;excluded.add(match.id);}
    }

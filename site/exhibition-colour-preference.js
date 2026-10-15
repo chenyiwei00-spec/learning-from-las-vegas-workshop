@@ -1,0 +1,7 @@
+/* Soft colour preferences use alpha-covered pixels of final counterpart cutouts. */
+(()=>{'use strict';const cache=new Map();
+function measure(image){const c=document.createElement('canvas');c.width=c.height=48;const g=c.getContext('2d',{willReadFrequently:true});g.drawImage(image,0,0,48,48);const p=g.getImageData(0,0,48,48).data;let light=0,vivid=0,n=0;for(let i=0;i<p.length;i+=4){if(p[i+3]<80)continue;const r=p[i]/255,b=p[i+2]/255,k=p[i+1]/255,max=Math.max(r,k,b),min=Math.min(r,k,b);light+=(r*.2126+k*.7152+b*.0722);vivid+=(max-min);n++;}return{light:n?light/n:.5,vivid:n?vivid/n:.2};}
+async function score(url){if(cache.has(url))return cache.get(url);const task=(async()=>{try{const im=new Image();im.decoding='async';im.src=url;await im.decode();return measure(im);}catch{return{light:.5,vivid:.2};}})();cache.set(url,task);if(cache.size>600)cache.delete(cache.keys().next().value);return task;}
+async function pick(candidates,preference,random=Math.random){if(!candidates.length)return null;const baseline=candidates[0].score;const stats=await Promise.all(candidates.map(c=>score(c.url)));const weights=candidates.map((c,i)=>Math.exp(-Math.max(0,c.score-baseline)*2.5)*(.85+.65*Math.min(1,stats[i][preference]*(preference==='vivid'?2:1))));let draw=random()*weights.reduce((a,b)=>a+b,0);for(let i=0;i<candidates.length;i++){draw-=weights[i];if(draw<=0)return candidates[i];}return candidates.at(-1);}
+window.ExhibitionColourPreference=Object.freeze({measure,pick,score});
+})();
