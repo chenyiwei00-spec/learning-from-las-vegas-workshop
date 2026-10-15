@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import {cellShape} from './exhibition-placement-size.js';
 import {CELL_SIZE} from './exhibition-dimensions.js';
 import {extractSource} from './inhabitable/form-source.js';
 import {SETTINGS,validateComposition} from './inhabitable/form-state.js';
@@ -24,7 +25,7 @@ export async function preparePlacedSources(placed,settings,onProgress=()=>{}){
  // the actual occupied-cell footprint after the architecture has been generated.
  const sizes=measured.map(m=>Math.max(m.size.x,m.size.y,m.size.z)).sort((a,b)=>a-b);
  const sourceUnits=Math.max(sizes[Math.floor(sizes.length/2)]/3.2,(hi.x-lo.x)/24,(hi.z-lo.z)/24);
- const footprint=new THREE.Box3();for(const m of measured){const half=(m.s.layout?.span||1)*CELL_SIZE/2;footprint.expandByPoint(new THREE.Vector3(m.position.x-half,0,m.position.z-half));footprint.expandByPoint(new THREE.Vector3(m.position.x+half,0,m.position.z+half));}
+ const footprint=new THREE.Box3();for(const m of measured){const d=cellShape(m.s.layout),halfX=d.spanX*CELL_SIZE/2,halfZ=d.spanZ*CELL_SIZE/2;footprint.expandByPoint(new THREE.Vector3(m.position.x-halfX,0,m.position.z-halfZ));footprint.expandByPoint(new THREE.Vector3(m.position.x+halfX,0,m.position.z+halfZ));}
  const d=footprint.getSize(new THREE.Vector3()),targetFootprint={width:d.x,depth:d.z},worldScale=Math.sqrt(d.x*d.z)/(12+3*Math.sqrt(Math.max(placed.length,settings.moduleCount||9)));
  if(!Number.isFinite(worldScale)||worldScale<=0)throw Error('The placed models have no measurable size.');
  const centre=lo.clone().add(hi).multiplyScalar(.5),layoutScale=1/sourceUnits,sources={},items=[],attribution={};

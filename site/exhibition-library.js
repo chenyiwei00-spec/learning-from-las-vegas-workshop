@@ -53,12 +53,14 @@ async function arrange(){if(busy())return;placing=true;refreshLayoutButton();let
  try{await ExhibitionWalk.placement.ready;await render();const count=Math.max(0,Math.min(50,Math.round(Number($('exhibition-place-count').value)||0))),pool=manualPool?collectionRows():unique(availableRows());if(!count)return;if(!pool.length)throw Error('Save '+noun()+' in the lower library first.');
  const shuffled=[...pool];for(let i=shuffled.length-1;i>0;i--){const j=Math.floor(random()*(i+1));[shuffled[i],shuffled[j]]=[shuffled[j],shuffled[i]];}
  const selected=Array.from({length:count},(_,i)=>shuffled[i%shuffled.length]);
- const layout=ExhibitionLayoutPlanner.plan(selected.map((r,i)=>({...r,id:r.id+':instance:'+i})),{random,minSpan:placementKind==='spaces'?2:1,maxSpan:placementKind==='spaces'?5:3}),floor=ExhibitionWalk.placement.state().models;
+ const descriptors=[];for(const row of selected){const hash=await crypto.subtle.digest('SHA-256',await row.glb.arrayBuffer()),id=[...new Uint8Array(hash)].map(v=>v.toString(16).padStart(2,'0')).join('');descriptors.push({id:/^[a-f0-9]{64}$/.test(row.record?.id)?row.record.id:id,blob:row.glb,name:row.title,preview:row.preview,record:row.record,composition:row.composition,camera:row.camera,libraryId:row.id,obj:row.obj});}
+ const measured=await ExhibitionWalk.placement.measureModels(descriptors);
+ const layout=ExhibitionLayoutPlanner.plan(selected.map((r,i)=>({...r,...measured[i],id:r.id+':instance:'+i})),{random,minSpan:placementKind==='spaces'?2:1,maxSpan:placementKind==='spaces'?5:3}),floor=ExhibitionWalk.placement.state().models;
  const existing=ExhibitionWalk.placement.browseEntries(),byModel=new Map(existing.map(r=>[r.id.replace('exhibit:',''),r]));
  const used=new Set(),matched=selected.map(row=>floor.find(f=>!used.has(f.id)&&identity(byModel.get(f.modelId)||{})===identity(row)&&(used.add(f.id),true)));
  ExhibitionWalk.space?.showOriginal();
  if(floor.length===selected.length&&matched.every(Boolean)){await ExhibitionWalk.placement.applyLayout(layout.map((l,i)=>({...l,id:matched[i].id})));done=selected.length;}
- else{const descriptors=[];for(const row of selected){const hash=await crypto.subtle.digest('SHA-256',await row.glb.arrayBuffer()),id=[...new Uint8Array(hash)].map(v=>v.toString(16).padStart(2,'0')).join('');descriptors.push({id:/^[a-f0-9]{64}$/.test(row.record?.id)?row.record.id:id,blob:row.glb,name:row.title,preview:row.preview,record:row.record,composition:row.composition,camera:row.camera,libraryId:row.id,obj:row.obj});}
+ else{
  await ExhibitionWalk.placement.replaceCollection(descriptors,layout);done=selected.length;}
  $('exhibition-layout-status').textContent=done+' arranged';$('place-model-status').textContent=done+' '+noun()+' arranged in the current view.';
  }catch(e){$('exhibition-layout-status').textContent=e.message;$('place-model-status').textContent=e.message;}finally{placing=false;renderPanes();}
