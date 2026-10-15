@@ -1,14 +1,23 @@
 /* Still renders and camera-path films are device-local, independent of mesh generation. */
 (()=>{
 'use strict';
-const $=id=>document.getElementById(id),KEY='learning-vegas-camera-path-v1';let busy=false,playing=false,opened=false,previewRAF=0,previewRestore=null,keys=[],urls=[],thumbUrls=[];
+const $=id=>document.getElementById(id),KEY='learning-vegas-camera-path-v1',BACKUP='learning-vegas-camera-path-backup-v1',UI_KEY='learning-vegas-render-panel-ui-v1';let busy=false,playing=false,opened=false,previewRAF=0,previewRestore=null,keys=[],urls=[],thumbUrls=[];
 try{const saved=JSON.parse(localStorage.getItem(KEY)||'[]');if(Array.isArray(saved))keys=saved;}catch{}
+let lastPersisted=JSON.stringify(keys);
 function db(){return new Promise((resolve,reject)=>{const r=indexedDB.open('learning-vegas-render-output-v1',1);r.onupgradeneeded=()=>r.result.createObjectStore('outputs',{keyPath:'id'});r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});}
 async function tx(mode,action){const d=await db();try{return await new Promise((resolve,reject)=>{const t=d.transaction('outputs',mode),r=action(t.objectStore('outputs'));t.oncomplete=()=>resolve(r?.result);t.onerror=t.onabort=()=>reject(t.error||Error('Render library could not be saved.'));});}finally{d.close();}}
 const list=async()=>((await tx('readonly',s=>s.getAll()))||[]).sort((a,b)=>b.createdAt-a.createdAt);
 const walk=()=>window.ExhibitionWalk;
 const pose=()=>({...walk().state().walkingCamera,fly:walk().state().fly});
-const persist=()=>localStorage.setItem(KEY,JSON.stringify(keys));
+function persist(){
+ const next=JSON.stringify(keys),previous=localStorage.getItem(KEY);
+ if(next===lastPersisted)return;
+ try{const old=JSON.parse(previous||'null');if(previous!==next&&Array.isArray(old)&&old.length>=2)localStorage.setItem(BACKUP,JSON.stringify({keys:old,at:Date.now(),title:'Previous camera path'}));}catch{}
+ localStorage.setItem(KEY,next);lastPersisted=next;
+}
+function savePanelState(){try{localStorage.setItem(UI_KEY,JSON.stringify({opened,cameraEditor:!!$('render-camera-editor')?.open}));}catch{}}
+function openCameraEditor(){opened=true;$('render-output-panel').hidden=false;$('render-camera-editor').open=true;savePanelState();walk()?.suspendNavigation();ui();}
+
 const status=text=>{$('render-output-status').textContent=text;};
 function download(blob,name){const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),10000);}
 const cleanName=()=>($('render-output-name').value.trim()||'Learning from Las Vegas').replace(/[\\/:*?"<>|]+/g,'-');
@@ -20,7 +29,7 @@ function renderKeys(){
   const row=document.createElement('section');row.className='render-camera-key';const head=document.createElement('div');head.className='render-camera-key-heading';const title=document.createElement('b');title.textContent='CAMERA '+String(i+1).padStart(2,'0');head.append(title);
   const action=(name,fn)=>{const b=document.createElement('button');b.type='button';b.textContent=name;b.disabled=busy||playing;b.onclick=fn;head.append(b);};
   action('View',()=>{walk().setViewMode('room');apply(key);});action('Update',()=>{key.pose=pose();key.light=walk().lighting.state();persist();renderKeys();});action('Delete',()=>{keys.splice(i,1);persist();renderKeys();});row.append(head);
-  const field=(label,value,change,step='0.1')=>{const l=document.createElement('label');l.textContent=label;const input=document.createElement('input');input.type='number';input.step=step;input.value=String(value);input.disabled=busy||playing;input.onchange=()=>{if(Number.isFinite(input.valueAsNumber)){change(input.valueAsNumber);persist();}};l.append(input);return l;};
+  const field=(label,value,change,step='0.1')=>{const l=document.createElement('label');l.textContent=label;const input=document.createElement('input');input.type='number';input.step=step;input.value=String(value);input.disabled=busy||playing;input.oninput=()=>{if(Number.isFinite(input.valueAsNumber)){change(input.valueAsNumber);persist();}};l.append(input);return l;};
   const timing=document.createElement('div');timing.className='render-camera-fields';timing.append(field('Film time / s',key.time,v=>key.time=Math.max(0,v)),field('Sun / hour',key.light?.time??8,v=>key.light={time:Math.max(0,Math.min(24,v))}));row.append(timing);
   const advanced=document.createElement('details'),summary=document.createElement('summary');summary.textContent='Position / direction';advanced.append(summary);const fields=document.createElement('div');fields.className='render-camera-fields';
   for(const n of ['x','y','z','yaw','pitch'])fields.append(field(n.toUpperCase()+(n==='yaw'||n==='pitch'?' / degrees':' / m'),(key.pose[n]||0)*(n==='yaw'||n==='pitch'?180/Math.PI:1),v=>key.pose[n]=v*(n==='yaw'||n==='pitch'?Math.PI/180:1)));
@@ -76,7 +85,7 @@ function setup(){
  panel.innerHTML='<header class="render-output-heading"><span>RENDER / CAMERA PATH</span><button id="render-output-close" type="button" aria-label="Close render panel">&#215;</button></header><label class="render-output-label">Output name<input id="render-output-name" value="Learning from Las Vegas" maxlength="120"></label><div class="render-output-fields"><label>Image size<select id="render-output-resolution"><option value="1920">1920 x 1080</option><option value="2560" selected>2560 x 1440</option><option value="3840">3840 x 2160 / 4K</option></select></label><button id="render-output-still" data-render-action type="button">Render image</button></div><details id="render-camera-editor"><summary>CAMERA PATH <span id="render-camera-count">0 camera views</span></summary><p class="render-output-note">Use eye-level view, move to a viewpoint, then add a camera. Edit film seconds and sunlight time for each view.</p><div class="render-output-actions"><button id="render-eye-view" data-render-action>Eye-level view</button><button id="render-camera-add" data-render-action>Add current camera +</button></div><p id="render-camera-empty" class="render-output-note">Add at least two camera views.</p><div id="render-camera-list"></div><label class="render-output-checkbox"><input id="render-path-smooth" type="checkbox" checked>Smooth camera path</label><div class="render-output-actions"><button id="render-path-play">Preview path</button><button id="render-path-save" data-render-action>Export path JSON</button><label class="render-path-import">Import path<input id="render-path-import" type="file" accept=".json" hidden></label></div><input id="render-path-scrub" type="range" min="0" max="1000" value="0" aria-label="Camera path position"><div class="render-output-fields"><label>Film size<select id="render-film-resolution"><option value="1280">1280 x 720</option><option value="1920" selected>1920 x 1080</option><option value="2560">2560 x 1440</option></select></label><label>Frames / s<select id="render-film-fps"><option>24</option><option>25</option><option>30</option><option>60</option></select></label></div><label class="render-output-checkbox"><input id="render-film-audio" type="checkbox" checked>Include exhibition audio</label><p class="render-output-note">Film sound follows nearby exhibits along the camera path, with distance and fades. PNG images are silent.</p><button id="render-path-export" class="primary-link" data-render-action>Render &amp; export film</button></details><div class="render-output-actions"><button id="render-output-cancel" hidden>Cancel export</button><span id="render-output-status" role="status"></span></div>';
  $('walk-surface').append(panel);
  const dialog=document.createElement('dialog');dialog.id='render-output-viewer';dialog.className='render-output-viewer';dialog.innerHTML='<header><h2 id="render-output-viewer-title"></h2><button id="render-output-viewer-close" aria-label="Close output">&#215;</button></header><div id="render-output-viewer-media"></div><button id="render-output-download">Export original</button>';document.body.append(dialog);
- const toggle=value=>{opened=value;panel.hidden=!value;if(value)walk()?.suspendNavigation();ui();};button.onclick=()=>toggle(!opened);$('render-output-close').onclick=()=>toggle(false);
+ const toggle=value=>{opened=value;panel.hidden=!value;if(value)walk()?.suspendNavigation();savePanelState();ui();};button.onclick=()=>toggle(!opened);$('render-output-close').onclick=()=>toggle(false);
  for(const name of ['pointerdown','wheel','keydown'])panel.addEventListener(name,e=>e.stopPropagation());
  $('render-output-still').onclick=()=>captureStill().catch(()=>{});$('render-output-cancel').onclick=()=>walk().output.cancel();
  $('render-eye-view').onclick=()=>walk().setViewMode('room');
@@ -86,9 +95,11 @@ function setup(){
  $('render-path-save').onclick=()=>download(new Blob([JSON.stringify({format:'learning-vegas-camera-path',version:1,keys},null,2)],{type:'application/json'}),'learning-vegas-camera-path.json');
  $('render-path-import').onchange=async e=>{try{const f=e.target.files?.[0];if(!f||f.size>1000000)throw Error('Choose a camera path JSON under 1 MB.');const doc=JSON.parse(await f.text());if(doc.format!=='learning-vegas-camera-path')throw Error('Choose an exported camera path.');walk().sampleCameraPath(doc.keys,0);keys=doc.keys;persist();renderKeys();status('Camera path imported.');}catch(err){status(err.message);}finally{e.target.value='';}};
  $('render-output-viewer-close').onclick=()=>dialog.close();dialog.addEventListener('close',()=>{dialog.querySelector('video')?.pause();urls.forEach(URL.revokeObjectURL);urls=[];});
- renderKeys();renderLibrary().catch(e=>status(e.message));
+ $('render-camera-editor').addEventListener('toggle',savePanelState);
+ try{const saved=JSON.parse(localStorage.getItem(UI_KEY)||'null');if(saved){opened=!!saved.opened;panel.hidden=!opened;$('render-camera-editor').open=!!saved.cameraEditor;}}catch{}
+ renderKeys();ui();renderLibrary().catch(e=>status(e.message));
 }
 setup();
-window.ExhibitionOutput=Object.freeze({list,renderLibrary,captureStill,exportFilm,viewOutput,state:()=>({busy,playing,opened,keyframes:structuredClone(keys)}),setKeys:value=>{keys=structuredClone(value);persist();renderKeys();}});
-window.addEventListener('pagehide',()=>{stopPreview();urls.forEach(URL.revokeObjectURL);thumbUrls.forEach(URL.revokeObjectURL);});
+window.ExhibitionOutput=Object.freeze({list,renderLibrary,captureStill,exportFilm,viewOutput,openCameraEditor,saveDraft:persist,state:()=>({busy,playing,opened,protectReload:opened||playing,keyframes:structuredClone(keys)}),setKeys:value=>{keys=structuredClone(value);persist();renderKeys();}});
+window.addEventListener('pagehide',()=>{persist();stopPreview();urls.forEach(URL.revokeObjectURL);thumbUrls.forEach(URL.revokeObjectURL);});
 })();
