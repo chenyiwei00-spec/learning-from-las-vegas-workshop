@@ -1,7 +1,7 @@
 /* The lower saved library shares collages and stores generated spaces as real local GLBs. */
 (()=>{'use strict';
 const $=id=>document.getElementById(id),DB='learning-vegas-saved-spaces-v1',urls=new Set();
-let dbPromise,revision=0,kind='models',spacesCache=[],draftsCache=[];
+let dbPromise,revision=0,kind='models',spacesCache=[],draftsCache=[],editing=null;
 try{kind=localStorage.getItem('learning-vegas-library-kind')||kind;}catch{}
 if(!['models','collages','spaces'].includes(kind))kind='models';
 function database(){return dbPromise||(dbPromise=new Promise((resolve,reject)=>{const r=indexedDB.open(DB,1);r.onupgradeneeded=()=>r.result.createObjectStore('spaces',{keyPath:'id'});r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);}));}
@@ -27,6 +27,15 @@ async function overwriteSpace(id,viewer,metadata={}){
 }
 function download(blob,name){if(!(blob instanceof Blob))return;const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),30000);}
 function report(error){$('archive-library-status').textContent=error.message||String(error);}
+function edit(row,type){
+ editing={id:row.id,type};$('archive-item-name').value=row.title;$('archive-item-group').value=row.group||(type==='collage'?'Agent collages':'Generated spaces');$('archive-item-edit').showModal();$('archive-item-name').focus();
+}
+$('archive-item-cancel').onclick=()=>$('archive-item-edit').close();
+$('archive-item-edit-form').onsubmit=async e=>{
+ e.preventDefault();if(!editing)return;const metadata={title:$('archive-item-name').value.trim(),group:$('archive-item-group').value.trim()};
+ try{if(editing.type==='collage')await ExhibitionAgentDrafts.update(editing.id,metadata);else{const row=await getSpace(editing.id);if(!row)throw Error('This space was removed.');Object.assign(row,metadata);await transaction('readwrite',s=>s.put(row));}await render();$('archive-item-edit').close();}
+ catch(error){report(error);}
+};
 function card(row,type){
  const article=document.createElement('article');article.className='saved-model-card';article.dataset.saved=row.id;
  const button=document.createElement('button');button.type='button';button.className='saved-model-image';button.setAttribute('aria-label',(type==='collage'?'Edit ':'View ')+row.title);
@@ -34,17 +43,19 @@ function card(row,type){
  if(row.preview instanceof Blob){const u=URL.createObjectURL(row.preview);urls.add(u);img.src=u;}
  const badge=document.createElement('span');badge.textContent=type==='collage'?'COLLAGE':'3D / SPACE';button.append(img,badge);
  const meta=document.createElement('div');meta.className='saved-model-meta';
- const title=document.createElement('h3');title.textContent=row.title;
+ const title=document.createElement('h3');title.textContent=row.title;title.title=row.title;const group=document.createElement('p');group.className='saved-group';group.textContent=row.group||(type==='collage'?'Agent collages':'Generated spaces');
  const date=document.createElement('p');date.textContent=new Date(row.savedAt||row.createdAt).toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+ date.textContent+=' / '+(type==='collage'?(row.document?.layers?.length||0)+' objects':Number(row.record?.triangles||0).toLocaleString('en-GB')+' triangles');
  const actions=document.createElement('div');actions.className='saved-model-actions';
  function action(label,fn){const b=document.createElement('button');b.type='button';b.textContent=label;b.onclick=e=>{e.stopPropagation();Promise.resolve().then(fn).catch(report);};actions.append(b);return b;}
  const open=()=>type==='collage'?ExhibitionAgentDrafts.load(row.id):window.dispatchEvent(new CustomEvent('saved-sculpture-open',{detail:{id:row.id}}));
  button.onclick=()=>Promise.resolve().then(open).catch(report);
  article.onclick=e=>{if(!e.target.closest('button,a,input'))Promise.resolve().then(open).catch(report);};
- if(type==='collage'){action('Edit',open);action('PNG',()=>download(row.preview,row.title+'.png'));}
- else{action('View 3D',open);action('GLB',()=>download(row.glb,row.title+'.glb'));}
+ action('Name / group',()=>edit(row,type));
+ if(type==='collage'){action('PNG',()=>download(row.preview,row.title+'.png'));action('JSON',()=>download(new Blob([JSON.stringify(row.document,null,2)],{type:'application/json'}),row.title+'.json'));}
+ else{action('GLB',()=>download(row.glb,row.title+'.glb'));action('OBJ',()=>{}).disabled=true;}
  const del=action('Delete',async()=>{if(type==='collage')await ExhibitionAgentDrafts.remove(row.id);else await transaction('readwrite',s=>s.delete(row.id));await render();});del.className='delete-saved';del.setAttribute('aria-label','Delete '+row.title);
- meta.append(title,date,actions);article.append(button,meta);return article;
+ meta.append(title,group,date,actions);article.append(button,meta);return article;
 }
 function syncTabs(){
  for(const k of ['models','collages','spaces']){$('archive-tab-'+k).setAttribute('aria-selected',String(k===kind));$('archive-tab-'+k).tabIndex=k===kind?0:-1;}

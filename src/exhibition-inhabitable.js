@@ -12,7 +12,7 @@ export function createInhabitableSpace({scene,renderer,placement,getView,getCame
  const feedback=$('exhibition-space-feedback');
  const say=text=>{$('exhibition-space-status').textContent=text;feedback.textContent=text;feedback.hidden=false;clearTimeout(feedbackTimer);};
  function ui(){
-  const button=$('exhibition-make-space');button.disabled=busy||!placement.state().modelCount||!!window.ExhibitionAgentDrafts?.state().busy;
+  const button=$('exhibition-make-space');button.disabled=busy||!placement.state().modelCount||!!window.ExhibitionAgentDrafts?.state().busy||!!window.ExhibitionAgent?.state().busy;
   const label='Make space';button.textContent=busy?Math.round(progress)+'%':'+';button.title=label;button.setAttribute('aria-label',label);$('exhibition-space-keyword').textContent=label.toUpperCase();
   $('exhibition-space-options').hidden=false;$('space-options-empty').hidden=!!result;
   $('exhibition-space-original').hidden=!result;$('exhibition-space-original').textContent=active?'Original models':'Show space';$('exhibition-space-original').disabled=busy;
@@ -41,7 +41,7 @@ export function createInhabitableSpace({scene,renderer,placement,getView,getCame
   }catch(e){disposeResult({group});throw e;}
  }
  async function generate({restore=false,override=null}={}){
-  if(busy||disposed||window.ExhibitionAgentDrafts?.state().busy)return false;await placement.ready;
+  if(busy||disposed||window.ExhibitionAgentDrafts?.state().busy||window.ExhibitionAgent?.state().busy)return false;await placement.ready;
   const key=layoutSignature(placement),revisionAtStart=settingsRevision,pendingAtStart={...settings};busy=true;progress=0;error='';ui();let next;
   try{
    const chosen=checkSettings(override||settings);if(result&&!stale&&!restore&&!override)chosen.seed=((Math.imul(chosen.seed,1664525)+1013904223)>>>0)%1000000;
@@ -143,10 +143,10 @@ export function createInhabitableSpace({scene,renderer,placement,getView,getCame
  }
  const handlers=[['exhibition-make-space',()=>generate()],['exhibition-enter-space',enter],['exhibition-space-original',()=>visibility(!active)],['exhibition-export-space',exportGLB],['exhibition-space-save',saveRecipe],['exhibition-space-load',()=>$('exhibition-space-recipe').click()]];
  handlers.forEach(([id,fn])=>$(id).addEventListener('click',fn));$('exhibition-space-recipe').addEventListener('change',loadRecipe);
- window.addEventListener('exhibition-placement-change',placementChange);window.addEventListener('exhibition-draft-queue-change',ui);renderer.domElement.addEventListener('pointerdown',down);renderer.domElement.addEventListener('pointerup',up);
+ window.addEventListener('exhibition-placement-change',placementChange);window.addEventListener('exhibition-draft-queue-change',ui);window.addEventListener('exhibition-agent-change',ui);renderer.domElement.addEventListener('pointerdown',down);renderer.domElement.addEventListener('pointerup',up);
  const ready=placement.ready.then(async()=>{ui();try{const saved=JSON.parse(localStorage.getItem(KEY)||'null');if(saved?.version===1){settings=checkSettings(saved.settings);generatedSettings=saved.generatedSettings;if(saved.active&&saved.signature===layoutSignature(placement))await generate({restore:true,override:generatedSettings||settings});ui();}}catch(e){say('Previous space could not reopen: '+e.message);}});
  return Object.freeze({ready,generate,captureArchive,enter,showOriginal:()=>visibility(false),showSpace:()=>visibility(true),constrain,collisionMeshes:()=>active&&result?result.meshes:[],exportGLB,
   state:()=>({engine:'inhabitable-v1',active,busy,stale,error,signature,settings:{...settings},generatedSettings,progress,connected:!!result?.plan.validation.routesClear,minimumClearance:result?.plan.validation.headroom||0,triangles:result?.triangles||0,validation:result?.plan.validation||null,bounds:result?{min:result.bounds.min.toArray(),max:result.bounds.max.toArray()}:null,offset:result?.offset||null,sourceSelection}),
-  dispose:()=>{disposed=true;clearTimeout(feedbackTimer);cancelPending?.();worker?.terminate();handlers.forEach(([id,fn])=>$(id).removeEventListener('click',fn));$('exhibition-space-recipe').removeEventListener('change',loadRecipe);for(const el of document.querySelectorAll('[data-space-setting]')){el.removeEventListener('input',settingChange);el.removeEventListener('change',settingChange);}window.removeEventListener('exhibition-placement-change',placementChange);window.removeEventListener('exhibition-draft-queue-change',ui);renderer.domElement.removeEventListener('pointerdown',down);renderer.domElement.removeEventListener('pointerup',up);onSpaceLight?.(null,false);disposeResult(result);result=null;}
+  dispose:()=>{disposed=true;clearTimeout(feedbackTimer);cancelPending?.();worker?.terminate();handlers.forEach(([id,fn])=>$(id).removeEventListener('click',fn));$('exhibition-space-recipe').removeEventListener('change',loadRecipe);for(const el of document.querySelectorAll('[data-space-setting]')){el.removeEventListener('input',settingChange);el.removeEventListener('change',settingChange);}window.removeEventListener('exhibition-placement-change',placementChange);window.removeEventListener('exhibition-draft-queue-change',ui);window.removeEventListener('exhibition-agent-change',ui);renderer.domElement.removeEventListener('pointerdown',down);renderer.domElement.removeEventListener('pointerup',up);onSpaceLight?.(null,false);disposeResult(result);result=null;}
  });
 }

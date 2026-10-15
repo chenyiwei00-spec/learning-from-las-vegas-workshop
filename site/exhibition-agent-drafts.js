@@ -11,7 +11,7 @@ function updateSelection(){
  $('agent-draft-selection').textContent=selected.size+' selected';
  $('agent-draft-generate').disabled=busy||!selected.size||!!window.ExhibitionAgent?.state().busy||!!window.ExhibitionStudio?.state().model.busy;
  $('agent-draft-stop').hidden=!busy;$('agent-draft-delete').disabled=busy||!selected.size||!!window.ExhibitionAgent?.state().busy;
- $('agent-draft-toggle').hidden=false;
+
  $('workspace-collage-count').textContent=rows.length;
 }
 function choose(id,event={}){
@@ -85,6 +85,6 @@ $('agent-draft-stop').onclick=()=>{stop=true;$('agent-draft-status').textContent
 $('agent-draft-toggle').onclick=()=>{$('agent-draft-toggle').closest('details').open=false;if(ExhibitionWorkspace.state().panel==='drafts')ExhibitionWorkspace.closePanel();else ExhibitionWorkspace.openPanel('drafts');};
 window.addEventListener('exhibition-draft-queue-change',updateSelection);window.addEventListener('exhibition-studio-ready',updateSelection);
 new MutationObserver(updateSelection).observe($('model-frame'),{attributes:true,attributeFilter:['aria-busy']});
-window.ExhibitionAgentDrafts=Object.freeze({list,save,load,remove:async id=>{if(busy||window.ExhibitionAgent?.state().busy)throw Error('Finish generation before deleting a collage.');await transact('readwrite',s=>s.delete(id));await render();},render,generateSelected,deleteSelected,state:()=>({busy,completed,failures:structuredClone(failures),selected:[...selected],count:rows.length,stopRequested:stop})});
+window.ExhibitionAgentDrafts=Object.freeze({list,save,load,waitForPreview,update:async(id,metadata)=>{await transact('readwrite',s=>{const r=s.get(id);r.onsuccess=()=>{if(!r.result)return;Object.assign(r.result,metadata);s.put(r.result);};return r;});await render();},attachModel:async(id,modelId)=>{await transact('readwrite',s=>{const r=s.get(id);r.onsuccess=()=>{if(!r.result)return;r.result.modelIds=[...new Set([...(r.result.modelIds||[]),modelId])];s.put(r.result);};return r;});await render();},remove:async id=>{if(busy||window.ExhibitionAgent?.state().busy)throw Error('Finish generation before deleting a collage.');await transact('readwrite',s=>s.delete(id));await render();},render,generateSelected,deleteSelected,state:()=>({busy,completed,failures:structuredClone(failures),selected:[...selected],count:rows.length,stopRequested:stop})});
 render().catch(report);window.addEventListener('pagehide',()=>urls.forEach(u=>URL.revokeObjectURL(u)));
 })();
