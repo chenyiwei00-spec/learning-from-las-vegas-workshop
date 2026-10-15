@@ -191,7 +191,6 @@ function syncDirection(){
  $('sculpture-empty').querySelector('p').textContent=reverse?'Your sculpture fragments find their Las Vegas counterparts here.':'Your city fragments find their sculptural counterparts here.';
  $('part-library-count').textContent=reverse?objectMap.size.toLocaleString('en-GB')+' cutouts · '+materials.length.toLocaleString('en-GB')+' photos':sculpture.parts.length+' parts · '+new Set(sculpture.parts.map(p=>p.sourceId)).size+' photographs';
  document.querySelector('.sculpture-toolbar>span:nth-child(2)').textContent=reverse?'LIVE LAS VEGAS COLLAGE':'LIVE PHOTOGRAPHIC COLLAGE';
- document.querySelector('.studio-intro>p').innerHTML=reverse?'Borrow a body.<br>Compose another city.':'Borrow a city.<br>Compose another body.';
  $('collage-overlay').setAttribute('aria-label',(reverse?'Sculpture':'Las Vegas')+' collage. Move, resize, rotate, mirror or Alt-drag to duplicate selected fragments.');
  $('sculpture-canvas').setAttribute('aria-label',(reverse?'Las Vegas':'Sculpture')+' paired collage. Click a fragment to select its linked editable layer.');
  $('pair-empty').textContent=reverse?'Select a sculpture fragment to choose its Las Vegas counterpart.':'Select a city fragment to choose its V&A counterpart.';
