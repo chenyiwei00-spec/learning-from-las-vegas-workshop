@@ -15,21 +15,21 @@ export function surfaceGrid(meshes,g){
   }
  }return data;
 }
-export function bodyClear(g,surfaces,x,floor,z,radius=.23,outsideClear=false){
+export function bodyClear(g,surfaces,x,floor,z,radius=.23,outsideClear=false,actorScale=1){
  for(const y of [.65,1.2,1.65,2.35])for(const [dx,dz] of [[0,0],[radius,0],[-radius,0],[0,radius],[0,-radius]]){
-  const px=x+dx,pz=z+dz,py=floor+y,ix=Math.round((px-g.minX)/g.step),iy=Math.round((py-g.minY)/g.step),iz=Math.round((pz-g.minZ)/g.step);
+  const px=x+dx,pz=z+dz,py=floor+y*actorScale,ix=Math.round((px-g.minX)/g.step),iy=Math.round((py-g.minY)/g.step),iz=Math.round((pz-g.minZ)/g.step);
   if(ix<0||iy<0||iz<0||ix>=g.nx||iy>=g.ny||iz>=g.nz){if(outsideClear)continue;return false;}
   if(sampleField(g,px,py,pz)<.03||surfaces[(iz*g.ny+iy)*g.nx+ix])return false;
  }return true;
 }
-export function buildNavigation(nodes,paths,g,surfaces,bounds){
+export function buildNavigation(nodes,paths,g,surfaces,bounds,padding=0){
  const step=.28,nx=Math.ceil((bounds.maxX-bounds.minX)/step)+1,nz=Math.ceil((bounds.maxZ-bounds.minZ)/step)+1,layers=12,heights=new Float32Array(nx*nz*layers),counts=new Uint8Array(nx*nz);
  heights.fill(NaN);
  // Bin candidate rooms/segments once instead of scanning every ramp for every empty cell.
  const bins=new Map(),binSize=2;
  const add=(part,minX,maxX,minZ,maxZ)=>{for(let z=Math.floor(minZ/binSize);z<=Math.floor(maxZ/binSize);z++)for(let x=Math.floor(minX/binSize);x<=Math.floor(maxX/binSize);x++){const key=x+','+z;if(!bins.has(key))bins.set(key,[]);bins.get(key).push(part);}};
- for(const n of nodes){const r=n.radius*.72;add({n,r},n.center.x-r,n.center.x+r,n.center.z-r,n.center.z+r);}
- for(const path of paths)for(let k=1;k<path.points.length;k++){const a=path.points[k-1],b=path.points[k],r=path.width/2+.34,dx=b.x-a.x,dz=b.z-a.z;add({a,b,r,dx,dz,L:dx*dx+dz*dz||1},Math.min(a.x,b.x)-r,Math.max(a.x,b.x)+r,Math.min(a.z,b.z)-r,Math.max(a.z,b.z)+r);}
+ for(const n of nodes){const r=n.radius*.72+padding;add({n,r},n.center.x-r,n.center.x+r,n.center.z-r,n.center.z+r);}
+ for(const path of paths)for(let k=1;k<path.points.length;k++){const a=path.points[k-1],b=path.points[k],r=path.width/2+.34+padding,dx=b.x-a.x,dz=b.z-a.z;add({a,b,r,dx,dz,L:dx*dx+dz*dz||1},Math.min(a.x,b.x)-r,Math.max(a.x,b.x)+r,Math.min(a.z,b.z)-r,Math.max(a.z,b.z)+r);}
  const candidates=(x,z)=>{
   const out=[];for(const p of bins.get(Math.floor(x/binSize)+','+Math.floor(z/binSize))||[]){
    if(p.n){if(Math.hypot(x-p.n.center.x,z-p.n.center.z)<p.r)out.push(p.n.floor+.055);}
@@ -48,13 +48,13 @@ export function floorAt(nav,x,z,current=0,maxStep=.22){
  if(ix<0||iz<0||ix>=nav.nx||iz>=nav.nz)return null;const id=iz*nav.nx+ix;let best=null,d=Infinity;
  for(let k=0;k<nav.counts[id];k++){const h=renderedFloor(nav,id,k,x,z),delta=Math.abs(h-current);if(delta<d&&delta<=maxStep){best=h;d=delta;}}return best;
 }
-export function validateCirculation(nodes,paths,g,surfaces,width,nav=null){
+export function validateCirculation(nodes,paths,g,surfaces,width,nav=null,actorScale=1){
  let samples=0,maxGrade=0;
  for(const path of paths)for(let k=1;k<path.points.length;k++){const a=path.points[k-1],b=path.points[k],L=Math.hypot(b.x-a.x,b.z-a.z),grade=Math.abs(b.y-a.y)/(L||1),right={x:-(b.z-a.z)/(L||1),z:(b.x-a.x)/(L||1)};maxGrade=Math.max(maxGrade,grade);
-  for(let t=0;t<=1;t+=.25)for(const side of [-width/2,0,width/2]){const x=a.x+(b.x-a.x)*t+right.x*side,z=a.z+(b.z-a.z)*t+right.z*side,y=a.y+(b.y-a.y)*t+.055;samples++;const support=nav?floorAt(nav,x,z,y,.6):y;if(support===null){const e=Error('A carved route is missing a supporting floor.');const id=Math.round((z-nav.minZ)/nav.step)*nav.nx+Math.round((x-nav.minX)/nav.step);e.details={point:{x,y,z},path:path.role,levels:Array.from(nav.heights.subarray(id*nav.layers,id*nav.layers+nav.layers)),count:nav.counts[id]};throw e;}if((nav&&!floorClear(nav,x,z,support,.05))||!bodyClear(g,surfaces,x,support,z,.05)){const e=Error('A source fragment obstructs a carved route. Try the next seed or reduce void density.');e.details={point:{x,y,z},path:path.role,floorBlocked:nav?!floorClear(nav,x,z,support,.05):false,bodyBlocked:!bodyClear(g,surfaces,x,support,z,.05),field:sampleField(g,x,y+1.65,z),support,levels:nav?Array.from(nav.heights.subarray((Math.round((z-nav.minZ)/nav.step)*nav.nx+Math.round((x-nav.minX)/nav.step))*nav.layers,(Math.round((z-nav.minZ)/nav.step)*nav.nx+Math.round((x-nav.minX)/nav.step))*nav.layers+nav.layers)):null};throw e;}}
+  for(let t=0;t<=1;t+=.25)for(const side of [-width/2,0,width/2]){const x=a.x+(b.x-a.x)*t+right.x*side,z=a.z+(b.z-a.z)*t+right.z*side,y=a.y+(b.y-a.y)*t+.055;samples++;const support=nav?floorAt(nav,x,z,y,.6):y;if(support===null){const e=Error('A carved route is missing a supporting floor.');const id=Math.round((z-nav.minZ)/nav.step)*nav.nx+Math.round((x-nav.minX)/nav.step);e.details={point:{x,y,z},path:path.role,levels:Array.from(nav.heights.subarray(id*nav.layers,id*nav.layers+nav.layers)),count:nav.counts[id]};throw e;}if((nav&&!floorClear(nav,x,z,support,.05*actorScale,actorScale))||!bodyClear(g,surfaces,x,support,z,.05*actorScale,false,actorScale)){const e=Error('A source fragment obstructs a carved route. Try the next seed or reduce void density.');e.details={point:{x,y,z},path:path.role,floorBlocked:nav?!floorClear(nav,x,z,support,.05*actorScale,actorScale):false,bodyBlocked:!bodyClear(g,surfaces,x,support,z,.05*actorScale,false,actorScale),field:sampleField(g,x,y+1.65,z),support,levels:nav?Array.from(nav.heights.subarray((Math.round((z-nav.minZ)/nav.step)*nav.nx+Math.round((x-nav.minX)/nav.step))*nav.layers,(Math.round((z-nav.minZ)/nav.step)*nav.nx+Math.round((x-nav.minX)/nav.step))*nav.layers+nav.layers)):null};throw e;}}
  }
- for(const n of nodes)if(!bodyClear(g,surfaces,n.view.x,n.view.y,n.view.z))throw Error('A retained fragment blocks a split-level chamber.');
- return {samples,maxGrade,headroom:2.35,routeWidth:width,actualTriangleVoxels:true};
+ for(const n of nodes)if(!bodyClear(g,surfaces,n.view.x,n.view.y,n.view.z,.23*actorScale,false,actorScale))throw Error('A retained fragment blocks a split-level chamber.');
+ return {samples,maxGrade,headroom:2.35*actorScale,routeWidth:width,actualTriangleVoxels:true};
 }
 
 export function renderedFloor(nav,id,k,x,z){
@@ -62,10 +62,10 @@ export function renderedFloor(nav,id,k,x,z){
  const ix=id%nav.nx,iz=Math.floor(id/nav.nx),u=clamp((x-nav.minX-ix*nav.step)/nav.step+.5,0,1),v=clamp((z-nav.minZ-iz*nav.step)/nav.step+.5,0,1),off=(id*nav.layers+k)*4,h=nav.corners;
  return u>=v?h[off]*(1-u)+h[off+1]*(u-v)+h[off+2]*v:h[off]*(1-v)+h[off+2]*u+h[off+3]*(v-u);
 }
-export function floorClear(nav,x,z,floor,radius=.23){
+export function floorClear(nav,x,z,floor,radius=.23,actorScale=1){
  for(const [dx,dz] of [[0,0],[radius,0],[-radius,0],[0,radius],[0,-radius]]){
   const px=x+dx,pz=z+dz,ix=Math.round((px-nav.minX)/nav.step),iz=Math.round((pz-nav.minZ)/nav.step);if(ix<0||iz<0||ix>=nav.nx||iz>=nav.nz)continue;
-  const id=iz*nav.nx+ix;for(let k=0;k<nav.counts[id];k++){const h=renderedFloor(nav,id,k,px,pz);if(h>floor+.4&&h<floor+2.79)return false;}
+  const id=iz*nav.nx+ix;for(let k=0;k<nav.counts[id];k++){const h=renderedFloor(nav,id,k,px,pz);if(h>floor+.4*actorScale&&h<floor+2.55*actorScale+.24)return false;}
  }return true;
 }
 
@@ -94,11 +94,11 @@ export function terrainVoid(nav){
  return (x,y,z)=>{const ix=Math.round((x-nav.minX)/nav.step),iz=Math.round((z-nav.minZ)/nav.step);if(ix<0||iz<0||ix>=nav.nx||iz>=nav.nz)return 1e5;const id=iz*nav.nx+ix;if(!Number.isFinite(low[id]))return 1e5;return Math.max(low[id]-.32-y,y-high[id]-4.05);};
 }
 
-export function buildWideRoutes(nav,nodes,entrance,exit,g,surfaces,width,connections){
+export function buildWideRoutes(nav,nodes,entrance,exit,g,surfaces,width,connections,actorScale=1){
  const allowed=new Uint8Array(nav.heights.length),R=width/2;
  const position=i=>{const id=Math.floor(i/nav.layers),x=nav.minX+(id%nav.nx)*nav.step,z=nav.minZ+Math.floor(id/nav.nx)*nav.step;return {x,z,y:renderedFloor(nav,id,i%nav.layers,x,z)};};
  for(let id=0;id<nav.counts.length;id++)for(let k=0;k<nav.counts[id];k++){const i=id*nav.layers+k,p=position(i);let clear=true;
-  for(let a=0;a<8&&clear;a++){const theta=a/8*Math.PI*2,x=p.x+Math.cos(theta)*R,z=p.z+Math.sin(theta)*R,h=floorAt(nav,x,z,p.y,.72);if(h===null||!floorClear(nav,x,z,h,.04)||!bodyClear(g,surfaces,x,h,z,.04))clear=false;}
+  for(let a=0;a<8&&clear;a++){const theta=a/8*Math.PI*2,x=p.x+Math.cos(theta)*R,z=p.z+Math.sin(theta)*R,h=floorAt(nav,x,z,p.y,.72);if(h===null||!floorClear(nav,x,z,h,.04*actorScale,actorScale)||!bodyClear(g,surfaces,x,h,z,.04*actorScale,false,actorScale))clear=false;}
   if(clear)allowed[i]=1;
  }
  nav.widthValid=allowed;
@@ -113,7 +113,7 @@ export function buildWideRoutes(nav,nodes,entrance,exit,g,surfaces,width,connect
      if(d>=(cost.get(next)??Infinity))continue;cost.set(next,d);parent.set(next,i);heap.push({i:next,f:d+Math.hypot(target.x-p.x,target.z-p.z)/nav.step+Math.abs(target.y-p.y)*2});
     }
    }
-  }throw Error('The multilevel route cannot maintain its full width. Try the next seed.');
+  }throw Error('This layout still has a narrow multilevel connection after automatic repair. Move the nearby models slightly or reduce Fragments, then Make space.');
  }
  for(const n of nodes){const p=position(nearest(n.view));n.view=p;n.floor=p.y-.055;n.entry={...p};}
  Object.assign(entrance,position(nearest(entrance)));Object.assign(exit,position(nearest(exit)));

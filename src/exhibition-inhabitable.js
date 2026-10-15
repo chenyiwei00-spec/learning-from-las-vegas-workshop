@@ -2,9 +2,10 @@ import * as THREE from 'three';
 import {GLTFExporter} from 'three/examples/jsm/exporters/GLTFExporter.js';
 import {SETTINGS} from './inhabitable/form-state.js';
 import {createArchitecture} from './inhabitable/form-scene.js';
-import {floorAt,bodyClear,floorClear,renderedFloor} from './inhabitable/surreal-navigation.js';
+import {floorAt,bodyClear,floorClear} from './inhabitable/surreal-navigation.js';
 import {layoutSnapshot,layoutSignature,preparePlacedSources,locateInHall,checkSettings,layoutSeed} from './exhibition-inhabitable-input.js';
-import {FLOOR_HALF} from './exhibition-dimensions.js';
+import {roadSupport} from './inhabitable/road-surface.js';
+import {GENERATED_SPACE_SCALE as SPACE_SCALE,WALK_SIZE} from './exhibition-dimensions.js';
 export function createInhabitableSpace({scene,renderer,placement,getView,getCamera,setView,navigate,invalidate,onSpaceBounds,onSpaceLight}){
  const $=id=>document.getElementById(id),surface=$('walk-surface'),KEY='learning-vegas-inhabitable-space-v1';
  let result=null,active=false,busy=false,stale=false,error='',signature='',settings={...SETTINGS,layoutVersion:2},generatedSettings=null,worker=null,ticket=0,cancelPending=null,disposed=false,lastSafe=null,progress=0,sourceSelection=null,settingsRevision=0,wasFlying=false,lastWalkSafe=null,archiveBlob=null;
@@ -33,10 +34,10 @@ export function createInhabitableSpace({scene,renderer,placement,getView,getCame
   worker.onmessage=e=>{const v=e.data;if(v.ticket!==id)return;if(v.error){finish(reject,Error(v.error));return;}if(v.progress!==undefined){progress=5+v.progress*.93;say(v.message+' / '+Math.round(progress)+'%');ui();}if(v.plan)finish(resolve,v.plan);};
   worker.postMessage({ticket:id,...input});
  });}
- function contactFootprint(plan,offset){
+ function contactFootprint(plan,offset,scale){
   const g=new THREE.Group();g.name='Generated space / ground-contact cells';
   const v=plan.volumeGrid,geometry=new THREE.PlaneGeometry(2,2),material=new THREE.MeshBasicMaterial({color:0xf6dfa0,transparent:true,opacity:.72,depthTest:true,depthWrite:false,toneMapped:false,side:THREE.DoubleSide});
-  const sample=(x,z)=>{const ix=Math.round((x-offset.x-v.minX)/v.step),iy=Math.round((-offset.y-v.minY)/v.step),iz=Math.round((z-offset.z-v.minZ)/v.step);return ix>=0&&ix<v.nx&&iy>=0&&iy<v.ny&&iz>=0&&iz<v.nz?v.values[(iz*v.ny+iy)*v.nx+ix]:Infinity;};
+  const sample=(x,z)=>{const ix=Math.round(((x-offset.x)/scale-v.minX)/v.step),iy=Math.round((-offset.y/scale-v.minY)/v.step),iz=Math.round(((z-offset.z)/scale-v.minZ)/v.step);return ix>=0&&ix<v.nx&&iy>=0&&iy<v.ny&&iz>=0&&iz<v.nz?v.values[(iz*v.ny+iy)*v.nx+ix]:Infinity;};
   for(let row=0;row<20;row++)for(let col=0;col<20;col++){
    const x=-19+col*2,z=-19+row*2;
    if([[0,0],[-.8,-.8],[.8,-.8],[-.8,.8],[.8,.8]].some(([dx,dz])=>sample(x+dx,z+dz)<0)){
@@ -47,10 +48,11 @@ export function createInhabitableSpace({scene,renderer,placement,getView,getCame
  }
  function candidate(plan,input){
   const visiblePlan={...plan,meshes:plan.meshes.filter(m=>m.name!=='Surrounding ground')},group=createArchitecture(visiblePlan);group.name='Inhabitable architecture / placed sculpture aggregation';
-  try{const {offset,bounds}=locateInHall(group,input.centre,FLOOR_HALF);const meshes=[];group.traverse(o=>{if(o.isMesh)meshes.push(o);});
-   group.userData={engine:'inhabitable-v1',snapshot:true,settings:plan.settings,sources:input.attribution,validation:plan.validation};
-   const footprints=contactFootprint(plan,offset);
-   return {group,meshes,plan,offset,bounds,footprints,attribution:input.attribution,layout:Object.entries(input.attribution).map(([id,a])=>({id,modelId:a.modelId,name:a.name,...a.layout})),triangles:plan.meshes.reduce((n,m)=>n+(m.index?.length||m.positions.length/3)/3,0)};
+  group.scale.setScalar(SPACE_SCALE);
+  try{const {offset,bounds}=locateInHall(group,input.centre,WALK_SIZE/2);const meshes=[];group.traverse(o=>{if(o.isMesh)meshes.push(o);});
+   group.userData={engine:'inhabitable-v1',snapshot:true,settings:plan.settings,sources:input.attribution,validation:plan.validation,spaceScale:SPACE_SCALE};
+   const footprints=contactFootprint(plan,offset,SPACE_SCALE);
+   return {scale:SPACE_SCALE,support:roadSupport(plan.meshes.find(m=>m.road)),group,meshes,plan,offset,bounds,footprints,attribution:input.attribution,layout:Object.entries(input.attribution).map(([id,a])=>({id,modelId:a.modelId,name:a.name,...a.layout})),triangles:plan.meshes.reduce((n,m)=>n+(m.index?.length||m.positions.length/3)/3,0)};
   }catch(e){disposeResult({group});throw e;}
  }
  async function generate({restore=false,override=null}={}){
@@ -68,20 +70,18 @@ export function createInhabitableSpace({scene,renderer,placement,getView,getCame
    return true;
   }catch(e){disposeResult(next);error=e.message;say(error);return false;}finally{busy=false;ui();}
  }
- function localPoint(position){return {x:position.x-result.offset.x,z:position.z-result.offset.z};}
- function clearAt(x,z,h,radius){return bodyClear(result.plan.volumeGrid,result.plan.volumeGrid.surfaces,x,h,z,radius,true)&&floorClear(result.plan.nav,x,z,h,radius);}
+ function localPoint(position){return {x:(position.x-result.offset.x)/result.scale,z:(position.z-result.offset.z)/result.scale};}
+ function clearAt(x,z,h,radius){const a=1/result.scale;return bodyClear(result.plan.volumeGrid,result.plan.volumeGrid.surfaces,x,h,z,radius*a,true,a)&&floorClear(result.plan.nav,x,z,h,radius*a,a);}
  // The same rendered terrain triangles support walking, landings and collision.
  function supportAt(x,z,reference,radius,maxDrop=.22){
-  const nav=result.plan.nav,ix=Math.round((x-nav.minX)/nav.step),iz=Math.round((z-nav.minZ)/nav.step);
-  const candidates=[];
-  if(ix>=0&&iz>=0&&ix<nav.nx&&iz<nav.nz){const id=iz*nav.nx+ix;for(let k=0;k<nav.counts[id];k++)candidates.push(renderedFloor(nav,id,k,x,z));}
-  candidates.push(-result.offset.y); // Real existing hall floor, where unobstructed.
-  return candidates.sort((a,b)=>b-a).find(h=>h<=reference+.22&&h>=reference-maxDrop&&clearAt(x,z,h,radius))??null;
+  const candidates=result.support(x,z),s=result.scale;
+  candidates.push(-result.offset.y/s);
+  return candidates.sort((a,b)=>b-a).find(h=>h<=reference+.22/s&&h>=reference-maxDrop/s&&clearAt(x,z,h,radius))??null;
  }
  function enter(){
   if(!result||busy)return;visibility(true);const path=result.plan.paths.find(p=>p.role==='carved entrance'),p=path?.points[0]||result.plan.entrance;
   const q=path?.points.find(v=>Math.hypot(v.x-p.x,v.z-p.z)>.6)||result.plan.gathering,h=floorAt(result.plan.nav,p.x,p.z,p.y,1)??p.y??0;
-  lastSafe={x:p.x+result.offset.x,z:p.z+result.offset.z,foot:h+result.offset.y};wasFlying=false;lastWalkSafe={...lastSafe};
+  lastSafe={x:p.x*result.scale+result.offset.x,z:p.z*result.scale+result.offset.z,foot:h*result.scale+result.offset.y};wasFlying=false;lastWalkSafe={...lastSafe};
   $('exhibition-space-options').open=false;
   setView('room');navigate({x:lastSafe.x,z:lastSafe.z,y:lastSafe.foot+1.65,yaw:Math.atan2(p.x-q.x,p.z-q.z),pitch:0});
   say('INSIDE SPACE / WASD WALK / Q UP / E DOWN / SPACE TO LAND');invalidate();
@@ -91,9 +91,9 @@ export function createInhabitableSpace({scene,renderer,placement,getView,getCame
   const wanted={x:position.x,z:position.z,foot:Math.max(0,position.y-eyeHeight)};
   let start=lastSafe||{...wanted};
   if(!fly&&wasFlying){
-   const p=localPoint(start),h=supportAt(p.x,p.z,start.foot-result.offset.y,radius,Infinity);
+   const p=localPoint(start),h=supportAt(p.x,p.z,(start.foot-result.offset.y)/result.scale,radius,Infinity);
    // Returning to walking lands on the highest clear supporting floor below.
-   if(h!==null)start={...start,foot:h+result.offset.y};else if(lastWalkSafe)start={...lastWalkSafe};
+   if(h!==null)start={...start,foot:h*result.scale+result.offset.y};else if(lastWalkSafe)start={...lastWalkSafe};
   }
   wasFlying=fly;
   const distance=Math.hypot(wanted.x-start.x,wanted.z-start.z,fly?wanted.foot-start.foot:0),steps=Math.max(1,Math.ceil(distance/.10));
@@ -102,20 +102,20 @@ export function createInhabitableSpace({scene,renderer,placement,getView,getCame
    const x=start.x+(wanted.x-start.x)*i/steps,z=start.z+(wanted.z-start.z)*i/steps,p=localPoint({x,z});
    let h;
    if(fly){
-    h=start.foot+(wanted.foot-start.foot)*i/steps-result.offset.y;
-    const floor=supportAt(p.x,p.z,safe.foot-result.offset.y,radius,.25);
-    if(floor!==null&&h<floor&&safe.foot>=floor+result.offset.y-.02)h=floor;
+    h=(start.foot+(wanted.foot-start.foot)*i/steps-result.offset.y)/result.scale;
+    const floor=supportAt(p.x,p.z,(safe.foot-result.offset.y)/result.scale,radius,.25);
+    if(floor!==null&&h<floor&&safe.foot>=floor*result.scale+result.offset.y-.02)h=floor;
     if(!clearAt(p.x,p.z,h,radius))break;
    }else{
-    h=supportAt(p.x,p.z,safe.foot-result.offset.y,radius);
+    h=supportAt(p.x,p.z,(safe.foot-result.offset.y)/result.scale,radius);
     if(h===null){
      // Slide along walls rather than freezing when walking diagonally into one.
      const alternatives=[{x,z:safe.z},{x:safe.x,z}].sort((a,b)=>Math.hypot(wanted.x-a.x,wanted.z-a.z)-Math.hypot(wanted.x-b.x,wanted.z-b.z));
-     for(const v of alternatives){const local=localPoint(v),floor=supportAt(local.x,local.z,safe.foot-result.offset.y,radius);if(floor!==null){safe={...v,foot:floor+result.offset.y};break;}}
+     for(const v of alternatives){const local=localPoint(v),floor=supportAt(local.x,local.z,(safe.foot-result.offset.y)/result.scale,radius);if(floor!==null){safe={...v,foot:floor*result.scale+result.offset.y};break;}}
      continue;
     }
    }
-   safe={x,z,foot:h+result.offset.y};
+   safe={x,z,foot:h*result.scale+result.offset.y};
   }
   lastSafe=safe;if(!fly)lastWalkSafe={...safe};position.set(safe.x,safe.foot+eyeHeight,safe.z);surface.dataset.spaceFootHeight=String(safe.foot);return position;
  }
@@ -127,9 +127,9 @@ export function createInhabitableSpace({scene,renderer,placement,getView,getCame
    const b=result.bounds,size=b.getSize(new THREE.Vector3()),centre=b.getCenter(new THREE.Vector3()),radius=size.length(),cam=new THREE.PerspectiveCamera(35,1,.01,radius*10+100);
    cam.position.copy(centre).add(new THREE.Vector3(radius*.95,radius*.7,radius*.95));cam.lookAt(centre);
    const captureScene=new THREE.Scene();captureScene.background=new THREE.Color(0xf2f2f2);captureScene.environment=scene.environment;
-   captureScene.add(new THREE.HemisphereLight(0xffffff,0x929da8,2));const light=new THREE.DirectionalLight(0xffffff,2);light.position.set(30,40,25);captureScene.add(light);captureScene.add(result.group.clone(true));
+   captureScene.add(new THREE.HemisphereLight(0xffffff,0x929da8,2));const light=new THREE.DirectionalLight(0xffffff,2);light.position.set(30,40,25);captureScene.add(light);const copy=result.group.clone(true),captureMaterials=[];copy.traverse(o=>{if(o.isMesh){o.material=o.material.clone();o.material.clippingPlanes=[];captureMaterials.push(o.material);}});captureScene.add(copy);
    const target=new THREE.WebGLRenderTarget(640,640);target.texture.colorSpace=THREE.SRGBColorSpace;const old=renderer.getRenderTarget(),pixels=new Uint8Array(640*640*4);
-   try{renderer.setRenderTarget(target);renderer.render(captureScene,cam);renderer.readRenderTargetPixels(target,0,0,640,640,pixels);}finally{renderer.setRenderTarget(old);target.dispose();}
+   try{renderer.setRenderTarget(target);renderer.render(captureScene,cam);renderer.readRenderTargetPixels(target,0,0,640,640,pixels);}finally{renderer.setRenderTarget(old);target.dispose();captureMaterials.forEach(m=>m.dispose());}
    const canvas=document.createElement('canvas');canvas.width=canvas.height=640;const ctx=canvas.getContext('2d'),data=ctx.createImageData(640,640);
    for(let y=0;y<640;y++)data.data.set(pixels.subarray((639-y)*640*4,(640-y)*640*4),y*640*4);ctx.putImageData(data,0,0);
    const preview=await new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(Error('Space preview unavailable')),'image/png'));
@@ -160,8 +160,8 @@ export function createInhabitableSpace({scene,renderer,placement,getView,getCame
  const ready=placement.ready.then(async()=>{ui();try{const saved=JSON.parse(localStorage.getItem(KEY)||'null');if(saved?.version===1){settings=checkSettings({...saved.settings,layoutVersion:2,moduleCount:saved.settings?.layoutVersion===2?saved.settings.moduleCount:Math.max(9,saved.settings?.moduleCount||9)});generatedSettings=saved.generatedSettings;if(saved.active&&saved.signature===layoutSignature(placement))await generate({restore:true,override:generatedSettings||settings});ui();}}catch(e){say('Previous space could not reopen: '+e.message);}});
  return Object.freeze({ready,generate,captureArchive,enter,showOriginal:()=>visibility(false),showSpace:()=>visibility(true),constrain,collisionMeshes:()=>active&&result?result.meshes:[],exportGLB,
   setViewMode:mode=>{if(result)result.footprints.visible=active&&mode==='axonometric';},
-  audioAnchors:()=>active&&result?result.plan.nodes.map(n=>({id:n.sourceId,x:n.center.x+result.offset.x,z:n.center.z+result.offset.z,y:n.view.y+result.offset.y+1.65,width:n.radius*2})):[],
-  state:()=>({engine:'inhabitable-v1',layoutDriven:true,groundContactCells:result?.footprints.children.length||0,anchors:result?result.plan.nodes.map(n=>({id:n.sourceId,x:n.center.x+result.offset.x,z:n.center.z+result.offset.z})):[],active,busy,stale,error,signature,settings:{...settings},generatedSettings,progress,connected:!!result?.plan.validation.routesClear,minimumClearance:result?.plan.validation.headroom||0,triangles:result?.triangles||0,validation:result?.plan.validation||null,bounds:result?{min:result.bounds.min.toArray(),max:result.bounds.max.toArray()}:null,offset:result?.offset||null,sourceSelection}),
+  audioAnchors:()=>active&&result?result.plan.nodes.map(n=>({id:n.sourceId,x:n.center.x*result.scale+result.offset.x,z:n.center.z*result.scale+result.offset.z,y:n.view.y*result.scale+result.offset.y+1.65,width:n.radius*2*result.scale})):[],
+  state:()=>({engine:'inhabitable-v1',layoutDriven:true,scale:result?.scale||SPACE_SCALE,groundContactCells:result?.footprints.children.length||0,anchors:result?result.plan.nodes.map(n=>({id:n.sourceId,x:n.center.x*result.scale+result.offset.x,z:n.center.z*result.scale+result.offset.z})):[],active,busy,stale,error,signature,settings:{...settings},generatedSettings,progress,connected:!!result?.plan.validation.routesClear,minimumClearance:(result?.plan.validation.headroom||0)*(result?.scale||1),triangles:result?.triangles||0,validation:result?.plan.validation||null,bounds:result?{min:result.bounds.min.toArray(),max:result.bounds.max.toArray()}:null,offset:result?.offset||null,sourceSelection}),
   dispose:()=>{disposed=true;clearTimeout(feedbackTimer);cancelPending?.();worker?.terminate();handlers.forEach(([id,fn])=>$(id).removeEventListener('click',fn));$('exhibition-space-recipe').removeEventListener('change',loadRecipe);for(const el of document.querySelectorAll('[data-space-setting]')){el.removeEventListener('input',settingChange);el.removeEventListener('change',settingChange);}window.removeEventListener('exhibition-placement-change',placementChange);window.removeEventListener('exhibition-draft-queue-change',ui);window.removeEventListener('exhibition-agent-change',ui);renderer.domElement.removeEventListener('pointerdown',down);renderer.domElement.removeEventListener('pointerup',up);onSpaceLight?.(null,false);disposeResult(result);result=null;}
  });
 }
