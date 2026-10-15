@@ -8,6 +8,46 @@ function notify(){for(const fn of listeners)fn();channel?.postMessage('changed')
 channel?.addEventListener('message',()=>{for(const fn of listeners)fn();});
 function database(){if(!dbPromise)dbPromise=new Promise((resolve,reject)=>{const r=indexedDB.open(DB,1);r.onupgradeneeded=()=>r.result.createObjectStore(STORE,{keyPath:'id'});r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(Error('Saved-model storage is unavailable in this browser.'));r.onblocked=()=>reject(Error('Close other model pages and try saving again.'));});return dbPromise;}
 async function transaction(mode,action){const db=await database();return new Promise((resolve,reject)=>{const tx=db.transaction(STORE,mode),r=action(tx.objectStore(STORE));let value;r.onsuccess=()=>value=r.result;tx.oncomplete=()=>resolve(value);tx.onabort=tx.onerror=()=>reject(tx.error||Error('Model storage failed.'));});}
+/* Refresh corrected imports in place so names, groups and model references remain stable. */
+async function applyImportPresentations(items){
+ const rows=await transaction('readonly',s=>s.getAll()),patches=[];
+ for(const item of items){
+  const p=item.presentation,base='assets/imported-sculptures/'+item.sha256+'/',row=rows.find(r=>r.importSha256===item.sha256||r.record?.id===item.sha256);
+  if(!p||!row||row.importPresentationRevision===p.revision&&row.record?.presentationSha256===p.sha256)continue;
+  if(!Number.isInteger(p.revision)||p.revision<1||p.modelUrl!==base+'upright-v1.glb'||p.previewUrl!==base+'upright-v1.png'||!/^[a-f0-9]{64}$/.test(p.sha256)||!Number.isFinite(p.translationY))throw Error('Invalid corrected-model presentation.');
+  const [mesh,image]=await Promise.all([fetch(p.modelUrl),fetch(p.previewUrl)]);
+  if(!mesh.ok||!image.ok)throw Error('A corrected model or preview is missing.');
+  const glb=await mesh.blob(),hash=[...new Uint8Array(await crypto.subtle.digest('SHA-256',await glb.arrayBuffer()))].map(v=>v.toString(16).padStart(2,'0')).join('');
+  if(hash!==p.sha256)throw Error('A corrected model failed its integrity check.');
+  let obj=null;
+  if(p.objUrl){
+   if(p.objUrl!==base+'upright-v1.obj')throw Error('Invalid corrected OBJ path.');
+   const response=await fetch(p.objUrl);if(!response.ok)throw Error('The corrected OBJ is missing.');obj=await response.blob();
+   const hash=[...new Uint8Array(await crypto.subtle.digest('SHA-256',await obj.arrayBuffer()))].map(v=>v.toString(16).padStart(2,'0')).join('');
+   if(hash!==p.objSha256)throw Error('The corrected OBJ failed its integrity check.');
+  }
+  patches.push({id:row.id,p,glb,obj,preview:await image.blob()});
+ }
+ if(!patches.length)return 0;
+ const db=await database();let corrected=0;
+ await new Promise((resolve,reject)=>{
+  const tx=db.transaction(STORE,'readwrite'),store=tx.objectStore(STORE);
+  for(const patch of patches){const request=store.get(patch.id);request.onsuccess=()=>{
+   const row=request.result,p=patch.p;if(!row||row.importPresentationRevision===p.revision&&row.record?.presentationSha256===p.sha256)return;
+   const previousShift=row.importPresentationTranslationY||0;
+   row.glb=patch.glb;if(patch.obj)row.obj=patch.obj;
+   if(p.resetCamera)row.camera=null;
+   else if(row.camera?.target&&Number.isFinite(row.camera.target.y))row.camera.target.y+=p.translationY-previousShift;
+   row.preview=patch.preview;row.previewType='model';row.previewVersion=row.camera?null:window.ModelPreviewFinish?.version||'';
+   row.importPresentationRevision=p.revision;row.importPresentationTranslationY=p.translationY;
+   row.record={...row.record,presentationRevision:p.revision,presentationSha256:p.sha256};row.updatedAt=Date.now();delete row.colourVersion;
+   store.put(row);corrected++;
+  };}
+  tx.oncomplete=resolve;tx.onabort=tx.onerror=()=>reject(tx.error||Error('Could not update corrected models.'));
+ });
+ return corrected;
+}
+
 /* The optional asset bundle is local data, separate from shared website source. */
 let localImportTask;
 async function importLocalModels(){
@@ -41,7 +81,7 @@ async function importLocalModels(){
     glb,obj,preview,previewType:'model',previewVersion:window.ModelPreviewFinish?.version||'',camera:null,composition:null});
    known.add(hash);
   }
-  if(!prepared.length)return {added:0};
+  if(!prepared.length)return {added:0,corrected:await applyImportPresentations(bundle.items)};
   const db=await database();let added=0;
   await new Promise((resolve,reject)=>{
    const tx=db.transaction(STORE,'readwrite'),store=tx.objectStore(STORE),r=store.getAll();
@@ -49,7 +89,7 @@ async function importLocalModels(){
     for(const row of prepared)if(!current.has(row.record.id)){row.number=++number;store.add(row);current.add(row.record.id);added++;}};
    tx.oncomplete=resolve;tx.onabort=tx.onerror=()=>reject(tx.error||Error('Could not store imported models.'));
   });
-  return {added};
+  return {added,corrected:await applyImportPresentations(bundle.items)};
  })().catch(error=>{console.warn('Local model import:',error.message);return {added:0,error:error.message};});
  return localImportTask;
 }
