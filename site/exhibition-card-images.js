@@ -7,12 +7,12 @@ async function modelPreview(row,mode){
  if(row.record?.target==='space'&&window.ExhibitionWalk?.previewSpaceCard)return ExhibitionWalk.previewSpaceCard(row);
  await customElements.whenDefined('model-viewer');
  const viewer=document.createElement('model-viewer'),url=URL.createObjectURL(row.record?.target==='space'?row.glb:await ModelColour.enhance(row.glb));
- viewer.setAttribute('aria-hidden','true');viewer.tabIndex=-1;viewer.setAttribute('loading','eager');viewer.setAttribute('interaction-prompt','none');viewer.setAttribute('exposure','1');viewer.setAttribute('shadow-intensity','.25');
+ viewer.setAttribute('aria-hidden','true');viewer.tabIndex=-1;viewer.setAttribute('loading','eager');viewer.setAttribute('interaction-prompt','none');viewer.setAttribute('exposure','1');viewer.setAttribute('shadow-intensity','.6');window.ModelPreviewFinish?.configure(viewer);
  viewer.style.cssText='position:fixed;left:0;top:0;width:800px;height:600px;opacity:0;z-index:-1;pointer-events:none;background:rgb(242,242,242)';
  (document.fullscreenElement||document.body).append(viewer);
  try{
   await new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(Error('Card model preview timed out.')),15000);viewer.addEventListener('load',()=>{clearTimeout(timer);resolve();},{once:true});viewer.addEventListener('error',()=>{clearTimeout(timer);reject(Error('Card model could not load.'));},{once:true});viewer.src=url;});
-  await viewer.updateComplete;
+  window.ModelPreviewFinish?.apply(viewer,{target:row.record?.target});await viewer.updateComplete;
   const d=viewer.getDimensions(),saved=mode==='saved'&&row.camera?.orbit;
   const fov=saved&&Number.isFinite(row.camera?.fieldOfView)?row.camera.fieldOfView:30;
   const fitted=Math.hypot(d.x,d.y,d.z)*.5/Math.sin(fov*Math.PI/360)*1.12;
@@ -29,7 +29,7 @@ async function modelPreview(row,mode){
   return viewer.toBlob({mimeType:'image/png',idealAspect:false});
  }finally{viewer.removeAttribute('src');viewer.remove();URL.revokeObjectURL(url);}
 }
-function preview(row,{mode='saved'}={}){const key=(row.record?.target==='space'?'axon-space-v1:':'')+mode+':'+row.id+':'+(row.updatedAt||row.savedAt)+':'+JSON.stringify(row.camera||{})+':'+row.preview.size;if(cache.has(key))return cache.get(key);const job=queue.catch(()=>{}).then(()=>modelPreview(row,mode).catch(()=>row.preview));queue=job;cache.set(key,job);if(cache.size>100)cache.delete(cache.keys().next().value);return job;}
+function preview(row,{mode='saved'}={}){const key=(window.ModelPreviewFinish?.version||'')+':'+(row.record?.target==='space'?'axon-space-v1:':'')+mode+':'+row.id+':'+(row.updatedAt||row.savedAt)+':'+JSON.stringify(row.camera||{})+':'+row.preview.size;if(cache.has(key))return cache.get(key);const job=queue.catch(()=>{}).then(()=>modelPreview(row,mode).catch(()=>row.preview));queue=job;cache.set(key,job);if(cache.size>100)cache.delete(cache.keys().next().value);return job;}
 function cleanup(){for(const [im,url]of urls)if(!im.isConnected){URL.revokeObjectURL(url);urls.delete(im);}}
 function attach(grid,rows,options={}){
  cleanup();observers.get(grid)?.disconnect();const byId=new Map(rows.map(r=>[r.id,r]));
