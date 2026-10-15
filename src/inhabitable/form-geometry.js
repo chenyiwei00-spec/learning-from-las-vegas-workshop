@@ -4,6 +4,11 @@ export function analyseSource(source){
  const {positions:p,colors:c,index}=source;if(!p?.length||p.length%3||!index?.length||index.length%3)throw Error('The source has no usable triangle mesh.');let h=0,maxR=0,lowR=0,midR=0,lo=[Infinity,Infinity,Infinity],hi=[-Infinity,-Infinity,-Infinity];const B=36,A=64,radii=Array.from({length:B},()=>new Float64Array(A)),col=Array.from({length:B},()=>new Float64Array(A*3)),counts=new Uint32Array(B);let covXX=0,covZZ=0,covXZ=0;
  for(let i=0;i<p.length;i+=3){for(let k=0;k<3;k++){if(!Number.isFinite(p[i+k]))throw Error('The source contains damaged vertex coordinates.');lo[k]=Math.min(lo[k],p[i+k]);hi[k]=Math.max(hi[k],p[i+k]);}h=Math.max(h,p[i+1]);maxR=Math.max(maxR,Math.hypot(p[i],p[i+2]));covXX+=p[i]**2;covZZ+=p[i+2]**2;covXZ+=p[i]*p[i+2];}if(h<.1||maxR<.05)throw Error('The source is too thin to form an occupiable envelope.');
  for(let i=0;i<p.length;i+=3){const x=p[i],y=p[i+1],z=p[i+2],r=Math.hypot(x,z),b=clamp(Math.floor(y/h*(B-1)),0,B-1),a=Math.floor(((Math.atan2(z,x)+TAU)%TAU)/TAU*A)%A;counts[b]++;if(r>radii[b][a]){radii[b][a]=r;col[b][a*3]=c[i];col[b][a*3+1]=c[i+1];col[b][a*3+2]=c[i+2];}if(y<h*.3)lowR=Math.max(lowR,r);if(y>h*.35&&y<h*.8)midR=Math.max(midR,r);}
+ // Empty height bands inherit a measured neighbour, not an unrelated grey stripe.
+ for(let b=0;b<B;b++)if(!counts[b]){
+  let near=-1;for(let d=1;d<B&&near<0;d++)for(const j of [b-d,b+d])if(j>=0&&j<B&&counts[j]){near=j;break;}
+  if(near>=0){radii[b].set(radii[near]);col[b].set(col[near]);}
+ }
  for(let b=0;b<B;b++)for(let a=0;a<A;a++)if(!radii[b][a]){let found=false;for(let d=1;d<A/2&&!found;d++)for(const dir of [-1,1]){const j=(a+d*dir+A)%A;if(radii[b][j]){radii[b][a]=radii[b][j];col[b].set(col[b].slice(j*3,j*3+3),a*3);found=true;break;}}if(!found){radii[b][a]=maxR*.3;col[b].set([.65,.65,.62],a*3);}}
  const profile=radii.map((r,b)=>Float32Array.from(r,(v,a)=>v*.65+(r[(a+A-1)%A]+r[(a+1)%A]+radii[Math.max(0,b-1)][a]+radii[Math.min(B-1,b+1)][a])*.0875));
  for(const i of index)if(i*3>=p.length)throw Error('The source contains broken triangle indices.');const w=hi[0]-lo[0],d=hi[2]-lo[2],slender=h/Math.max(w,d),projection=Math.max(0,(midR-lowR)/Math.max(w,d)),kind=slender>1.46?'passage':projection>.12?'canopy':'chamber';const peakBand=profile.reduce((best,row,b)=>Math.max(...row)>Math.max(...profile[best])?b:best,0);
