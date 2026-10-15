@@ -34,7 +34,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
     position.x = clamp(position.x,-LIMIT,LIMIT);
     position.z = clamp(position.z,-LIMIT,LIMIT);
     position.y = fly ? clamp(position.y,RADIUS,Math.min(ROOM.height,factoryRoom?.ceilingAt(position.x)||ROOM.height)-RADIUS) : EYE_HEIGHT;
-    space?.constrain(position,RADIUS);
+    space?.constrain(position,RADIUS,{fly,eyeHeight:EYE_HEIGHT});
     position.x=clamp(position.x,-LIMIT,LIMIT);position.z=clamp(position.z,-LIMIT,LIMIT);
     return position;
   }
@@ -271,7 +271,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
 
   const canvas = renderer.domElement;
   const placement=createExhibitionPlacement({scene,canvas,getCamera:()=>camera,getRoomMeshes:()=>roomMeshes,isRoom:()=>viewMode==='room',orient,invalidate:invalidateScene,previewInvalidate:requestFrame,suspend:suspendNavigation,getMaxHeight:()=>23});
-  space=createExhibitionSpace({scene,renderer,placement,onSpaceLight:(result,active)=>skylight.updateCanopy(result,active),onSpaceBounds:frameSpace,getView:()=>viewMode,setView:setViewMode,navigate:value=>{clearInput();teleport=null;fly=false;eye.set(value.x,value.y,value.z);yaw=value.yaw;pitch=value.pitch||0;constrain(eye);ui();requestFrame();focusView();},invalidate:invalidateScene});
+  space=createExhibitionSpace({scene,renderer,placement,getCamera:()=>camera,onSpaceLight:(result,active)=>skylight.updateCanopy(result,active),onSpaceBounds:frameSpace,getView:()=>viewMode,setView:setViewMode,navigate:value=>{clearInput();teleport=null;fly=false;eye.set(value.x,value.y,value.z);yaw=value.yaw;pitch=value.pitch||0;constrain(eye);ui();requestFrame();focusView();},invalidate:invalidateScene});
   // Enter at the parent capture phase; the entry click must not also edit an exhibit.
   surface.addEventListener('pointerdown',event=>{
     if(event.target===canvas&&!immersive&&event.button===0){

@@ -1,0 +1,22 @@
+# Inhabitable engine in the latest MAKE SPACE UI
+
+Based on main d593629. The feature now runs inside Exhibition Walk, from the existing **MAKE SPACE +** row below PLACE. There is no third workspace navigation link and no separate spatial page. The latest grey preview palette, square cards, agents, batch collage generation, placement collection and shared model viewer are retained.
+
+## Use
+Place one to twelve actual models using the existing model library and PLACE workflow, then click MAKE SPACE. It snapshots the real placed Object3D geometry, scale and layout, processes it in a dedicated worker and replaces the view with an interlocking, carved architectural organism in the same scene. Source models and their layout are retained. Generate/update preserves the axis camera, target and zoom. Open the existing disclosure beside MAKE SPACE for Enter space, Original models / Show space, GLB export, settings and recipe save/load. A second click with unchanged inputs uses the next deterministic seed. Source clicks display the original model and transformation.
+
+Parameters and placement changes are staged; the successful geometry remains available until replacement succeeds. A layout change during computation rejects that stale output. Failures keep the previous result. Returning to the original layout clears its stale flag. Source bytes, geometry, materials and original transforms are not modified.
+
+The existing WASD controller follows the generated supported floors through the adapter. Enter space starts at the carved entrance; Eye level / Axonometric switching, fullscreen, room lighting and the existing original-model editing gestures remain in the main controller. Small substeps stop fast movement crossing a wall. Fly retains collision checking. The modest existing hall floor supports exterior movement; the old prototype surrounding ground is omitted.
+
+## Implementation
+The default factory in src/exhibition-space.js selects src/exhibition-inhabitable.js; the documented external provider API still takes priority. The old canopy files are retained as source fallback but do not register controls. src/exhibition-inhabitable-input.js reads the actual placed models; src/inhabitable contains the measured contour fusion, original scan fragments, connected void carving and navigation modules ported from the independently tested prototype. scripts/build.mjs emits the current main exhibition bundles plus site/exhibition-space-worker.js.
+
+No AI inference or new server endpoint is involved. The generation settings use local key learning-vegas-inhabitable-space-v1. A saved recipe references the same placed model instances and can restore their layout and settings; it does not embed GLB bytes. The existing floor model store retains the original files on this browser. Exported GLB is a static snapshot, with source identifiers and validation metadata.
+
+The core is a true closed connected reconstructed volume. Its source contour approximation and separately preserved scan details are distinguished; this is not an exact Boolean union of every original scan triangle. Original materials remain on the source exhibits; generated surfaces bake sampled base/texture colours into vertices. Very dense, damaged or animated assets can be rejected with an explicit error. Up to twelve sources are supported. Internal deterministic retries preserve clearance; some inputs/seeds may fail and leave the previous result. The dense composition is centred near the original layout and translated as a whole to fit the 40 m hall; yellow original footprints remain as a comparison reference. This does not preserve a one-to-one column at every original plot. Existing proximity audio continues to use the original exhibit positions.
+
+## Verification
+Run node qa/verify_inhabitable_adapter.mjs with the supplied validation GLBs present in the ignored site/assets/spatial-validation folder, then node scripts/build.mjs and python scripts/check_project.py. The adapter test uses real worker geometry, verifies a single-source space, multi-source fusion, actual floor-following walking, camera preservation, unchanged original buffers/transforms/materials, rejected stale in-flight outputs, retained successful geometry after failure, and GLB reimport. Outputs live in ignored runtime/make-space-integration. These are supplied real meshes explicitly used as validation assets, not claimed AI generation results.
+
+Local preview: http://127.0.0.1:8065/exhibition.html. No repository push or deployment is performed by this local integration.
