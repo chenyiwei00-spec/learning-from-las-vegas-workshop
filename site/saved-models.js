@@ -34,6 +34,7 @@ async function modelPreview(viewer,fallback){
    await new Promise(resolve=>setTimeout(resolve,attempt?160:80));
    await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
    const blob=await viewer.toBlob({mimeType:'image/png',idealAspect:false}),image=await createImageBitmap(blob);
+   if(document.body.classList.contains('exhibition-page')){const square=document.createElement('canvas');square.width=square.height=640;const g=square.getContext('2d');g.fillStyle='rgb(242,242,242)';g.fillRect(0,0,640,640);const k=Math.min(640/image.width,640/image.height);g.drawImage(image,(640-image.width*k)/2,(640-image.height*k)/2,image.width*k,image.height*k);image.close();return await new Promise((resolve,reject)=>square.toBlob(b=>b?resolve(b):reject(Error('Preview unavailable')),'image/png'));}
    const raw=document.createElement('canvas');raw.width=image.width;raw.height=image.height;const g=raw.getContext('2d');g.drawImage(image,0,0);
    const pixels=g.getImageData(0,0,raw.width,raw.height).data,bg=Array.from(pixels.slice(0,4));let x0=raw.width,y0=raw.height,x1=0,y1=0,count=0;
    const step=Math.max(2,Math.ceil(Math.sqrt(raw.width*raw.height/120000)));
@@ -55,7 +56,7 @@ function cameraView(viewer){
 async function overwrite(id,viewer,metadata={}){
  const old=await get(id);if(!old)throw Error('This saved model was removed.');
  const camera=cameraView(viewer),preview=await modelPreview(viewer,old.preview),db=await database();let result;
- await new Promise((resolve,reject)=>{const tx=db.transaction(STORE,'readwrite'),store=tx.objectStore(STORE),r=store.get(id);r.onsuccess=()=>{const entry=r.result;if(!entry){tx.abort();return;}if(metadata.title?.trim())entry.title=metadata.title.trim().slice(0,120);if(metadata.group!==undefined)entry.group=String(metadata.group).trim().slice(0,80);entry.camera=camera;entry.preview=preview;entry.updatedAt=Date.now();store.put(entry);result=entry;};tx.oncomplete=resolve;tx.onerror=tx.onabort=()=>reject(tx.error||Error('The saved model could not be updated.'));});
+ await new Promise((resolve,reject)=>{const tx=db.transaction(STORE,'readwrite'),store=tx.objectStore(STORE),r=store.get(id);r.onsuccess=()=>{const entry=r.result;if(!entry){tx.abort();return;}if(metadata.title?.trim())entry.title=metadata.title.trim().slice(0,120);if(metadata.group!==undefined)entry.group=String(metadata.group).trim().slice(0,80);if(metadata.linkedMedia)entry.record.linkedMedia=structuredClone(metadata.linkedMedia);entry.camera=camera;entry.preview=preview;entry.updatedAt=Date.now();store.put(entry);result=entry;};tx.oncomplete=resolve;tx.onerror=tx.onabort=()=>reject(tx.error||Error('The saved model could not be updated.'));});
  notify();return result;
 }
 async function save(record,viewer,metadata={}){
@@ -63,7 +64,7 @@ async function save(record,viewer,metadata={}){
  const root='assets/generated-sculptures/'+record.id+'/';
  if(record.modelUrl!==root+'sculpture.glb'||record.objUrl!==root+'sculpture.obj')throw Error('Invalid generated model paths.');
  const existing=(await list()).find(r=>r.record.id===record.id);
- if(existing)return {entry:await overwrite(existing.id,viewer,{title:metadata.title?.trim()||existing.title,group:metadata.group?.trim()||existing.group||''}),alreadySaved:true,updated:true};
+ if(existing)return {entry:await overwrite(existing.id,viewer,{title:metadata.title?.trim()||existing.title,group:metadata.group?.trim()||existing.group||'',...(record.linkedMedia?{linkedMedia:record.linkedMedia}:{})}),alreadySaved:true,updated:true};
  const camera=cameraView(viewer);let previewTask;
  try{previewTask=modelPreview(viewer,root+'source.png');}catch{previewTask=bytes(root+'source.png');}
  const [glb,obj,preview,composition]=await Promise.all([bytes(record.modelUrl),bytes(record.objUrl),previewTask,fetch(root+'composition.json').then(async r=>{if(!r.ok)throw Error('The original model composition is missing.');return r.json();})]);
@@ -78,7 +79,7 @@ async function save(record,viewer,metadata={}){
 async function importEntry(source,viewer,metadata={}){
  if(!(source?.glb instanceof Blob)||await source.glb.slice(0,4).text()!=='glTF'||!/^[a-f0-9]{64}$/.test(source.record?.id||''))throw Error('This exhibit does not contain a valid model.');
  const rows=await list(),old=rows.find(e=>e.record.id===source.record.id);
- if(old)return {entry:await overwrite(old.id,viewer,metadata),alreadySaved:true,updated:true};
+ if(old)return {entry:await overwrite(old.id,viewer,{...metadata,...(source.record.linkedMedia?{linkedMedia:source.record.linkedMedia}:{})}),alreadySaved:true,updated:true};
  let obj=source.obj||null;
  if(!obj&&!source.record.localOnly&&source.record.objUrl){try{obj=await bytes(source.record.objUrl);}catch{}}
  const glb=await ModelColour.enhance(source.glb);
@@ -89,6 +90,9 @@ async function importEntry(source,viewer,metadata={}){
  await transaction('readwrite',s=>s.put(entry));notify();return {entry,alreadySaved:false};
 }
 
+async function updateMedia(id,linkedMedia){
+ const db=await database();await new Promise((resolve,reject)=>{const tx=db.transaction(STORE,'readwrite'),store=tx.objectStore(STORE),r=store.get(id);r.onsuccess=()=>{const entry=r.result;if(!entry){tx.abort();return;}entry.record.linkedMedia=structuredClone(linkedMedia);store.put(entry);};tx.oncomplete=resolve;tx.onerror=tx.onabort=()=>reject(tx.error||Error('This saved model was removed.'));});notify();
+}
 async function update(id,metadata){
  const db=await database();
  await new Promise((resolve,reject)=>{const tx=db.transaction(STORE,'readwrite'),store=tx.objectStore(STORE),r=store.get(id);
@@ -102,6 +106,7 @@ async function removeGroup(group){
 }
 async function gallery(){
  const grid=document.getElementById('saved-model-grid');if(!grid)return;
+ const exhibition=document.body.classList.contains('exhibition-page');
  const history=document.getElementById('model-history');try{const preference=localStorage.getItem('learning-vegas-model-history-open');if(preference!==null)history.open=preference==='true';}catch{}history.addEventListener('toggle',()=>{try{localStorage.setItem('learning-vegas-model-history-open',String(history.open));}catch{}});
  const filter=document.getElementById('history-group-filter'),dialog=document.getElementById('saved-model-edit');let revision=0,urls=[],editingId=null;
  async function render(){const ticket=++revision;
@@ -114,8 +119,9 @@ async function gallery(){
    document.getElementById('saved-model-count').textContent=rows.length+' model'+(rows.length===1?'':'s');
    const empty=document.getElementById('history-empty');empty.hidden=shown.length>0;empty.textContent=rows.length?'No models in this group.':'Your saved models will appear here.';
    grid.innerHTML=shown.map(r=>{const url=URL.createObjectURL(r.preview);urls.push(url);const date=new Date(r.savedAt).toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
-    return '<article class="saved-model-card" data-saved="'+text(r.id)+'"><button class="saved-model-image" data-open aria-label="Preview '+text(r.title)+' in the 3D stage"><img src="'+url+'" alt="Saved model preview"><span>3D / '+(r.record.target==='city'?'CITY':'SCULPTURE')+'</span></button><div class="saved-model-meta"><h3>'+text(r.title)+'</h3><p class="saved-group">'+text(r.group||'Ungrouped')+'</p><p>'+text(date)+' · '+Number(r.record.triangles||0).toLocaleString('en-GB')+' triangles</p><div class="saved-model-actions"><button data-open>Preview ↑</button><button data-edit>Name / group</button><button data-export="glb">GLB ↗</button><button data-export="obj"'+(!r.obj?' disabled':'')+'>OBJ ↗</button><button class="delete-saved" data-delete aria-label="Delete '+text(r.title)+'">Delete</button></div></div></article>';
+    return '<article class="saved-model-card" data-saved="'+text(r.id)+'"><button class="saved-model-image" data-open aria-label="Preview '+text(r.title)+' in the 3D stage"><img src="'+url+'" alt="Saved model preview"><span>3D / '+(r.record.target==='city'?'CITY':'SCULPTURE')+'</span></button><div class="saved-model-meta"><h3>'+text(r.title)+'</h3><p class="saved-group">'+text(r.group||'Ungrouped')+'</p><p>'+text(date)+' · '+Number(r.record.triangles||0).toLocaleString('en-GB')+' triangles</p><div class="saved-model-actions">'+(exhibition?'':'<button data-open>Preview &rarr;</button>')+'<button data-edit>Name / group</button><button data-export="glb">GLB ↗</button><button data-export="obj"'+(!r.obj?' disabled':'')+'>OBJ ↗</button><button class="delete-saved" data-delete aria-label="Delete '+text(r.title)+'">Delete</button></div></div></article>';
    }).join('');
+   if(exhibition)window.ExhibitionCardImages?.attach(grid,shown);
   }catch(e){document.getElementById('history-status').textContent=e.message;}
  }
  filter?.addEventListener('change',render);
@@ -123,7 +129,7 @@ async function gallery(){
 
  grid.addEventListener('click',async e=>{const card=e.target.closest('[data-saved]');if(!card)return;
   try{
-   if(e.target.closest('[data-open]')){const item=await get(card.dataset.saved);if((item?.composition?.workspace==='exhibition-model-loop-v1'||item?.composition?.format==='borrowed-worlds-exhibition-collage'||(!item?.composition&&item?.record?.localOnly))&&!document.body.classList.contains('exhibition-page')){location.href='exhibition.html?saved='+encodeURIComponent(card.dataset.saved);return;}window.dispatchEvent(new CustomEvent('saved-sculpture-open',{detail:{id:card.dataset.saved}}));return;}
+   if(e.target.closest('[data-open]')||(exhibition&&!e.target.closest('button,input,select,a'))){const item=await get(card.dataset.saved);if((item?.composition?.workspace==='exhibition-model-loop-v1'||item?.composition?.format==='borrowed-worlds-exhibition-collage'||(!item?.composition&&item?.record?.localOnly))&&!document.body.classList.contains('exhibition-page')){location.href='exhibition.html?saved='+encodeURIComponent(card.dataset.saved);return;}window.dispatchEvent(new CustomEvent('saved-sculpture-open',{detail:{id:card.dataset.saved}}));return;}
    if(e.target.closest('[data-delete]')){await remove(card.dataset.saved);document.getElementById('history-status').textContent='Saved model removed from history.';return;}
    const entry=await get(card.dataset.saved);if(!entry)throw Error('This saved model was removed.');
    if(e.target.closest('[data-edit]')){editingId=entry.id;document.getElementById('saved-edit-name').value=entry.title;document.getElementById('saved-edit-group').value=entry.group||'';dialog.showModal();return;}
@@ -134,6 +140,6 @@ async function gallery(){
  document.getElementById('saved-model-edit-form')?.addEventListener('submit',async e=>{e.preventDefault();try{await update(editingId,{title:document.getElementById('saved-edit-name').value,group:document.getElementById('saved-edit-group').value});dialog.close();document.getElementById('history-status').textContent='Name and group updated.';window.dispatchEvent(new CustomEvent('saved-sculpture-renamed',{detail:{id:editingId}}));}catch(error){document.getElementById('history-status').textContent=error.message;}});
  listeners.add(render);window.addEventListener('focus',render);await render();
 }
-window.SavedSculptures=Object.freeze({list,get,remove,removeGroup,save,importEntry,update,overwrite,cameraView,download,gallery,subscribe:fn=>{listeners.add(fn);return()=>listeners.delete(fn);}});
+window.SavedSculptures=Object.freeze({list,get,remove,removeGroup,save,importEntry,update,updateMedia,overwrite,cameraView,download,gallery,subscribe:fn=>{listeners.add(fn);return()=>listeners.delete(fn);}});
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',gallery);else gallery();
 })();

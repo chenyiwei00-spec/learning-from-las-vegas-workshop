@@ -85,6 +85,7 @@ class Handler(BaseHTTPRequestHandler):
   headers={'User-Agent':'Mozilla/5.0','Accept-Encoding':'identity'}
   if self.headers.get('Range'):headers['Range']=self.headers['Range']
   request=urllib.request.Request(REMOTE+'/'+quote(rel,safe='/'),headers=headers,method=self.command)
+  headers_sent=False
   try:
    with urllib.request.urlopen(request,timeout=45) as upstream:
     self.send_response(upstream.status)
@@ -94,14 +95,16 @@ class Handler(BaseHTTPRequestHandler):
     self.send_header('Cache-Control','no-store');self.send_header('X-Content-Type-Options','nosniff')
     if not upstream.headers.get('Content-Length'):
      self.send_header('Connection','close');self.close_connection=True
-    self.end_headers()
+    self.end_headers();headers_sent=True
     if self.command!='HEAD':
      while True:
       block=upstream.read(256*1024)
       if not block:break
       self.wfile.write(block)
   except HTTPError as error:self.send_json(error.code,{'error':'Shared archive media is unavailable.'})
-  except (URLError,TimeoutError):self.send_json(502,{'error':'Cannot reach the shared archive. Check your connection or configure a local media folder.'})
+  except (URLError,TimeoutError):
+   if headers_sent:self.close_connection=True
+   else:self.send_json(502,{'error':'Cannot reach the shared archive. Check your connection or configure a local media folder.'})
   except (BrokenPipeError,ConnectionResetError,ConnectionAbortedError):pass
  def reject_write(self):
   self.close_connection=True;self.send_json(405,{'error':'This local endpoint does not accept writes.'})

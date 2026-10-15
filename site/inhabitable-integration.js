@@ -4,6 +4,17 @@
 const $=id=>document.getElementById(id),surface=$('walk-surface'),panel=$('inhabitable-panel'),picker=$('inhabitable-picker'),frame=$('inhabitable-frame'),status=$('inhabitable-status');
 const protocol=1,maxBytes=100*1024*1024;
 let ready=false,loading=null,active=false,busy=false,request=null,lastResult=null,returnFocus=null;
+let clickedModel=null,returnSelection=[];
+// Current main clears floor selection on outside pointerdown. Snapshot before
+// its document handler runs, without replacing the host's selection behaviour.
+window.addEventListener('pointerdown',event=>{
+ clickedModel=null;
+ if(!event.target.closest?.('#walk-inhabitable'))return;
+ const placement=window.ExhibitionWalk?.placement;if(!placement)return;
+ const state=placement.state(),record=state.models.find(m=>m.id===state.selected);
+ const entry=record&&placement.browseEntries().find(e=>e.id==='exhibit:'+record.modelId);
+ if(entry?.glb instanceof Blob)clickedModel={blob:entry.glb,name:entry.title,selection:state.selectedIds||[state.selected]};
+},true);
 function tell(message,error=false){status.textContent=message;status.dataset.error=String(error);}
 function lock(value){busy=value;for(const id of ['inhabitable-change','inhabitable-import','inhabitable-refresh'])$(id).disabled=value;panel.setAttribute('aria-busy',String(value));}
 function describe(data){
@@ -18,6 +29,12 @@ function close(){
  if(busy){tell('正在处理模型，请完成后返回展厅。');return;}
  frame.contentWindow?.postMessage({type:'bw:inhabitable:suspend',protocol},location.origin);
  active=false;panel.hidden=true;surface.dataset.inhabitable='false';
+ const placement=window.ExhibitionWalk?.placement;
+ if(placement&&returnSelection.length){
+  const ids=returnSelection.filter(id=>placement.state().models.some(m=>m.id===id));
+  if(placement.selectMany)placement.selectMany(ids);else placement.select(ids[0]||null);
+ }
+ returnSelection=[];
  (returnFocus?.isConnected?returnFocus:$('walk-inhabitable')).focus({preventScroll:true});
  window.dispatchEvent(new Event('resize'));
 }
@@ -92,11 +109,12 @@ async function selected(){
 }
 async function open(){
  if(busy){show();return;}
- try{const model=await selected();if(model)await sendBlob(model.blob,model.name);else await choices();}
+ const captured=clickedModel;clickedModel=null;
+ try{const model=captured||await selected();returnSelection=captured?.selection||[];if(model)await sendBlob(model.blob,model.name);else await choices();}
  catch(error){show();tell(error.message,true);}
 }
 $('walk-inhabitable').onclick=open;
-$('exhibition-inhabit-model').onclick=open;
+$('exhibition-inhabit-model')?.addEventListener('click',open);
 $('workspace-inhabit-model').onclick=async()=>{
  try{if(!window.ExhibitionTransfer?.state().available)throw Error('请先打开一个已完成的模型，或通过“雕塑建筑”导入 GLB。');const model=await window.ExhibitionTransfer.capture();await sendBlob(model.blob,model.name);}
  catch(error){show();tell(error.message,true);}

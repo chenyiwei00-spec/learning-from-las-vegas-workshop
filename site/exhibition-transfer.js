@@ -22,17 +22,11 @@ function overFloor(e){
  const p=window.ExhibitionWalk?.placement;if(!p)return null;
  return p.hover(e.clientX,e.clientY);
 }
-function clearGhost(){
- ghost.hidden=true;if(ghostUrl)URL.revokeObjectURL(ghostUrl);ghostUrl='';ghost.querySelector('img').removeAttribute('src');window.ExhibitionWalk?.placement.stopHover();
-}
-function showGhost(e){
- ghost.hidden=false;ghost.style.transform='translate('+(e.clientX+16)+'px,'+(e.clientY+16)+'px)';
- const cell=overFloor(e);ghost.dataset.valid=String(!!cell?.valid);
- ghost.querySelector('span').textContent=cell?.valid?'CELL '+(cell.row*20+cell.col+1):cell?'Cell occupied':'Move over the floor';
-}
+function clearGhost(keepTemplate=false){window.ExhibitionWalk?.placement.endDragPreview(keepTemplate);}
+function showGhost(e){window.ExhibitionWalk?.placement.updateDragPreview(e);}
 function down(e){
  if(e.button!==0||!available())return;
- candidate={pointerId:e.pointerId,x:e.clientX,y:e.clientY,started:false,desc:capture()};
+ const source=e.currentTarget.id==='workspace-drag-model'?viewer:thumb;candidate={pointerId:e.pointerId,x:e.clientX,y:e.clientY,started:false,view:{orbit:source.getCameraOrbit(),fov:source.getFieldOfView?.()||35},desc:capture()};
  // Retain the prepared GLB independently of a viewer URL that can later be revoked.
  candidate.desc.catch(error=>tell(error.message));
  window.ExhibitionWalk.suspendNavigation();
@@ -47,9 +41,10 @@ document.addEventListener('pointermove',e=>{
  if(!candidate.started){
   candidate.started=true;suppressClick=true;
   const active=candidate;
-  candidate.desc.then(desc=>{if(candidate!==active||!desc.preview)return;ghostUrl=URL.createObjectURL(desc.preview);ghost.querySelector('img').src=ghostUrl;}).catch(()=>{});
+  candidate.desc.then(async desc=>{if(candidate!==active)return;await ExhibitionWalk.placement.beginDragPreview(desc,active.view);if(candidate===active)showGhost(active.lastPointer||e);}).catch(error=>tell(error.message));
+
  }
- e.preventDefault();showGhost(e);
+ candidate.lastPointer={clientX:e.clientX,clientY:e.clientY};e.preventDefault();showGhost(e);
 },{passive:false,capture:true});
 async function finish(e){
  if(!candidate||candidate.pointerId!==e.pointerId)return;
@@ -58,7 +53,7 @@ async function finish(e){
  e.preventDefault();e.stopImmediatePropagation();
  setTimeout(()=>{suppressClick=false;},0);
  const cell=e.type==='pointercancel'?null:window.ExhibitionWalk.placement.cellAt(e.clientX,e.clientY);
- clearGhost();
+ clearGhost(!!cell?.valid);
  if(!cell?.valid){tell(cell?'This cell is occupied. Choose another cell.':'Drop the model on the exhibition floor.');return;}
  try{const desc={...await active.desc,name:$('model-name').value.trim()||'Generated collage'};await window.ExhibitionWalk.placement.ready;await window.ExhibitionWalk.placement.place(desc,cell);}
  catch(error){tell(error.message);}
