@@ -2,7 +2,7 @@
 (()=>{
 'use strict';
 function attach(viewer,{frame,fitCamera,applyCamera,onChange,listEntries=null,onNavigate=null}){
- let entry=null,phase='idle',ids=[],index=-1,ticket=0,raf=0,down=null,panResolve=null,switching=false,buffer=null,progress=0;
+ let entry=null,phase='idle',ids=[],index=-1,ticket=0,raf=0,down=null,panResolve=null,switching=false,buffer=null,progress=0,resumePhase='overview';
  const reduced=matchMedia('(prefers-reduced-motion: reduce)'),stage=frame.closest('.model-layout');
  const prev=document.createElement('button'),next=document.createElement('button'),hint=document.createElement('p');
  prev.className='model-gallery-arrow previous';next.className='model-gallery-arrow next';
@@ -18,13 +18,16 @@ function attach(viewer,{frame,fitCamera,applyCamera,onChange,listEntries=null,on
   frame.dataset.galleryPhase=phase;stage.dataset.gallerySwitching=String(switching);onChange();
  }
  function freezeRotation(){
-  if(!viewer.autoRotate)return;
+  if(!viewer.autoRotate)return Promise.resolve();
   const pose=SavedSculptures.cameraView(viewer),rotation=viewer.turntableRotation||0;
-  viewer.autoRotate=false;viewer.resetTurntableRotation(0);pose.orbit.theta-=rotation;applyCamera(pose);viewer.jumpCameraToGoal();
+  viewer.autoRotate=false;pose.orbit.theta-=rotation;applyCamera(pose);
+  // Commit the compensated camera before clearing turntable yaw, in the same paint.
+  return viewer.updateComplete.then(()=>{viewer.resetTurntableRotation(0);applyCamera(pose);viewer.jumpCameraToGoal();});
  }
- function stop(){freezeRotation();ticket++;cancelAnimationFrame(raf);raf=0;if(panResolve){panResolve(false);panResolve=null;}}
- function reset(preserveSwitch=false){stop();if(!preserveSwitch)disposeBuffer();entry=null;phase='idle';ids=[];index=-1;switching=preserveSwitch;viewer.style.transform='';viewer.style.visibility='';viewer.style.opacity=buffer?'0':'';viewer.cameraControls=true;ui();}
- function beginBrowse(){switching=true;ui();}
+ function stop(freeze=true){const settled=freeze?freezeRotation():Promise.resolve();if(!freeze){viewer.autoRotate=false;viewer.resetTurntableRotation(0);}ticket++;cancelAnimationFrame(raf);raf=0;if(panResolve){panResolve(false);panResolve=null;}return settled;}
+ function reset(preserveSwitch=false){stop(false);if(!preserveSwitch)disposeBuffer();entry=null;phase='idle';ids=[];index=-1;switching=preserveSwitch;viewer.style.transform='';viewer.style.visibility='';viewer.style.opacity=buffer?'0':'';viewer.cameraControls=true;ui();}
+ function beginBrowse(){if(['overview','detail'].includes(phase))resumePhase=phase;switching=true;phase='preparing';ui();}
+ function cancelBrowse(){stop(false);disposeBuffer();switching=false;phase=entry?resumePhase:'idle';viewer.cameraControls=phase==='detail'||!entry;ui();}
  async function set(entryValue){
   reset(true);entry=entryValue;phase='loading';viewer.cameraControls=false;ui();
   const run=ticket,visible=[...document.querySelectorAll('#saved-model-grid [data-saved]')].map(e=>e.dataset.saved);
@@ -61,11 +64,11 @@ function attach(viewer,{frame,fitCamera,applyCamera,onChange,listEntries=null,on
   if(!old.transferred)URL.revokeObjectURL(old.url);stage.dataset.galleryOverlap='false';
  }
  async function prepare(value,direction){
-  stop();disposeBuffer();progress=0;
+  await stop();disposeBuffer();progress=0;
   if(!entry||!direction){phase=entry?'overview':'idle';ui();return true;}
   phase='preparing';viewer.cameraControls=false;switching=true;ui();
   const run=ticket,other=viewer.cloneNode(false);other.removeAttribute('id');other.removeAttribute('hidden');
-  other.className='model-gallery-buffer';other.style.transform='';other.style.visibility='';other.style.opacity='0';other.cameraControls=false;
+  other.className='model-gallery-buffer';other.style.transform='';other.style.visibility='';other.style.opacity='0';other.cameraControls=false;other.autoRotate=false;
   other.setAttribute('aria-hidden','true');other.setAttribute('tabindex','-1');other.removeAttribute('src');
   const valueBuffer={id:value.id,url:URL.createObjectURL(value.glb),viewer:other,ready:false,transferred:false,complete:false};
   buffer=valueBuffer;frame.insertBefore(other,prev);
@@ -100,7 +103,7 @@ function attach(viewer,{frame,fitCamera,applyCamera,onChange,listEntries=null,on
   if(!entry||!direction)return;
   // Both actual meshes are already decoded before either starts to move.
   if(!buffer?.ready)throw Error('The next model is not ready for its transition.');
-  stop();const run=ticket,other=buffer.viewer,otherBuffer=buffer,sign=Math.sign(direction);
+  await stop();const run=ticket,other=buffer.viewer,otherBuffer=buffer,sign=Math.sign(direction);
   switching=true;phase='preparing';viewer.cameraControls=false;ui();
   const base=SavedSculptures.cameraView(viewer),incoming=otherBuffer.pose;
   const distanceOut=edgeDistance(viewer,base,-sign),distanceIn=edgeDistance(other,incoming,sign);
@@ -130,13 +133,23 @@ function attach(viewer,{frame,fitCamera,applyCamera,onChange,listEntries=null,on
   if(run!==ticket)return;overview();
  }
  function overview(){
-  if(!entry)return;stop();fitCamera();switching=false;phase='overview';viewer.style.visibility='';viewer.style.opacity='1';viewer.cameraControls=false;ui();
+  if(!entry)return;stop(false);fitCamera();switching=false;phase='overview';viewer.style.visibility='';viewer.style.opacity='1';viewer.cameraControls=false;ui();
   viewer.resetTurntableRotation(0);viewer.autoRotateDelay=0;viewer.rotationPerSecond=reduced.matches?'0deg':'15deg';viewer.autoRotate=!reduced.matches;
 
  }
+ function normaliseCamera(value,fallback){
+  if(typeof value==='string'){
+   const parts=value.trim().split(/\s+/);if(parts.length!==3)return null;
+   const angle=(s,base)=>s==='auto'?base:parseFloat(s)*(s.endsWith('rad')?1:Math.PI/180),radius=parts[2]==='auto'?fallback.orbit.radius:parseFloat(parts[2]);
+   value={...fallback,orbit:{theta:angle(parts[0],fallback.orbit.theta),phi:angle(parts[1],fallback.orbit.phi),radius}};
+  }
+  if(!value?.orbit||![value.orbit.theta,value.orbit.phi,value.orbit.radius].every(Number.isFinite)||value.orbit.radius<=0)return null;
+  return {...fallback,...value,target:value.target||fallback.target};
+ }
  async function enter(){
-  if(phase!=='overview'||!entry)return;stop();const run=ticket,from=SavedSculptures.cameraView(viewer),to=entry.camera||from;
-  if(!to?.orbit){phase='detail';viewer.cameraControls=true;ui();return;}
+  if(phase!=='overview'||!entry)return;phase='entering';ui();await stop();const run=ticket,from=SavedSculptures.cameraView(viewer);let to=entry.camera||from;
+  const destination=normaliseCamera(to,from);
+  if(!destination){phase='detail';viewer.cameraControls=true;ui();return;}to=destination;
   phase='entering';ui();const started=performance.now(),duration=reduced.matches?1:1350;
   // Follow only the shortest angular path; no decorative full revolution.
   const turn=Math.atan2(Math.sin(to.orbit.theta-from.orbit.theta),Math.cos(to.orbit.theta-from.orbit.theta));
@@ -148,8 +161,9 @@ function attach(viewer,{frame,fitCamera,applyCamera,onChange,listEntries=null,on
    if(raw<1)raf=requestAnimationFrame(tick);else{applyCamera(to);await viewer.updateComplete;if(run!==ticket)return;viewer.jumpCameraToGoal();phase='detail';viewer.cameraControls=true;ui();}
   };raf=requestAnimationFrame(tick);
  }
- function navigate(direction){
+ async function navigate(direction){
   if(!entry||ids.length<2||!['overview','detail'].includes(phase))return;
+  resumePhase=phase;phase='preparing';switching=true;ui();await freezeRotation();const pose=SavedSculptures.cameraView(viewer);applyCamera(pose);
   const id=ids[(index+direction+ids.length)%ids.length];if(onNavigate)onNavigate(id,direction);else window.dispatchEvent(new CustomEvent('saved-sculpture-open',{detail:{id,direction}}));
  }
  prev.addEventListener('click',()=>navigate(-1));next.addEventListener('click',()=>navigate(1));
@@ -166,7 +180,7 @@ function attach(viewer,{frame,fitCamera,applyCamera,onChange,listEntries=null,on
   if(!entry)return;const run=ticket,rows=await (listEntries?listEntries():SavedSculptures.list());if(run!==ticket||!entry)return;
   ids=ids.filter(id=>rows.some(e=>e.id===id));if(!ids.includes(entry.id))ids.unshift(entry.id);index=ids.indexOf(entry.id);ui();
  });
- return {set,ready,prepare,slideOut,overview,reset,beginBrowse,source:id=>{if(buffer?.id===id&&buffer.ready){buffer.transferred=true;return buffer.url;}return null;},update:value=>{if(entry&&(entry.id===value?.id||entry.ephemeral)){const imported=entry.ephemeral;entry=value;if(listEntries||imported)Promise.resolve(listEntries?listEntries():SavedSculptures.list()).then(rows=>{if(!entry)return;ids=rows.map(e=>e.id);index=ids.indexOf(entry.id);ui();});else ui();}},state:()=>({phase,switching,progress,preparedId:buffer?.id||null,overlap:stage.dataset.galleryOverlap==='true',id:entry?.id||null,index,total:ids.length}),canSave:()=>!entry||phase==='detail'};
+ return {set,ready,prepare,slideOut,overview,reset,beginBrowse,cancelBrowse,source:id=>{if(buffer?.id===id&&buffer.ready){buffer.transferred=true;return buffer.url;}return null;},update:value=>{if(entry&&(entry.id===value?.id||entry.ephemeral)){const imported=entry.ephemeral;entry=value;if(listEntries||imported)Promise.resolve(listEntries?listEntries():SavedSculptures.list()).then(rows=>{if(!entry)return;ids=rows.map(e=>e.id);index=ids.indexOf(entry.id);ui();});else ui();}},state:()=>({phase,switching,progress,preparedId:buffer?.id||null,overlap:stage.dataset.galleryOverlap==='true',id:entry?.id||null,index,total:ids.length}),canSave:()=>!entry||phase==='detail'};
 }
 window.SavedModelGallery=Object.freeze({attach});
 })();
