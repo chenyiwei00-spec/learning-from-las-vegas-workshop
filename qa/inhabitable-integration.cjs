@@ -77,7 +77,7 @@ const out=path.resolve(__dirname,'../runtime/inhabitable-qa');
   });
   const placed=await page.evaluate(()=>({placements:ExhibitionWalk.placement.state().models,collage:ExhibitionStudio.getDocument()}));
   await page.locator('#walk-inhabitable').click();
-  await page.waitForFunction(()=>!ExhibitionInhabitable.state().busy&&ExhibitionInhabitable.state().lastResult?.modelId.endsWith('b2451dd36abf8c2f097218aef30d6363e84a167ed9b73e77a0e64cc39da9599d'),null,{timeout:120000});
+  await page.waitForFunction(expected=>!ExhibitionInhabitable.state().busy&&ExhibitionInhabitable.state().lastResult?.modelId===expected,evidence.models[1].modelId,{timeout:120000});
   assert.equal((await page.evaluate(()=>ExhibitionInhabitable.state().lastResult)).modelId,evidence.models[1].modelId);
   await page.locator('#inhabitable-back').click();assert.deepEqual(await page.evaluate(()=>({placements:ExhibitionWalk.placement.state().models,collage:ExhibitionStudio.getDocument()})),placed);
   evidence.checks.push('Selected room exhibit transfers its real GLB and survives return unchanged.');
