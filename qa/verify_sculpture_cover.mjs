@@ -1,0 +1,44 @@
+import fs from'node:fs';import path from'node:path';import assert from'node:assert/strict';import{createRequire}from'node:module';
+const require=createRequire(process.env.PLAYWRIGHT_ANCHOR),{chromium}=require('./browser_tools/node_modules/playwright-core'),root=process.cwd(),base='http://127.0.0.1:8065/';
+const browser=await chromium.launch({executablePath:process.env.CHROME_PATH,headless:true,args:['--use-angle=swiftshader','--enable-unsafe-swiftshader','--mute-audio']});
+const context=await browser.newContext({viewport:{width:1440,height:1000}}),page=await context.newPage(),errors=[];page.setDefaultTimeout(60000);page.on('pageerror',e=>errors.push(e.message));
+await context.route('**/*',async route=>{const u=new URL(route.request().url());if(u.origin!==new URL(base).origin)return route.continue();const file=u.pathname==='/'?'index.html':decodeURIComponent(u.pathname).slice(1);if(file==='team-live.js')return route.fulfill({body:''});if(file.startsWith('api/sculpture3d/jobs')&&route.request().method()==='POST')throw Error('No real inference');const p=path.join(root,'site',file);if(fs.existsSync(p)&&fs.statSync(p).isFile())return route.fulfill({body:fs.readFileSync(p),contentType:file.endsWith('.js')?'text/javascript':file.endsWith('.css')?'text/css':file.endsWith('.html')?'text/html':file.endsWith('.json')?'application/json':file.endsWith('.png')?'image/png':undefined});return route.continue();});
+try{
+ await page.goto(base+'#cover');await page.waitForFunction(()=>window.WorkshopCover?.state().loaded&&document.getElementById('cover-model').dataset.ready==='true');
+ const camera=await page.evaluate(async()=>{
+  const v=document.getElementById('cover-model'),d=v.getDimensions(),t=v.getCameraTarget(),orbit=v.getCameraOrbit(),id=WorkshopCover.state().id;
+  const camera={orbit:{theta:.12,phi:1.4,radius:orbit.radius*.24},target:{x:t.x,y:t.y+d.y*.2,z:t.z},fieldOfView:30};
+  const db=await new Promise(resolve=>{const r=indexedDB.open('borrowed-worlds-saved-sculptures-v1');r.onsuccess=()=>resolve(r.result)});
+  await new Promise(resolve=>{const tx=db.transaction('models','readwrite'),s=tx.objectStore('models'),r=s.get(id);r.onsuccess=()=>{const row=r.result;row.camera=camera;s.put(row)};tx.oncomplete=resolve});db.close();
+  await SavedSculptures.update(id,{title:'City model 05'});return camera;
+ });
+ await page.waitForFunction(radius=>WorkshopCover.state().camera?.orbit.radius===radius&&document.getElementById('cover-model').dataset.ready==='true',camera.orbit.radius);
+ assert.deepEqual(await page.evaluate(()=>WorkshopCover.state().camera),camera);
+ const orbit=await page.evaluate(()=>{const v=document.getElementById('cover-model'),o=v.getCameraOrbit();return {theta:o.theta,phi:o.phi,radius:o.radius,target:{...v.getCameraTarget()}}});
+ assert.ok(Math.abs(orbit.radius-camera.orbit.radius)<1e-6);assert.ok(Math.abs(orbit.theta-camera.orbit.theta)<1e-6);
+ for(const name of ['Yiwei Chen','Jiayi Tan','linxi Chen','Ziyang Liu'])assert.ok((await page.locator('#workshop-cover footer').textContent()).includes(name));
+ assert.equal(await page.locator('#workshop-cover button:visible').count(),1);assert.equal(await page.locator('#workshop-cover h1').textContent(),'LEARNINGFROM LAS VEGAS');
+ assert.ok((await page.locator('#cover-title').evaluate(e=>getComputedStyle(e).fontFamily)).startsWith('Impact'));
+ fs.mkdirSync('runtime',{recursive:true});await page.screenshot({path:'runtime/sculpture-cover-desktop.png'});
+ await page.mouse.move(330,400);await page.mouse.wheel(0,800);await page.waitForTimeout(350);
+ assert.ok(Math.abs((await page.evaluate(()=>document.getElementById('cover-model').getCameraOrbit().radius))-camera.orbit.radius)<1e-6);
+ await page.mouse.move(320,400);await page.mouse.down();await page.mouse.move(450,430,{steps:18});await page.mouse.up();await page.waitForTimeout(700);
+ const rotated=await page.evaluate(()=>{const v=document.getElementById('cover-model'),o=v.getCameraOrbit(),t=v.getCameraTarget();return {theta:o.theta,radius:o.radius,target:{x:t.x,y:t.y,z:t.z}}});
+ assert.ok(Math.abs(rotated.theta-camera.orbit.theta)>.005);assert.ok(Math.abs(rotated.radius-camera.orbit.radius)<1e-6);
+ for(const k of ['x','y','z'])assert.ok(Math.abs(rotated.target[k]-camera.target[k])<1e-6);
+ await page.mouse.down({button:'right'});await page.mouse.move(520,460,{steps:8});await page.mouse.up({button:'right'});await page.waitForTimeout(350);
+ const target=await page.evaluate(()=>{const t=document.getElementById('cover-model').getCameraTarget();return{x:t.x,y:t.y,z:t.z}});
+ for(const k of ['x','y','z'])assert.ok(Math.abs(target[k]-camera.target[k])<1e-6);
+ await page.waitForTimeout(3000);const yaw=await page.evaluate(()=>document.getElementById('cover-model').turntableRotation);await page.waitForTimeout(1000);const delta=Math.abs(await page.evaluate(()=>document.getElementById('cover-model').turntableRotation)-yaw);assert.ok(delta>0&&delta<.04);
+ console.log('PASS: cover reads the saved camera exactly; slow rotation and drag work, wheel zoom and pan stay locked; Impact title and all four names remain.');
+ await page.locator('#workshop-enter').click();await page.waitForFunction(()=>document.querySelector('iframe[data-view=archive]')?.contentWindow?.document.getElementById('query'));
+ let frame=page.frames().find(f=>f.url().includes('archive.html'));await frame.waitForFunction(()=>document.getElementById('result-count')?.textContent.includes('items'));await frame.locator('#query').fill('neon');await frame.evaluate(()=>window.coverDraftToken='keep-me');
+ assert.equal(await page.evaluate(()=>document.getElementById('cover-model').autoRotate),false);
+ await page.locator('#workshop-home').click();assert.equal(await page.locator('#workshop-cover').isVisible(),true);assert.equal(await page.locator('#workshop-nav').isVisible(),false);
+ await page.locator('#workshop-enter').click();assert.equal(await frame.evaluate(()=>window.coverDraftToken),'keep-me');assert.equal(await frame.locator('#query').inputValue(),'neon');assert.equal(await page.locator('.workshop-frame').count(),1);
+ await page.locator('#workshop-home').click();await page.waitForFunction(()=>document.getElementById('cover-model').autoRotate);
+ await page.setViewportSize({width:390,height:844});await page.waitForTimeout(350);assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+ await page.screenshot({path:'runtime/sculpture-cover-mobile.png'});
+ await page.goto(base+'collage.html');await page.locator('.workshop-child-nav .workshop-home').click();await page.waitForURL('**/index.html#cover');assert.equal(await page.locator('#workshop-cover').isVisible(),true);
+ assert.deepEqual(errors,[]);console.log('PASS: Cover button returns without unloading workspace state, Enter resumes it, direct module navigation returns to cover, mobile has no horizontal overflow. No browser errors.');
+}finally{await browser.close();}

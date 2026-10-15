@@ -4,8 +4,9 @@ const embedded=window.parent!==window,kind=location.pathname.endsWith('exhibitio
 document.documentElement.classList.add(embedded?'workshop-embedded':'workshop-module-direct');
 const nav=document.createElement('nav');nav.className='workshop-nav workshop-child-nav';nav.setAttribute('aria-label','Workshop sections');
 nav.innerHTML=[['archive','01','DATABASE'],['collage','02','COLLAGE WORKSHOP'],['architecture','03','ARCHITECTURE']].map(([key,n,label])=>'<a href="index.html?view='+key+'" data-workshop-view="'+key+'"'+(key===kind?' aria-current="page"':'')+'><span>'+n+'</span>'+label+'</a>').join('');
+const home=document.createElement('button');home.type='button';home.className='workshop-home';home.setAttribute('aria-label','Return to cover');home.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="m4 11 8-7 8 7M6 9v11h12V9M10 20v-6h4v6"/></svg><span>Cover</span>';home.onclick=()=>navigate('cover');nav.prepend(home);
 document.body.prepend(nav);
-function navigate(view,search=''){if(embedded)parent.postMessage({type:'workshop-navigate',view,search},location.origin);else location.href='index.html?view='+view+(search?'&'+search.slice(1):'');}
+function navigate(view,search=''){if(view==='cover'&&!embedded){location.href='index.html#cover';return;}if(embedded)parent.postMessage({type:'workshop-navigate',view,search},location.origin);else location.href='index.html?view='+view+(search?'&'+search.slice(1):'');}
 document.addEventListener('click',e=>{
  const a=e.target.closest('a');if(!a||a.target==='_blank'||a.hasAttribute('download')||e.ctrlKey||e.metaKey||e.shiftKey)return;
  if(a.dataset.workshopView){e.preventDefault();navigate(a.dataset.workshopView);return;}
