@@ -1,5 +1,6 @@
 import * as THREE from 'three';
-import {Output,Mp4OutputFormat,WebMOutputFormat,BufferTarget,CanvasSource,Quality,getFirstEncodableVideoCodec} from 'mediabunny';
+import {Output,Mp4OutputFormat,WebMOutputFormat,BufferTarget,CanvasSource,AudioBufferSource,Quality,getFirstEncodableVideoCodec,getFirstEncodableAudioCodec} from 'mediabunny';
+import {spatialSound,planSpatialSound,createSpatialSoundMixer} from './exhibition-spatial-audio.js';
 const wait=()=>new Promise(r=>setTimeout(r,0));
 export function validateCameraPath(keys){
  if(!Array.isArray(keys)||keys.length<2)throw Error('Add at least two camera views.');
@@ -19,7 +20,7 @@ export function sampleCameraPath(keys,time,smooth=true){
  return {pose:{x:p.x,y:p.y,z:p.z,yaw:e.y,pitch:e.x,fly:true},light};
 }
 export function createExhibitionExport({renderer,scene,pipeline,getCamera,getView,setView,getPose,setPose,lighting,orient,lock,unlock}){
- let busy=false,cancelled=false,progress=0,scratch=null;
+ let busy=false,cancelled=false,progress=0,scratch=null,audioController=null;
  function check(){if(cancelled)throw new DOMException('Export cancelled.','AbortError');}
  function dimensions(width,height){if(!Number.isInteger(width)||!Number.isInteger(height)||width<64||height<64||width>3840||height>3840||width*height>3840*2160)throw Error('Choose an output up to 3840 x 2160.');}
  function begin(width,height){
@@ -49,19 +50,54 @@ export function createExhibitionExport({renderer,scene,pipeline,getCamera,getVie
  async function still({width=2560,height=1440,samples=4}={}){
   let saved;try{saved=begin(width,height);const canvas=await draw(width,height,samples);check();const blob=await new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(Error('PNG could not be encoded.')),'image/png'));return{blob,width,height,pose:getPose(),light:lighting.state(),view:getView()};}finally{end(saved);}
  }
- async function film({keys,width=1920,height=1080,fps=24,smooth=true,onProgress=()=>{}}){
+ async function film({keys,width=1920,height=1080,fps=24,smooth=true,includeAudio=true,onProgress=()=>{}}){
   const path=validateCameraPath(keys);if(![12,24,25,30,60].includes(fps))throw Error('Choose a supported frame rate.');dimensions(width,height);
+  if(busy)throw Error('Finish the current render first.');
   if(typeof VideoEncoder==='undefined')throw Error('This browser cannot encode films. Open the local website in Chrome or Edge.');
-  const codec=await getFirstEncodableVideoCodec(['avc','vp9','vp8'],{width,height});if(!codec)throw Error('No supported video encoder is available.');
-  const mp4=codec==='avc',output=new Output({format:mp4?new Mp4OutputFormat({fastStart:'in-memory'}):new WebMOutputFormat(),target:new BufferTarget()});let saved,source,poster;
+  let codec=await getFirstEncodableVideoCodec(['avc','vp9','vp8'],{width,height});if(!codec)throw Error('No supported video encoder is available.');
+  let mp4=codec==='avc',audioCodec=null;
+  if(includeAudio){
+   audioCodec=await getFirstEncodableAudioCodec(mp4?['aac']:['opus'],{numberOfChannels:2,sampleRate:48000,bitrate:160000});
+   if(!audioCodec&&mp4){
+    const alternate=await getFirstEncodableVideoCodec(['vp9','vp8'],{width,height}),opus=await getFirstEncodableAudioCodec(['opus'],{numberOfChannels:2,sampleRate:48000,bitrate:160000});
+    if(alternate&&opus){codec=alternate;mp4=false;audioCodec=opus;}
+   }
+   if(!audioCodec)throw Error('No supported audio encoder. Use Chrome or Edge, or turn off Include exhibition audio.');
+  }
+  const output=new Output({format:mp4?new Mp4OutputFormat({fastStart:'in-memory'}):new WebMOutputFormat(),target:new BufferTarget()});let saved,source,audioSource,mixer,poster,soundSuspended=false;
   try{
    if(getView()!=='room')throw Error('Use eye-level view before exporting a camera path.');
-   saved=begin(width,height);const encoderCanvas=document.createElement('canvas');encoderCanvas.width=width;encoderCanvas.height=height;const ctx=encoderCanvas.getContext('2d');
-   source=new CanvasSource(encoderCanvas,{codec,quality:new Quality({bitrate:Math.max(4000000,width*height*fps*.16)}),latencyMode:'quality'});output.addVideoTrack(source,{frameRate:fps});await output.start();
+   saved=begin(width,height);audioController=new AbortController();
    const duration=path.at(-1).time,count=Math.ceil(duration*fps);
-   for(let i=0;i<count;i++){check();const t=i/fps,value=sampleCameraPath(path,t,smooth);setPose(value.pose);lighting.set(value.light);lighting.flush?.();const canvas=await draw(width,height,1);ctx.drawImage(canvas,0,0);if(!poster)poster=await new Promise(r=>canvas.toBlob(r,'image/png'));await source.add(t,Math.min(1/fps,duration-t));progress=(i+1)/count;onProgress(progress);await wait();}
-   source.close();await output.finalize();check();return{blob:new Blob([output.target.buffer],{type:mp4?'video/mp4':'video/webm'}),poster,width,height,fps,duration,extension:mp4?'mp4':'webm',keys:path};
-  }catch(e){if(output.state!=='finalized'&&output.state!=='canceled')await output.cancel();throw e;}finally{end(saved);}
+   let soundPlan=null;
+   if(includeAudio){
+    const proximity=window.ExhibitionProximityAudio;
+    if(!proximity?.capture)throw Error('Exhibition sound is not ready. Wait for the space to finish loading.');
+    const sounds=await proximity.capture();check();
+    soundPlan=planSpatialSound({sources:sounds,duration,samplePose:t=>sampleCameraPath(path,t,smooth).pose});
+    mixer=createSpatialSoundMixer(soundPlan,{signal:audioController.signal,check});
+    audioSource=new AudioBufferSource({codec:audioCodec,quality:new Quality({bitrate:160000})});output.addAudioTrack(audioSource);
+   }
+   // Export runs on film timestamps, not wall time. Keep live speakers quiet meanwhile.
+   window.ExhibitionProximityAudio?.suspend();soundSuspended=true;
+   const encoderCanvas=document.createElement('canvas');encoderCanvas.width=width;encoderCanvas.height=height;const ctx=encoderCanvas.getContext('2d');
+   source=new CanvasSource(encoderCanvas,{codec,quality:new Quality({bitrate:Math.max(4000000,width*height*fps*.16)}),latencyMode:'quality'});output.addVideoTrack(source,{frameRate:fps});await output.start();
+   let audioTime=0;
+   for(let i=0;i<count;i++){
+    check();const t=i/fps,value=sampleCameraPath(path,t,smooth);setPose(value.pose);lighting.set(value.light);lighting.flush?.();
+    const canvas=await draw(width,height,1);ctx.drawImage(canvas,0,0);if(!poster)poster=await new Promise(r=>canvas.toBlob(r,'image/png'));
+    await source.add(t,Math.min(1/fps,duration-t));
+    if(audioSource&&audioTime<Math.min(duration,t+1/fps)-1e-8){
+     const endTime=Math.min(duration,audioTime+1);await audioSource.add(await mixer.chunk(audioTime,endTime));audioTime=endTime;
+    }
+    progress=(i+1)/count;onProgress(progress);await wait();
+   }
+   source.close();audioSource?.close();await output.finalize();check();
+   return{blob:new Blob([output.target.buffer],{type:mp4?'video/mp4':'video/webm'}),poster,width,height,fps,duration,extension:mp4?'mp4':'webm',keys:path,
+    audio:{included:!!audioSource,codec:audioCodec,sources:soundPlan?.urls.length||0,mode:'exhibition-proximity'}};
+  }catch(e){if(output.state!=='finalized'&&output.state!=='canceled')await output.cancel();throw e;}
+  finally{audioController?.abort();audioController=null;mixer?.dispose();end(saved);if(soundSuspended)window.ExhibitionProximityAudio?.resume();}
  }
- return Object.freeze({still,film,cancel:()=>{cancelled=true;},state:()=>({busy,progress,maxResolution:[3840,2160]})});
+
+ return Object.freeze({still,film,sound:spatialSound,cancel:()=>{cancelled=true;audioController?.abort(new DOMException('Export cancelled.','AbortError'));},state:()=>({busy,progress,maxResolution:[3840,2160]})});
 }
