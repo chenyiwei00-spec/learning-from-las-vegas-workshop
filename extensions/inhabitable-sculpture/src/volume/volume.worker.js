@@ -1,2 +1,0 @@
-import {generateInhabitableSculpture} from './hollow.js';
-self.onmessage=({data})=>{try{self.postMessage({id:data.id,progress:'Reconstructing the 3D sculpture and subtracting its interior…'});const volume=generateInhabitableSculpture(data.geometry,data.parameters,data.identity);const transfer=[...new Set(Object.values(volume).filter(v=>ArrayBuffer.isView(v)).map(v=>v.buffer))];self.postMessage({id:data.id,volume},transfer);}catch(error){self.postMessage({id:data.id,error:error.message});}};

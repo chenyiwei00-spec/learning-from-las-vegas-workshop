@@ -19,7 +19,6 @@ MEDIA=configured_path('readOnlyMediaRoot','external-assets/archive-assets')
 SHARED=configured_path('sharedSiteAssets','external-assets/site-assets')
 CUTOUTS=configured_path('cutoutRoot','external-assets/collage-objects')
 ANALYSIS=configured_path('analysisRoot','external-assets/analysis')
-INHABITABLE=configured_path('inhabitableModelRoot','external-assets/inhabitable-sculptures')
 REMOTE=CONFIG.get('remoteMediaBase','').rstrip('/')
 IDENTITY='borrowed-worlds-team-collaboration'
 manager_path=ROOT/'qa/sculpture-3d/job_manager.py'
@@ -114,16 +113,6 @@ class Handler(BaseHTTPRequestHandler):
   if name=='/__team/version':
    signatures=[(p.name,p.stat().st_size,p.stat().st_mtime_ns) for p in sorted(SITE.iterdir()) if p.is_file()]
    return self.send_json(200,{'version':hashlib.sha256(json.dumps(signatures).encode()).hexdigest()})
-  if name=='/api/inhabitable/models':
-   from urllib.parse import quote
-   models=[]
-   if INHABITABLE.is_dir():
-    for candidate in sorted(INHABITABLE.glob('*.glb')):
-     resolved=candidate.resolve()
-     if resolved.parent!=INHABITABLE or not resolved.is_file():continue
-     size=resolved.stat().st_size
-     if 20<=size<=100*1024*1024:models.append({'name':candidate.stem,'url':'/inhabitable-models/'+quote(candidate.name,safe=''),'bytes':size})
-   return self.send_json(200,{'models':models[:100],'readOnly':True})
   if name=='/api/sculpture3d/capabilities':
    return self.send_json(200,{'ready':jobs.ready(),'generator':'TripoSR','localOnly':True,'activeJob':jobs.ACTIVE})
   if name.startswith('/api/sculpture3d/jobs/'):
@@ -141,11 +130,6 @@ class Handler(BaseHTTPRequestHandler):
   p=(SITE/rel).resolve()
   try:p.relative_to(SITE)
   except ValueError:return self.send_json(403,{'error':'Invalid path.'})
-  if rel.startswith('inhabitable-models/'):
-   filename=rel[len('inhabitable-models/'):]
-   if not filename or '/' in filename or Path(filename).suffix.lower()!='.glb':return self.send_json(403,{'error':'Only configured GLB models are available.'})
-   p=(INHABITABLE/filename).resolve()
-   if p.parent!=INHABITABLE:return self.send_json(403,{'error':'Invalid model path.'})
   if rel.startswith('collage-objects/'):
    parts=rel.split('/')
    if len(parts)<4 or parts[1] not in ['architecture','advertisement','publicity','inspiration','detournement']:
