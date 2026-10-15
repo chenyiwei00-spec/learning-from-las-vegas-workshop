@@ -5,15 +5,15 @@ export function createLightControls({scene,skylight,renderPipeline,invalidate}){
  let value=sunForTime(8),view='axonometric',opened=false,frame=0,disposed=false;
  try{const saved=JSON.parse(localStorage.getItem(key));if(saved&&['time','azimuth','elevation'].every(k=>Number.isFinite(saved[k])))value={time:Math.max(0,Math.min(24,saved.time)),azimuth:Math.max(0,Math.min(360,saved.azimuth)),elevation:Math.max(-90,Math.min(85,saved.elevation))};}catch{}
  function ui(){
-  button.hidden=view!=='room';panel.hidden=view!=='room'||!opened;button.setAttribute('aria-pressed',String(!panel.hidden));
+  button.hidden=false;panel.hidden=!opened;button.setAttribute('aria-pressed',String(!panel.hidden));
   time.value=String(value.time);azimuth.value=String(value.azimuth);elevation.value=String(Math.max(-90,value.elevation));
   const minutes=Math.round(value.time*60);$('walk-light-time-value').textContent=String(Math.floor(minutes/60)).padStart(2,'0')+':'+String(minutes%60).padStart(2,'0');
   $('walk-light-direction-value').textContent=Math.round(value.azimuth)+'°';$('walk-light-elevation-value').textContent=Math.round(value.elevation)+'°';
  }
  function apply(){
   frame=0;if(disposed)return;const light=skylight.setLighting(value);renderPipeline.setLighting(light);
-  const ambient=scene.children.find(o=>o.isHemisphereLight);if(ambient)ambient.intensity=.035+.045*light.daylight;
-  if(view==='room'){const background=new THREE.Color(0x27303b).lerp(new THREE.Color(0xf0ede7),light.daylight);scene.background.copy(background);if(scene.fog)scene.fog.color.copy(background);}
+  const ambient=scene.children.find(o=>o.isHemisphereLight);if(ambient){ambient.intensity=.035+.045*light.daylight;ambient.color.set(view==='room'?0xffffff:0xdde4ed);ambient.groundColor.set(view==='room'?0x424242:0x42352b);}
+  if(view==='room'){const background=new THREE.Color(0x282828).lerp(new THREE.Color(0xffffff),light.daylight);scene.background.copy(background);if(scene.fog)scene.fog.color.copy(background);}
   invalidate();
  }
  function set(next){

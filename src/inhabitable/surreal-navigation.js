@@ -69,14 +69,15 @@ export function floorClear(nav,x,z,floor,radius=.23,actorScale=1){
  }return true;
 }
 
-export function prepareTerrain(nav){
+export function prepareTerrain(nav,actorScale=1){
+ const layerGap=2.48*actorScale+.24;
  // Merge surfaces that cannot have a human-height space between them. Spread
  // height changes as a continuous terrain, while retaining genuine overpasses.
- const merge=(list)=>{const out=[];for(const h of list.sort((a,b)=>a-b)){if(out.length&&h-out.at(-1)<2.72)out[out.length-1]=h;else out.push(h);}return out;};
+ const merge=(list)=>{const out=[];for(const h of list.sort((a,b)=>a-b)){if(out.length&&h-out.at(-1)<layerGap)out[out.length-1]=h;else out.push(h);}return out;};
  for(let id=0;id<nav.counts.length;id++){const v=merge(Array.from(nav.heights.subarray(id*nav.layers,id*nav.layers+nav.counts[id])));nav.counts[id]=v.length;nav.heights.fill(NaN,id*nav.layers,(id+1)*nav.layers);nav.heights.set(v,id*nav.layers);}
  for(let iteration=0;iteration<65;iteration++){let change=0;const next=nav.heights.slice();
   for(let z=0;z<nav.nz;z++)for(let x=0;x<nav.nx;x++){const id=z*nav.nx+x;for(let k=0;k<nav.counts[id];k++){let h=nav.heights[id*nav.layers+k];
-   for(const [dx,dz] of [[1,0],[-1,0],[0,1],[0,-1]]){const xx=x+dx,zz=z+dz;if(xx<0||zz<0||xx>=nav.nx||zz>=nav.nz)continue;const n=zz*nav.nx+xx;let closest=null,d=2.72;for(let j=0;j<nav.counts[n];j++){const v=nav.heights[n*nav.layers+j],delta=Math.abs(v-h);if(delta<d){d=delta;closest=v;}}if(closest!==null)h=Math.max(h,closest-.38*nav.step);}
+   for(const [dx,dz] of [[1,0],[-1,0],[0,1],[0,-1]]){const xx=x+dx,zz=z+dz;if(xx<0||zz<0||xx>=nav.nx||zz>=nav.nz)continue;const n=zz*nav.nx+xx;let closest=null,d=layerGap;for(let j=0;j<nav.counts[n];j++){const v=nav.heights[n*nav.layers+j],delta=Math.abs(v-h);if(delta<d){d=delta;closest=v;}}if(closest!==null)h=Math.max(h,closest-.38*nav.step);}
    next[id*nav.layers+k]=h;change=Math.max(change,h-nav.heights[id*nav.layers+k]);
   }}nav.heights=next;if(change<.001)break;
  }
@@ -84,14 +85,41 @@ export function prepareTerrain(nav){
  // and querying; no independent collision proxy invents a different floor.
  return nav;
 }
-export function terrainVoid(nav){
- const low=new Float32Array(nav.counts.length),high=new Float32Array(nav.counts.length),reach=4;low.fill(Infinity);high.fill(-Infinity);
- for(let z=0;z<nav.nz;z++)for(let x=0;x<nav.nx;x++){const id=z*nav.nx+x;
-  for(let dz=-reach;dz<=reach;dz++)for(let dx=-reach;dx<=reach;dx++){if(dx*dx+dz*dz>reach*reach)continue;const xx=x+dx,zz=z+dz;if(xx<0||zz<0||xx>=nav.nx||zz>=nav.nz)continue;const q=zz*nav.nx+xx;
-   for(let k=0;k<nav.counts[q];k++){const h=nav.heights[q*nav.layers+k];low[id]=Math.min(low[id],h);high[id]=Math.max(high[id],h);}
+export function repairTerrainSpine(nav,actorScale=1){
+ // A guaranteed continuous sloping floor through the existing corridor union.
+ // Lift only the base terrain where crossing ramps had erased one another;
+ // retain upper terraces wherever a full-height storey still fits above it.
+ const base=new Float32Array(nav.counts.length).fill(-Infinity),heap=[];
+ const push=(id,h)=>{let i=heap.length;heap.push({id,h});while(i){const p=(i-1)>>1;if(heap[p].h>=h)break;heap[i]=heap[p];i=p;}heap[i]={id,h};};
+ const pop=()=>{const result=heap[0],last=heap.pop();if(heap.length){let i=0;while(i*2+1<heap.length){let c=i*2+1;if(c+1<heap.length&&heap[c+1].h>heap[c].h)c++;if(heap[c].h<=last.h)break;heap[i]=heap[c];i=c;}heap[i]=last;}return result;};
+ for(let id=0;id<nav.counts.length;id++)if(nav.counts[id]){base[id]=Math.min(...nav.heights.subarray(id*nav.layers,id*nav.layers+nav.counts[id]));push(id,base[id]);}
+ while(heap.length){const {id,h}=pop();if(h<base[id]-.00001)continue;const x=id%nav.nx,z=Math.floor(id/nav.nx);
+  for(const [dx,dz] of [[1,0],[-1,0],[0,1],[0,-1]]){const xx=x+dx,zz=z+dz;if(xx<0||zz<0||xx>=nav.nx||zz>=nav.nz)continue;const q=zz*nav.nx+xx,next=h-.32*nav.step;
+   if(nav.counts[q]&&next>base[q]+.00001){base[q]=next;push(q,next);}
   }
  }
- return (x,y,z)=>{const ix=Math.round((x-nav.minX)/nav.step),iz=Math.round((z-nav.minZ)/nav.step);if(ix<0||iz<0||ix>=nav.nx||iz>=nav.nz)return 1e5;const id=iz*nav.nx+ix;if(!Number.isFinite(low[id]))return 1e5;return Math.max(low[id]-.32-y,y-high[id]-4.05);};
+ let retained=0;const gap=2.65*actorScale+.4;
+ for(let id=0;id<nav.counts.length;id++)if(nav.counts[id]){const upper=Array.from(nav.heights.subarray(id*nav.layers,id*nav.layers+nav.counts[id])).filter(h=>h>base[id]+gap);
+  const levels=[base[id],...upper].slice(0,nav.layers);nav.heights.fill(NaN,id*nav.layers,(id+1)*nav.layers);nav.heights.set(levels,id*nav.layers);nav.counts[id]=levels.length;retained+=upper.length;
+ }
+ nav.repair={kind:'continuous-sloping-spine',retainedUpperSamples:retained};return nav;
+}
+export function terrainVoid(nav,{clearance=4.05,reach=4}={}){
+ // Carve a separate interval above each floor. Filling the entire low-to-high
+ // envelope erased the intermediate walls and left only an upper shell on stilts.
+ const levels=nav.layers*2,low=new Float32Array(nav.counts.length*levels),high=new Float32Array(low.length),counts=new Uint8Array(nav.counts.length);
+ for(let z=0;z<nav.nz;z++)for(let x=0;x<nav.nx;x++){
+  const id=z*nav.nx+x,heights=[];
+  for(let dz=-reach;dz<=reach;dz++)for(let dx=-reach;dx<=reach;dx++){if(dx*dx+dz*dz>reach*reach)continue;const xx=x+dx,zz=z+dz;if(xx<0||zz<0||xx>=nav.nx||zz>=nav.nz)continue;const q=zz*nav.nx+xx;
+   for(let k=0;k<nav.counts[q];k++)heights.push(nav.heights[q*nav.layers+k]);
+  }
+  heights.sort((a,b)=>a-b);let count=0;
+  for(const h of heights){const lo=h-.32,hi=h+clearance;if(count&&lo<=high[id*levels+count-1])high[id*levels+count-1]=Math.max(high[id*levels+count-1],hi);
+   else if(count<levels){low[id*levels+count]=lo;high[id*levels+count]=hi;count++;}
+  }counts[id]=count;
+ }
+ return (x,y,z)=>{const ix=Math.round((x-nav.minX)/nav.step),iz=Math.round((z-nav.minZ)/nav.step);if(ix<0||iz<0||ix>=nav.nx||iz>=nav.nz)return 1e5;const id=iz*nav.nx+ix;let d=1e5;
+  for(let k=0;k<counts[id];k++)d=Math.min(d,Math.max(low[id*levels+k]-y,y-high[id*levels+k]));return d;};
 }
 
 export function buildWideRoutes(nav,nodes,entrance,exit,g,surfaces,width,connections,actorScale=1){
@@ -102,20 +130,56 @@ export function buildWideRoutes(nav,nodes,entrance,exit,g,surfaces,width,connect
   if(clear)allowed[i]=1;
  }
  nav.widthValid=allowed;
- function nearest(p){let best=null,d=Infinity;for(let id=0;id<nav.counts.length;id++)for(let k=0;k<nav.counts[id];k++){const i=id*nav.layers+k;if(!allowed[i])continue;const q=position(i),horizontal=Math.hypot(q.x-p.x,q.z-p.z);if(horizontal>2.6)continue;const score=horizontal+Math.abs(q.y-p.y)*2;if(score<d){d=score;best=i;}}
-  if(best===null)throw Error('A room cannot retain a full-width entrance. Try the next seed.');return best;}
+ // Validate the complete edge, not only its endpoint rings. Mid-edge checks
+ // must match the final path validator, otherwise a tiny retained face can be
+ // discovered only after A* has already committed to that connection.
+ const edgeCache=new Map();
+ function edgeClear(i,j){
+  const key=Math.min(i,j)*nav.heights.length+Math.max(i,j);if(edgeCache.has(key))return edgeCache.get(key);
+  const a=position(i),b=position(j),L=Math.hypot(b.x-a.x,b.z-a.z)||1,rx=-(b.z-a.z)/L,rz=(b.x-a.x)/L;let clear=true;
+  for(const t of [0,.25,.5,.75,1])for(const side of [-R,0,R]){const x=a.x+(b.x-a.x)*t+rx*side,z=a.z+(b.z-a.z)*t+rz*side,y=a.y+(b.y-a.y)*t,h=floorAt(nav,x,z,y,.6);
+   if(h===null||!floorClear(nav,x,z,h,.05*actorScale,actorScale)||!bodyClear(g,surfaces,x,h,z,.05*actorScale,false,actorScale)){clear=false;break;}}
+  edgeCache.set(key,clear);return clear;
+ }
+ // Pick room entrances from one genuinely connected full-width component.
+ // The closest sample alone may lie on a tiny disconnected terrace, although
+ // another valid entrance to the same room is only a few samples away.
+ const labels=new Int32Array(nav.heights.length).fill(-1);let componentCount=0;
+ function adjacent(i,visit){
+  const id=Math.floor(i/nav.layers),x=id%nav.nx,z=Math.floor(id/nav.nx),h=position(i).y;
+  for(const [dx,dz] of [[1,0],[-1,0],[0,1],[0,-1]]){const xx=x+dx,zz=z+dz;if(xx<0||zz<0||xx>=nav.nx||zz>=nav.nz)continue;const cell=zz*nav.nx+xx;
+   for(let k=0;k<nav.counts[cell];k++){const j=cell*nav.layers+k;if(allowed[j]&&Math.abs(position(j).y-h)<=.22&&edgeClear(i,j))visit(j);}
+  }
+ }
+ function component(start){
+  if(labels[start]>=0)return labels[start];const label=componentCount++,queue=[start];labels[start]=label;
+  for(let head=0;head<queue.length;head++)adjacent(queue[head],j=>{if(labels[j]<0){labels[j]=label;queue.push(j);}});
+  return label;
+ }
+ const anchors=[...nodes.map(n=>n.view),entrance,exit],choices=anchors.map(p=>{
+  const out=new Map();
+  for(let id=0;id<nav.counts.length;id++)for(let k=0;k<nav.counts[id];k++){const i=id*nav.layers+k;if(!allowed[i])continue;const q=position(i),horizontal=Math.hypot(q.x-p.x,q.z-p.z);if(horizontal>2.6)continue;
+   const score=horizontal+Math.abs(q.y-p.y)*2,label=component(i),previous=out.get(label);if(!previous||score<previous.score)out.set(label,{i,score});
+  }
+  return out;
+ });
+ let shared=null,bestScore=Infinity;
+ for(const label of choices[0].keys()){let score=0;for(const options of choices){const choice=options.get(label);if(!choice){score=Infinity;break;}score+=choice.score;}if(score<bestScore){shared=label;bestScore=score;}}
+ if(shared===null){const error=Error('The carved floors need a wider connected passage.');error.details={components:componentCount,anchorComponents:choices.map(c=>[...c.keys()]),width,actorScale};error.routeRepair=true;throw error;}
+ const selected=new Map(anchors.map((p,k)=>[p,choices[k].get(shared).i]));
+ function nearest(p){const i=selected.get(p);if(i===undefined)throw Error('A room has no connected entrance.');return i;}
  class Heap{constructor(){this.a=[];}push(v){let i=this.a.length;this.a.push(v);while(i){const p=(i-1)>>1;if(this.a[p].f<=v.f)break;this.a[i]=this.a[p];i=p;}this.a[i]=v;}pop(){const v=this.a[0],last=this.a.pop();if(this.a.length){let i=0;while(i*2+1<this.a.length){let c=i*2+1;if(c+1<this.a.length&&this.a[c+1].f<this.a[c].f)c++;if(this.a[c].f>=last.f)break;this.a[i]=this.a[c];i=c;}this.a[i]=last;}return v;}get length(){return this.a.length;}}
  function route(A,B){const start=nearest(A),end=nearest(B),target=position(end),heap=new Heap(),cost=new Map([[start,0]]),parent=new Map(),seen=new Set();heap.push({i:start,f:0});
   while(heap.length){const {i}=heap.pop();if(seen.has(i))continue;seen.add(i);if(i===end){const result=[];let id=end;while(id!==undefined){const p=position(id);result.push({...p,y:p.y-.055});id=parent.get(id);}return result.reverse();}
    const id=Math.floor(i/nav.layers),x=id%nav.nx,z=Math.floor(id/nav.nx),h=position(i).y;
    for(const [dx,dz] of [[1,0],[-1,0],[0,1],[0,-1]]){const xx=x+dx,zz=z+dz;if(xx<0||zz<0||xx>=nav.nx||zz>=nav.nz)continue;const cell=zz*nav.nx+xx;
     for(let k=0;k<nav.counts[cell];k++){const next=cell*nav.layers+k;if(!allowed[next]||seen.has(next))continue;const p=position(next),delta=Math.abs(p.y-h);if(delta>.22)continue;const d=cost.get(i)+1+delta*3;
-     if(d>=(cost.get(next)??Infinity))continue;cost.set(next,d);parent.set(next,i);heap.push({i:next,f:d+Math.hypot(target.x-p.x,target.z-p.z)/nav.step+Math.abs(target.y-p.y)*2});
+     if(d>=(cost.get(next)??Infinity)||!edgeClear(i,next))continue;cost.set(next,d);parent.set(next,i);heap.push({i:next,f:d+Math.hypot(target.x-p.x,target.z-p.z)/nav.step+Math.abs(target.y-p.y)*2});
     }
    }
-  }throw Error('This layout still has a narrow multilevel connection after automatic repair. Move the nearby models slightly or reduce Fragments, then Make space.');
+  }const error=Error('This layout still has a narrow multilevel connection after automatic repair. Move the nearby models slightly or reduce Fragments, then Make space.');error.details={start:position(start),end:position(end),visited:seen.size,allowed:allowed.reduce((a,b)=>a+b,0),width,actorScale};error.routeRepair=true;throw error;
  }
- for(const n of nodes){const p=position(nearest(n.view));n.view=p;n.floor=p.y-.055;n.entry={...p};}
+ for(const n of nodes){const p=position(nearest(n.view));Object.assign(n.view,p);n.floor=p.y-.055;n.entry={...p};}
  Object.assign(entrance,position(nearest(entrance)));Object.assign(exit,position(nearest(exit)));
  const paths=[];
  for(const e of connections){const a=nodes[e.a],b=nodes[e.b];try{paths.push({role:e.loop?'interlocking loop':'rising carved connection',from:a.id,to:b.id,width,points:route(a.view,b.view)});}catch(error){if(!e.loop)throw error;}}

@@ -15,5 +15,5 @@ function texture(){
 }
 export function applyMarble(geometry){
  const p=geometry.attributes.position,uv=new Float32Array(p.count*2);for(let i=0;i<p.count;i++){uv[i*2]=p.getX(i)/5;uv[i*2+1]=p.getZ(i)/5;}geometry.setAttribute('uv',new THREE.BufferAttribute(uv,2));
- const map=texture(),mat=new THREE.MeshStandardMaterial({map,bumpMap:map,bumpScale:.018,color:0xffffff,roughness:.94,metalness:0,side:THREE.DoubleSide});mat.name='Honed pale marble';mat.userData.roadFinish='rough-marble-v1';return mat;
+ const map=texture(),mat=new THREE.MeshStandardMaterial({map,bumpMap:map,bumpScale:.018,color:0xffffff,roughness:.94,metalness:0,transparent:false,opacity:1,depthWrite:true,blending:THREE.NoBlending,side:THREE.DoubleSide});mat.name='Honed pale marble';mat.userData.roadFinish='rough-marble-v1';return mat;
 }

@@ -1,7 +1,8 @@
 import {analyseSource,Builder,meshBounds} from './form-geometry.js';
 import {SETTINGS,validateComposition} from './form-state.js';
 import {seeded,rotation,profile,forward,moduleDistance,massFunction,makeVoids,remesh,topology,vertexColor,clamp,keepPrimaryCore,refineSurface} from './surreal-volume.js';
-import {surfaceGrid,buildNavigation,validateCirculation,floorAt,renderedFloor,floorClear,prepareTerrain,terrainVoid,bodyClear,buildWideRoutes} from './surreal-navigation.js';
+import {surfaceGrid,buildNavigation,validateCirculation,floorAt,renderedFloor,floorClear,prepareTerrain,repairTerrainSpine,terrainVoid,bodyClear,buildWideRoutes} from './surreal-navigation.js';
+import {footprintScale} from './space-footprint.js';
 import {roundRoad} from './road-surface.js';
 const TAU=Math.PI*2,distance=(a,b)=>Math.hypot(a.x-b.x,a.z-b.z);
 function curve(a,b,width,rng,role,options={}){
@@ -17,7 +18,8 @@ function curve(a,b,width,rng,role,options={}){
  return {points,width,role,length:total,maxGrade:rise/(lengths[last]-lengths[first]||1),from:a.id,to:b.id};
 }
 function growth(items,analysis,s,rng){
- const modules=[],nodes=[],edges=[],count=Math.max(items.length,s.moduleCount);
+ const modules=[],nodes=[],edges=[],count=Math.max(items.length,s.moduleCount),actorScale=s.layoutDriven?1/(s.worldScale||1):1;
+ const minimumRise=s.layoutDriven&&s.verticalComplexity>0?(2.65*actorScale+.35)*Math.min(1,s.verticalComplexity/.5):0,maximumFloor=Math.max(5.7*s.verticalComplexity,minimumRise*3);
  const compact=clamp(s.compactness+(s.density-.7)*.18,0,1),lock=clamp(s.interlocking+(s.connectionStrength-.65)*.12,0,1);
  for(let k=0;k<count;k++){
   const source=items[k%items.length],a=analysis[source.asset],base=Math.max(3.4,(3.6*s.spatialScale/2.6)*source.scale*(1+(rng()*2-1)*s.scaleVariation));
@@ -31,8 +33,8 @@ function growth(items,analysis,s,rng){
     for(const q of modules){const d=Math.hypot(xx-q.x,zz-q.z);score+=Math.max(0,5.2-d)**2*3.0;}
     if(!best||score<best.score)best={x:xx,z:zz,angle,score};
    }x=best.x;z=best.z;yaw=best.angle+(rng()-.5)*1.7+source.rotation*.23;
-   const direction=k<3?1:rng()>.28?1:-1,step=(1.35+rng()*.50)*s.verticalComplexity;
-   floor=clamp(p.floor+direction*step,0,5.7*s.verticalComplexity);
+   const direction=k<3?1:rng()>.28?1:-1,step=Math.max((1.35+rng()*.50)*s.verticalComplexity,minimumRise);
+   floor=clamp(p.floor+direction*step,0,maximumFloor);
    edges.push({a:parent,b:k});
   }
   if(s.layoutDriven&&k<items.length){
@@ -41,7 +43,7 @@ function growth(items,analysis,s,rng){
    if(k){
     const nearest=modules.reduce((best,q,j)=>distance({x,z},q)<distance({x,z},modules[best])?j:best,0);
     edges[edges.length-1]={a:nearest,b:k};
-    floor=clamp(modules[nearest].floor+(1.35+rng()*.50)*s.verticalComplexity,0,5.7*s.verticalComplexity);
+    floor=clamp(modules[nearest].floor+Math.max((1.35+rng()*.50)*s.verticalComplexity,minimumRise),0,maximumFloor);
    }
   }
   const pitch=(rng()-.5)*(.25+s.rotationVariation*.8),roll=(rng()-.5)*(.22+s.rotationVariation*.7);
@@ -106,8 +108,8 @@ function connectedNavigation(nav,nodes,entrance,exit){
  for(const p of [exit,...nodes.map(n=>n.view)]){const id=index(p);if(id<0||!seen[id]){const e=Error('A split-level room is not connected to the entrance. Try the next seed.');e.details={target:p,index:id,visited:queue.length};throw e;}}
  return queue.length;
 }
-function oneGrowth(items,sources,input,onProgress=()=>{},diagnostics=null){
- const start=Date.now(),s={...SETTINGS,...input};
+function oneGrowth(items,sources,input,onProgress=()=>{},diagnostics=null,onScale=()=>{}){
+ const start=Date.now(),s={...SETTINGS,...input};let actorScale=s.layoutDriven?1/(s.worldScale||1):1;
  validateComposition({format:'borrowed-worlds-model-architecture',version:1,items,settings:s},Object.keys(sources));
  if(!items.length)throw Error('Add at least one original source.');
  onProgress(3,'Measuring the original casts, projections and source contours');const analysis={};for(const i of items)if(!analysis[i.asset])analysis[i.asset]=analyseSource(sources[i.asset]);
@@ -138,13 +140,14 @@ function oneGrowth(items,sources,input,onProgress=()=>{},diagnostics=null){
  if(nodes.length>5){const n=nodes[Math.floor(nodes.length/2)];atriums.push({x:n.center.x+1.5,z:n.center.z-1.4,floor:n.floor,radius:1.1+s.voidDensity*.45,phase:rng()*TAU});}
  const margin=2.2,bounds={minX:Math.floor(Math.min(roughBounds.minX,...paths.flatMap(p=>p.points.map(v=>v.x)))-margin),maxX:Math.ceil(Math.max(roughBounds.maxX,...paths.flatMap(p=>p.points.map(v=>v.x)))+margin),minY:-1.5,maxY:Math.ceil(roughBounds.maxY),minZ:Math.floor(Math.min(roughBounds.minZ,...paths.flatMap(p=>p.points.map(v=>v.z)))-margin),maxZ:Math.ceil(Math.max(roughBounds.maxZ,...paths.flatMap(p=>p.points.map(v=>v.z)))+margin)};
  onProgress(22,'Carving overlapping rooms, irregular atriums and split-level passages');
- const nav=prepareTerrain(buildNavigation(nodes,paths,null,null,bounds,s.routePadding||0));
+ const nav=prepareTerrain(buildNavigation(nodes,paths,null,null,bounds,s.routePadding||0),actorScale);
+ if(s.repairSpine)repairTerrainSpine(nav,actorScale);
  const floorMesh=floors(nav,modules);
  for(const n of nodes){const h=floorAt(nav,n.center.x,n.center.z,n.floor+.055,10);if(h!==null){n.nominalFloor=n.floor;n.floor=h-.055;n.view.y=h;n.entry.y=h;}}
  for(const path of paths)for(const p of path.points){const h=floorAt(nav,p.x,p.z,p.y+.055,10);if(h!==null)p.y=h-.055;}
  const outer=nodes.slice().sort((a,b)=>distance(b.center,mean)-distance(a.center,mean)).slice(0,Math.max(1,Math.ceil(nodes.length/3)));
  const windows=outer.map((n,k)=>{const dx=n.center.x-mean.x,dz=n.center.z-mean.z,L=Math.hypot(dx,dz)||1,normal={x:dx/L,z:dz/L};return {role:'source facade section',carveRadius:k===0?1.35+s.opening*.7:.87+s.opening*.5,clearance:k===0?4.1:2.7,points:[{x:n.center.x+normal.x*n.radius*.35,z:n.center.z+normal.z*n.radius*.35,y:n.floor+(k===0?0:.5)},{x:n.center.x+normal.x*8,z:n.center.z+normal.z*8,y:n.floor+(k===0?0:.5)}]};});
- const originalVoids=makeVoids(nodes,paths.concat(windows),atriums,s,bounds),bedVoid=terrainVoid(nav),voids={value:(x,y,z)=>Math.min(originalVoids.value(x,y,z),bedVoid(x,y,z))};
+ const originalVoids=makeVoids(nodes,paths.concat(windows),atriums,s,bounds),bedVoid=terrainVoid(nav,s.layoutDriven?{clearance:Math.max(1.0,2.8*actorScale+.4),reach:3}:{}),voids={value:(x,y,z)=>Math.min(originalVoids.value(x,y,z),bedVoid(x,y,z))};
  const field=(x,y,z)=>Math.max(mass(x,y,z),-voids.value(x,y,z));
  const extracted=remesh(field,modules,bounds,onProgress),core=extracted.mesh;const discardedVoxelTriangles=keepPrimaryCore(core);refineSurface(core,modules);
  onProgress(74,'Restoring recognisable original crowns and projecting fragments');
@@ -152,7 +155,8 @@ function oneGrowth(items,sources,input,onProgress=()=>{},diagnostics=null){
  if(topo.boundaryEdges||topo.nonManifoldEdges)throw Error('The shared volume could not close reliably. Try the next seed.');
  diagnostics?.({meshes,nodes,paths,bounds,grid:extracted.grid,topology:topo,atriums});
  onProgress(83,'Measuring the actual three-dimensional carved surface');
- const actorScale=s.layoutDriven?1/(s.worldScale||1):1,routeWidth=s.corridorWidth*actorScale;
+ const fitScale=footprintScale(meshBounds([...meshes,floorMesh]),s.targetFootprint);
+ if(fitScale!==null){s.worldScale=fitScale;actorScale=1/fitScale;onScale(fitScale);}
  // The initial carving curves are a proposal, not the final circulation.
  // Retained source faces may block that proposal; find supported full-width
  // routes around them before checking the final paths, rooms and connectivity.
@@ -162,6 +166,9 @@ function oneGrowth(items,sources,input,onProgress=()=>{},diagnostics=null){
   nav.counts[id]=keep.length;for(let k=0;k<keep.length;k++){nav.heights[id*nav.layers+k]=keep[k].h;nav.corners.set(keep[k].c,(id*nav.layers+k)*4);}
  }
  meshes.push(floors(nav,modules,.24));
+ const actualBounds=meshBounds(meshes),finalScale=footprintScale(actualBounds,s.targetFootprint);
+ if(finalScale!==null){s.worldScale=finalScale;actorScale=1/finalScale;onScale(finalScale);}
+ const routeWidth=s.corridorWidth*actorScale;
  const actualRoutes=buildWideRoutes(nav,nodes,entrance,exit,extracted.grid,occupancy,routeWidth,edges,actorScale);paths.splice(0,paths.length,...actualRoutes);
  const floorCirculation=validateCirculation(nodes,paths,extracted.grid,occupancy,routeWidth,nav,actorScale);
  const walkableCells=connectedNavigation(nav,nodes,{...entrance,y:floorAt(nav,entrance.x,entrance.z,entrance.y+.055,10)},{...exit,y:floorAt(nav,exit.x,exit.z,exit.y+.055,10)});
@@ -171,16 +178,16 @@ function oneGrowth(items,sources,input,onProgress=()=>{},diagnostics=null){
  const plan={generator:'source-volume-organism-v1',meshes,nodes,paths,entrance:{...entrance},exit:{...exit},gathering:nodes[0].view,courtyard:atriums[0],atriums,clusters:[],bounds,nav,volumeGrid:{...extracted.grid,surfaces:occupancy},walkGrid:{data:new Uint8Array(1),nx:1,nz:1,step:1,minX:0,minZ:0},settings:s,
  skeleton:{growthEdges:edges,modules:modules.map(m=>({id:m.id,sourceId:m.sourceId,asset:m.asset,parent:m.parent,center:{x:m.x,y:m.floor,z:m.z},rotation:{yaw:m.yaw,pitch:m.pitch,roll:m.roll},scale:[m.scaleX,m.scaleY,m.scaleZ]})),sequence:['carved entrance','interlocked lower void','rising interior','split-level chambers','exit terrace'],atriums,seed:s.seed},
  analysis:Object.fromEntries(Object.entries(analysis).map(([key,a])=>[key,{kind:a.kind,height:a.height,width:a.width,depth:a.depth,sourceTriangles:a.sourceTriangles,sourceVertices:a.sourceVertices}])),
- validation:{roadThickness:.24,discardedVoxelTriangles,...floorCirculation,floorTrianglesChecked:true,topology:topo,modules:nodes.length,roomFloorRange:Math.max(...nodes.map(n=>n.floor))-Math.min(...nodes.map(n=>n.floor)),verticalRange:(()=>{let lo=Infinity,hi=-Infinity;for(let id=0;id<nav.counts.length;id++)for(let k=0;k<nav.counts[id];k++){const h=nav.heights[id*nav.layers+k];lo=Math.min(lo,h);hi=Math.max(hi,h);}return hi-lo;})(),multilevelColumns:Array.from(nav.counts).filter(v=>v>1).length,nativeTriangles:details.retainedTriangles,connectedWalkableCells:walkableCells,voxelResolution:extracted.grid.step,voxelSamples:extracted.grid.values.length,carvedRouteInsideMass:inMass/(total||1),longestGrowthContact:Math.max(0,...edges.map(e=>distance(nodes[e.a].center,nodes[e.b].center))),runtimeMs:Date.now()-start,topologicallyFusedCore:true,nativeFragmentsSeparatelyRetained:true,routesClear:true}};
+ validation:{terrainRepair:nav.repair||null,targetFootprint:s.targetFootprint||null,outputFootprint:{width:(actualBounds.maxX-actualBounds.minX)*(s.worldScale||1),depth:(actualBounds.maxZ-actualBounds.minZ)*(s.worldScale||1)},roadThickness:.24,discardedVoxelTriangles,...floorCirculation,floorTrianglesChecked:true,topology:topo,modules:nodes.length,roomFloorRange:Math.max(...nodes.map(n=>n.floor))-Math.min(...nodes.map(n=>n.floor)),verticalRange:(()=>{let lo=Infinity,hi=-Infinity;for(let id=0;id<nav.counts.length;id++)for(let k=0;k<nav.counts[id];k++){const h=nav.heights[id*nav.layers+k];lo=Math.min(lo,h);hi=Math.max(hi,h);}return hi-lo;})(),multilevelColumns:Array.from(nav.counts).filter(v=>v>1).length,nativeTriangles:details.retainedTriangles,connectedWalkableCells:walkableCells,voxelResolution:extracted.grid.step,voxelSamples:extracted.grid.values.length,carvedRouteInsideMass:inMass/(total||1),longestGrowthContact:Math.max(0,...edges.map(e=>distance(nodes[e.a].center,nodes[e.b].center))),runtimeMs:Date.now()-start,topologicallyFusedCore:true,nativeFragmentsSeparatelyRetained:true,routesClear:true}};
  onProgress(100,'One shared body. Many borrowed spaces.');return plan;
 }
 
 export function generateSurreal(items,sources,input,onProgress=()=>{},diagnostics=null){
- let lastError;const requested=input.seed??SETTINGS.seed;
+ let lastError,workingScale=input.worldScale;const requested=input.seed??SETTINGS.seed;
  for(let attempt=0;attempt<4;attempt++){const effective=attempt===0?requested:((requested^(Math.imul(attempt,0x9e3779b9)))>>>0)%1000000;
-  try{const plan=oneGrowth(items,sources,{...input,seed:effective,routePadding:attempt===3?.65:0},(p,m)=>onProgress(Math.min(99,attempt*30+p*.30),(attempt?'Refining the growth contacts. ':'')+m),diagnostics);
-   plan.settings={...SETTINGS,...input};plan.validation.requestedSeed=requested;plan.validation.effectiveSeed=effective;plan.validation.growthAttempts=attempt+1;plan.validation.routeRepair=attempt===3;onProgress(100,'One shared body. Many borrowed spaces.');return plan;
-  }catch(error){lastError=error;if(attempt===2&&!/route|support|entrance|chamber/.test(error.message))break;if(/outside its limits|invalid|unavailable|at least one/.test(error.message))throw error;}
+  try{const plan=oneGrowth(items,sources,{...input,worldScale:workingScale,seed:effective,routePadding:attempt===3?.9:0,repairSpine:attempt===3},(p,m)=>onProgress(Math.min(99,attempt*30+p*.30),(attempt?'Refining the growth contacts. ':'')+m),diagnostics,value=>{workingScale=value;});
+   plan.settings={...SETTINGS,...input,worldScale:plan.settings.worldScale};plan.validation.requestedSeed=requested;plan.validation.effectiveSeed=effective;plan.validation.growthAttempts=attempt+1;plan.validation.routeRepair=attempt===3;onProgress(100,'One shared body. Many borrowed spaces.');return plan;
+  }catch(error){lastError=error;if(attempt===2&&!error.routeRepair&&!/route|support|entrance|chamber|passage/.test(error.message))break;if(/outside its limits|invalid|unavailable|at least one/.test(error.message))throw error;}
  }
  throw lastError;
 }

@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {prepareTerrain,terrainVoid} from '../src/inhabitable/surreal-navigation.js';
+import {preparePlacedSources} from '../src/exhibition-inhabitable-input.js';
+import {footprintScale} from '../src/inhabitable/space-footprint.js';
+import {SETTINGS} from '../src/inhabitable/form-state.js';
+import * as THREE from 'three';
+const nav=()=>({nx:1,nz:1,layers:2,step:.28,minX:0,minZ:0,counts:new Uint8Array([2]),heights:new Float32Array([0,2])});
+assert.equal(prepareTerrain(nav(),1).counts[0],1,'Unsafe low headroom must still merge');
+const layered=prepareTerrain(nav(),.2);assert.equal(layered.counts[0],2,'Physically distinct floors must survive normalization');
+const voidAt=terrainVoid(layered,{clearance:1,reach:0});assert(voidAt(0,.5,0)<0);assert(voidAt(0,2.5,0)<0);assert(voidAt(0,1.5,0)>.1,'The solid between floors must not become one continuous void');
+const object=new THREE.Mesh(new THREE.BoxGeometry(40,120,40));object.position.y=60;
+const input=await preparePlacedSources([{id:'a',modelId:'a',name:'Tall sculpture',object,layout:{col:9,row:9,span:2,scale:1,rotation:0}}],SETTINGS);
+assert.equal(input.sourceUnits,37.5);assert.deepEqual(input.targetFootprint,{width:40,depth:40});const scale=footprintScale({minX:-12,maxX:12,minZ:-10,maxZ:10},input.targetFootprint);assert(Math.abs(24*20*scale*scale-1600)<1e-8);assert.equal(input.settings.spaceStyle,3);
+console.log('PASS: input-footprint calibrated space growth; separate walkable layers, retained inter-floor mass and unsafe low-level merging.');

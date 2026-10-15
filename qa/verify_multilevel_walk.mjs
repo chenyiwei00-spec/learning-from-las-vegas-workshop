@@ -26,7 +26,7 @@ const context={scene,renderer:{domElement:canvas},placement,getCamera:()=>camera
 await engine.ready;
 assert(await engine.generate({override:{...SETTINGS,moduleCount:3,layoutVersion:2}}),engine.state().error);
 assert(engine.state().validation.verticalRange>2);assert(engine.state().validation.maxGrade>.02);
-const plan=lastPlan,offset=engine.state().offset,scale=engine.state().scale;assert.equal(scale,1.25);engine.enter();assert.equal(view,'room');assert(navigated.y>=1.65);
+const plan=lastPlan,offset=engine.state().offset,scale=engine.state().scale;assert.equal(scale,lastPlan.settings.worldScale);const f=lastPlan.validation;assert(Math.abs(f.outputFootprint.width*f.outputFootprint.depth/(f.targetFootprint.width*f.targetFootprint.depth)-1)<1e-5);engine.enter();assert.equal(view,'room');assert(navigated.y>=1.65);
 let walkingSamples=0,eye=new THREE.Vector3(navigated.x,navigated.y,navigated.z);
 const walk=points=>{for(let k=1;k<points.length;k++){const a=points[k-1],b=points[k];for(let f=.25;f<=1;f+=.25){eye.set((a.x+(b.x-a.x)*f)*scale+offset.x,1.65,(a.z+(b.z-a.z)*f)*scale+offset.z);engine.constrain(eye,.35,{fly:false,eyeHeight:1.65});const expected=new THREE.Vector3((a.x+(b.x-a.x)*f)*scale+offset.x,(a.y+(b.y-a.y)*f+.055)*scale+offset.y+1.65,(a.z+(b.z-a.z)*f)*scale+offset.z);assert(eye.distanceTo(expected)<.20,'Main-site walk must follow actual supported floors: '+eye.distanceTo(expected));walkingSamples++;}}};
 walk(plan.paths.find(p=>p.role==='carved entrance').points);

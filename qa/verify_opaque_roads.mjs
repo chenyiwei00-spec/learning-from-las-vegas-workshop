@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import * as THREE from 'three';
+import {createArchitecture} from '../src/inhabitable/form-scene.js';
+import {createExhibitionSection} from '../src/exhibition-section.js';
+const geometry=new THREE.BoxGeometry(4,.3,4),part={road:true,solid:false,name:'Opaque road',positions:geometry.attributes.position.array.slice(),index:geometry.index.array.slice(),colors:new Float32Array(geometry.attributes.position.array.length).fill(1)},group=createArchitecture({meshes:[part]}),road=group.children[0];
+assert.equal(road.material.transparent,false);assert.equal(road.material.opacity,1);assert.equal(road.material.depthWrite,true);assert.equal(road.material.blending,THREE.NoBlending);assert.equal(road.castShadow,true);
+const elements=new Map();globalThis.document={getElementById:id=>{if(!elements.has(id))elements.set(id,{addEventListener(){},removeEventListener(){},setAttribute(){}});return elements.get(id);}};globalThis.requestAnimationFrame=()=>1;globalThis.cancelAnimationFrame=()=>{};
+const scene=new THREE.Scene();scene.add(group);scene.updateMatrixWorld(true);
+const section=createExhibitionSection({scene,renderer:{clearStencil(){}},getMeshes:()=>[road],invalidate(){}});
+section.set({enabled:true,axis:'y'});const cap=scene.getObjectByName('Axonometric section caps').children.find(o=>o.userData.sectionCap);
+assert(cap.userData.road);assert.equal(cap.material.opacity,1);assert.equal(cap.material.depthWrite,true);assert.equal(cap.material.blending,THREE.NoBlending);
+const shader={uniforms:{},vertexShader:'#include <begin_vertex>',fragmentShader:'#include <opaque_fragment>'};cap.material.onBeforeCompile(shader);assert.equal(shader.uniforms.sectionRoad.value,1);assert(shader.fragmentShader.includes('mix(.13,1.,sectionRoad)'));
+section.dispose();console.log('PASS: opaque depth-writing marble roads cast shadows; road section fills stay opaque with dark grid marks.');

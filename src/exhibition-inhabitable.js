@@ -67,7 +67,7 @@ export function createInhabitableSpace({scene,renderer,placement,getView,getCame
    const chosen={...checkSettings(override||settings),layoutDriven:true,moduleCount:Math.max(placement.spaceSources().length,(override||settings).layoutVersion===2?(override||settings).moduleCount:9),layoutVersion:2,seed:layoutSeed(placement.spaceSources())};
    const input=await preparePlacedSources(placement.spaceSources(),chosen,(p,m)=>{progress=p*.05;say(m);ui();});if(disposed)throw Error('The exhibition was closed.');
    const plan=await compute(input);if(disposed)throw Error('The exhibition was closed.');if(key!==layoutSignature(placement))throw Error('The placed models changed during generation. Click Make space again.');
-   next=candidate(plan,input,input.worldScale);onSpaceBounds?.(next.bounds);disposeResult(result);result=next;next=null;scene.add(result.group,result.footprints);
+   next=candidate(plan,input,plan.settings.worldScale||input.worldScale);onSpaceBounds?.(next.bounds);disposeResult(result);result=next;next=null;scene.add(result.group,result.footprints);
    archiveBlob=null;signature=key;settings=settingsRevision!==revisionAtStart?settings:restore?pendingAtStart:{...chosen};generatedSettings={...chosen};stale=JSON.stringify(settings)!==JSON.stringify(generatedSettings);lastSafe=null;wasFlying=false;lastWalkSafe=null;sourceSelection=null;progress=100;visibility(true);
    surface.dataset.spaceSeed=String(chosen.seed);surface.dataset.spaceRoutesClear=String(plan.validation.routesClear);surface.dataset.spaceTriangles=String(result.triangles);
    say(stale?'SPACE READY / CHANGES STAGED FOR UPDATE':'SPACE READY / '+plan.nodes.length+' FRAGMENTS / '+chosen.corridorWidth.toFixed(1)+' M ROUTE');

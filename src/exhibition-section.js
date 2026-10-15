@@ -66,7 +66,7 @@ export function createExhibitionSection({scene,renderer,getMeshes,invalidate}){
     }
     // Custom alpha blending keeps this in the opaque queue so each stencil
     // volume is immediately capped/cleared, after the surviving geometry.
-    const mat=new THREE.MeshBasicMaterial({color:0x222222,opacity:.22,transparent:false,blending:THREE.CustomBlending,blendSrc:THREE.SrcAlphaFactor,blendDst:THREE.OneMinusSrcAlphaFactor,blendEquation:THREE.AddEquation,depthWrite:false,toneMapped:false,side:THREE.DoubleSide,stencilWrite:true,stencilRef:0,stencilFunc:THREE.NotEqualStencilFunc,stencilFail:THREE.ReplaceStencilOp,stencilZFail:THREE.ReplaceStencilOp,stencilZPass:THREE.ReplaceStencilOp,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1});
+    const mat=new THREE.MeshBasicMaterial({color:0x222222,opacity:mesh.userData.road?1:.22,transparent:false,blending:mesh.userData.road?THREE.NoBlending:THREE.CustomBlending,blendSrc:THREE.SrcAlphaFactor,blendDst:THREE.OneMinusSrcAlphaFactor,blendEquation:THREE.AddEquation,depthWrite:!!mesh.userData.road,toneMapped:false,side:THREE.DoubleSide,stencilWrite:true,stencilRef:0,stencilFunc:THREE.NotEqualStencilFunc,stencilFail:THREE.ReplaceStencilOp,stencilZFail:THREE.ReplaceStencilOp,stencilZPass:THREE.ReplaceStencilOp,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1});
     // Drafting marks are opaque #222, while the continuous fill stays translucent.
     mat.onBeforeCompile=shader=>{
      shader.uniforms.sectionPitch={value:Math.max(.6,side/(mesh.userData.road?80:180))};
@@ -78,11 +78,11 @@ export function createExhibitionSection({scene,renderer,getMeshes,invalidate}){
       'float dotMask=step(dotDistance,.23);',
       'vec2 gridDistance=abs(fract(q-.5)-.5)/max(fwidth(q),vec2(.0001));',
       'float gridMask=1.-smoothstep(.55,1.0,min(gridDistance.x,gridDistance.y));',
-      'float inkMask=mix(dotMask,gridMask,sectionRoad);diffuseColor.a=mix(.13,1.,inkMask);outgoingLight=diffuse;',
+      'float inkMask=mix(dotMask,gridMask,sectionRoad);diffuseColor.a=mix(mix(.13,1.,sectionRoad),1.,inkMask);outgoingLight=mix(diffuse,mix(vec3(.65),diffuse,inkMask),sectionRoad);',
       '#include <opaque_fragment>'
      ].join('\n'));
-    };mat.customProgramCacheKey=()=> 'section-opaque-drafting-v3';
-    const cap=new THREE.Mesh(new THREE.PlaneGeometry(side,side),mat);cap.name='Translucent cut surface';cap.userData.ownsGeometry=true;cap.userData.sectionCap=true;cap.renderOrder=order+1;cap.frustumCulled=false;cap.onAfterRender=()=>renderer.clearStencil();overlays.add(cap);caps++;
+    };mat.customProgramCacheKey=()=> 'section-opaque-drafting-v4';
+    const cap=new THREE.Mesh(new THREE.PlaneGeometry(side,side),mat);cap.name='Translucent cut surface';cap.userData.ownsGeometry=true;cap.userData.sectionCap=true;cap.userData.road=!!mesh.userData.road;cap.renderOrder=order+1;cap.frustumCulled=false;cap.onAfterRender=()=>renderer.clearStencil();overlays.add(cap);caps++;
    }
   }
   if(targets.length){const b=new THREE.Box3();for(const m of targets)b.union(new THREE.Box3().setFromObject(m));height=THREE.MathUtils.lerp(b.min[axisName],b.max[axisName],ratio);plane.normal.set(0,0,0);plane.normal[axisName]=-1;plane.constant=height;
@@ -96,5 +96,5 @@ export function createExhibitionSection({scene,renderer,getMeshes,invalidate}){
  panel.addEventListener('pointerdown',e=>e.stopPropagation());
  const toggle=()=>set({enabled:!enabled}),slide=()=>set({ratio:Number(range.value)/100}),changeAxis=()=>set({axis:axis.value});
  button.addEventListener('click',toggle);range.addEventListener('input',slide);axis.addEventListener('change',changeAxis);
- return {refresh:update,set,setViewMode:mode=>{view=mode;update();},state:()=>({enabled,active:enabled&&view==='axonometric',axis:axisName,ratio,height,capColour:'#222222',capOpacity:.22,contourOpacity:1,contourWidth:2,wallPattern:'stipple',roadPattern:'grid',patternColour:'#222222',patternOpacity:1,lineSegments,caps,meshCount:targets.length}),dispose:()=>{disposed=true;release();scene.remove(overlays);button.removeEventListener('click',toggle);range.removeEventListener('input',slide);axis.removeEventListener('change',changeAxis);}};
+ return {refresh:update,set,setViewMode:mode=>{view=mode;update();},state:()=>({enabled,active:enabled&&view==='axonometric',axis:axisName,ratio,height,capColour:'#222222',capOpacity:.22,roadCapOpacity:1,contourOpacity:1,contourWidth:2,wallPattern:'stipple',roadPattern:'grid',patternColour:'#222222',patternOpacity:1,lineSegments,caps,meshCount:targets.length}),dispose:()=>{disposed=true;release();scene.remove(overlays);button.removeEventListener('click',toggle);range.removeEventListener('input',slide);axis.removeEventListener('change',changeAxis);}};
 }

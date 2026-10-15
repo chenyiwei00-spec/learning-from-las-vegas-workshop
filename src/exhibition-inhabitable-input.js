@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import {CELL_SIZE} from './exhibition-dimensions.js';
 import {extractSource} from './inhabitable/form-source.js';
 import {SETTINGS,validateComposition} from './inhabitable/form-state.js';
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
@@ -19,11 +20,14 @@ export async function preparePlacedSources(placed,settings,onProgress=()=>{}){
  for(const m of measured){lo.min(m.position);hi.max(m.position);}
  let sourceTriangles=0;
  // Work in compact numerical units, then restore the measured metre scale.
- // This conversion is homogeneous: scaling all inputs 4x scales the space 4x.
+ // Keep source proportions in solver units. Final scale is measured against
+ // the actual occupied-cell footprint after the architecture has been generated.
  const sizes=measured.map(m=>Math.max(m.size.x,m.size.y,m.size.z)).sort((a,b)=>a-b);
- const worldScale=Math.max(sizes[Math.floor(sizes.length/2)]/3.2,(hi.x-lo.x)/24,(hi.z-lo.z)/24);
+ const sourceUnits=Math.max(sizes[Math.floor(sizes.length/2)]/3.2,(hi.x-lo.x)/24,(hi.z-lo.z)/24);
+ const footprint=new THREE.Box3();for(const m of measured){const half=(m.s.layout?.span||1)*CELL_SIZE/2;footprint.expandByPoint(new THREE.Vector3(m.position.x-half,0,m.position.z-half));footprint.expandByPoint(new THREE.Vector3(m.position.x+half,0,m.position.z+half));}
+ const d=footprint.getSize(new THREE.Vector3()),targetFootprint={width:d.x,depth:d.z},worldScale=Math.sqrt(d.x*d.z)/(12+3*Math.sqrt(Math.max(placed.length,settings.moduleCount||9)));
  if(!Number.isFinite(worldScale)||worldScale<=0)throw Error('The placed models have no measurable size.');
- const centre=lo.clone().add(hi).multiplyScalar(.5),layoutScale=1/worldScale,sources={},items=[],attribution={};
+ const centre=lo.clone().add(hi).multiplyScalar(.5),layoutScale=1/sourceUnits,sources={},items=[],attribution={};
  for(let k=0;k<measured.length;k++){
   const {s,size,position}=measured[k],key=String(s.modelId);
   if(!sources[key]){
@@ -32,12 +36,12 @@ export async function preparePlacedSources(placed,settings,onProgress=()=>{}){
    copy.position.set(-c.x,-b.min.y,-c.z);const root=new THREE.Group();root.add(copy);root.scale.setScalar(3.2/Math.max(d.x,d.y,d.z));root.updateMatrixWorld(true);sources[key]=extractSource(root);sourceTriangles+=sources[key].index.length/3;
    if(sourceTriangles>1500000)throw Error('This layout exceeds the 1.5 million source-triangle budget. Use lighter models or a smaller collection for Make space.');
   }
-  items.push({id:s.id,asset:key,x:(position.x-centre.x)*layoutScale,z:(position.z-centre.z)*layoutScale,rotation:s.layout.rotation||0,scale:clamp(Math.max(size.x,size.y,size.z)/(3.2*worldScale),.5,1.4)});
+  items.push({id:s.id,asset:key,x:(position.x-centre.x)*layoutScale,z:(position.z-centre.z)*layoutScale,rotation:s.layout.rotation||0,scale:clamp(Math.max(size.x,size.y,size.z)/(3.2*sourceUnits),.5,1.4)});
   attribution[s.id]={modelId:key,name:s.name,layout:{...s.layout},originalPosition:{x:position.x,z:position.z}};
   onProgress(Math.round((k+1)/measured.length*100),'Reading source model '+(k+1)+' / '+measured.length);
   await new Promise(resolve=>typeof requestAnimationFrame==='function'?requestAnimationFrame(resolve):setTimeout(resolve,0));
  }
- return {items,sources,settings:{...checkSettings(settings),layoutDriven:true,worldScale,moduleCount:Math.max(items.length,settings.moduleCount||9),seed:layoutSeed(placed)},centre:{x:0,z:0},layoutScale,worldScale,attribution};
+ return {items,sources,settings:{...checkSettings(settings),layoutDriven:true,worldScale,sourceUnits,targetFootprint,spaceStyle:3,moduleCount:Math.max(items.length,settings.moduleCount||9),seed:layoutSeed(placed)},centre:{x:0,z:0},layoutScale,sourceUnits,targetFootprint,worldScale,attribution};
 }
 export function locateInHall(group,centre,half=20){
  group.updateMatrixWorld(true);const local=new THREE.Box3().setFromObject(group),margin=.6;
