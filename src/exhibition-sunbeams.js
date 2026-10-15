@@ -3,6 +3,7 @@ import * as THREE from 'three';
 export function createSunbeams({scene,sun}){
  const group=new THREE.Group();group.name='studio-volumetric-sunlight';scene.add(group);const beams=[],materials=[],dustMaterial=new THREE.PointsMaterial({color:0xfff1d5,size:.045,transparent:true,opacity:.12,depthWrite:false});let height=30;
  function rebuild(y){height=y;group.children.forEach(o=>o.geometry.dispose());materials.forEach(m=>m.dispose());materials.length=0;group.clear();beams.length=0;const positions=[],direction=sun.target.position.clone().sub(sun.position).normalize(),origins=[[-2,y-.5,0],[6,y-.5,0],[-2,y-.5,8],[6,y-.5,8],...[ -5,5,15].map(z=>[19.8,y-8,z]),...[ -5,5,15].map(x=>[x,y-8,19.8])];
+  if(direction.y>=-.02||sun.intensity<.01)return;
   for(const at of origins){const origin=new THREE.Vector3(...at),length=origin.y/-direction.y,end=origin.clone().addScaledVector(direction,length),geometry=new THREE.CylinderGeometry(.35,1.5,length,18,1,true),uniforms={sunDepth:{value:null},sunMatrix:{value:sun.shadow.matrix},beamDirection:{value:direction},shadowReady:{value:0}};
    const material=new THREE.ShaderMaterial({uniforms,transparent:true,depthWrite:false,side:THREE.DoubleSide,blending:THREE.AdditiveBlending,vertexShader:`varying vec3 beamPosition;varying vec3 beamNormal;varying float alongBeam;void main(){vec4 p=modelMatrix*vec4(position,1.0);beamPosition=p.xyz;beamNormal=normalize(mat3(modelMatrix)*normal);alongBeam=uv.y;gl_Position=projectionMatrix*viewMatrix*p;}`,fragmentShader:`#include <packing>
  uniform sampler2D sunDepth;uniform mat4 sunMatrix;uniform float shadowReady;uniform vec3 beamDirection;varying vec3 beamPosition;varying vec3 beamNormal;varying float alongBeam;
@@ -13,5 +14,5 @@ export function createSunbeams({scene,sun}){
   }
   const dust=new THREE.BufferGeometry();dust.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));group.add(new THREE.Points(dust,dustMaterial));
  }
- return {setHeight:rebuild,setVisible:value=>group.visible=!!value,state:()=>({beams:beams.length,visible:group.visible,height,shadowMasked:true,dustParticles:240}),dispose:()=>{scene.remove(group);group.children.forEach(o=>o.geometry.dispose());materials.forEach(m=>m.dispose());dustMaterial.dispose();}};
+ return {setHeight:rebuild,setVisible:value=>group.visible=!!value,state:()=>({beams:beams.length,visible:group.visible,height,shadowMasked:true,dustParticles:beams.length*24}),dispose:()=>{scene.remove(group);group.children.forEach(o=>o.geometry.dispose());materials.forEach(m=>m.dispose());dustMaterial.dispose();}};
 }

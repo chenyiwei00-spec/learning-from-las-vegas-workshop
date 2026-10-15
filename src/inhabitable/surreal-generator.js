@@ -2,7 +2,6 @@ import {analyseSource,Builder,meshBounds} from './form-geometry.js';
 import {SETTINGS,validateComposition} from './form-state.js';
 import {seeded,rotation,profile,forward,moduleDistance,massFunction,makeVoids,remesh,topology,vertexColor,clamp,keepPrimaryCore,refineSurface} from './surreal-volume.js';
 import {surfaceGrid,buildNavigation,validateCirculation,floorAt,renderedFloor,floorClear,prepareTerrain,terrainVoid,bodyClear,buildWideRoutes} from './surreal-navigation.js';
-import {GENERATED_SPACE_SCALE} from '../exhibition-dimensions.js';
 import {roundRoad} from './road-surface.js';
 const TAU=Math.PI*2,distance=(a,b)=>Math.hypot(a.x-b.x,a.z-b.z);
 function curve(a,b,width,rng,role,options={}){
@@ -153,8 +152,11 @@ function oneGrowth(items,sources,input,onProgress=()=>{},diagnostics=null){
  if(topo.boundaryEdges||topo.nonManifoldEdges)throw Error('The shared volume could not close reliably. Try the next seed.');
  diagnostics?.({meshes,nodes,paths,bounds,grid:extracted.grid,topology:topo,atriums});
  onProgress(83,'Measuring the actual three-dimensional carved surface');
- const actorScale=s.layoutDriven?1/GENERATED_SPACE_SCALE:1,routeWidth=s.corridorWidth*actorScale;
- const occupancy=surfaceGrid(meshes,extracted.grid),circulation=validateCirculation(nodes,paths,extracted.grid,occupancy,routeWidth,null,actorScale);
+ const actorScale=s.layoutDriven?1/(s.worldScale||1):1,routeWidth=s.corridorWidth*actorScale;
+ // The initial carving curves are a proposal, not the final circulation.
+ // Retained source faces may block that proposal; find supported full-width
+ // routes around them before checking the final paths, rooms and connectivity.
+ const occupancy=surfaceGrid(meshes,extracted.grid);
  for(let id=0;id<nav.counts.length;id++){const x=nav.minX+(id%nav.nx)*nav.step,z=nav.minZ+Math.floor(id/nav.nx)*nav.step,keep=[];
   for(let k=0;k<nav.counts[id];k++){const h=renderedFloor(nav,id,k,x,z);if(bodyClear(extracted.grid,occupancy,x,h,z,.23*actorScale,false,actorScale)&&floorClear(nav,x,z,h,.23*actorScale,actorScale))keep.push({h,c:Array.from(nav.corners.subarray((id*nav.layers+k)*4,(id*nav.layers+k)*4+4))});}
   nav.counts[id]=keep.length;for(let k=0;k<keep.length;k++){nav.heights[id*nav.layers+k]=keep[k].h;nav.corners.set(keep[k].c,(id*nav.layers+k)*4);}

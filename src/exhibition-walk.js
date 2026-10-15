@@ -4,6 +4,7 @@ import {createFactoryRoom} from './exhibition-factory-room.js';
 import {WALK_SIZE} from './exhibition-dimensions.js';
 import {createExhibitionSection} from './exhibition-section.js';
 import {createExhibitionRender} from './exhibition-render.js';
+import {createLightControls} from './exhibition-light-controls.js';
 import {createSkylight} from './exhibition-skylight.js';
 import {createExhibitionSpace} from './exhibition-space.js';
 import {createExhibitionPlacement} from './exhibition-placement.js';
@@ -17,13 +18,13 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
   if (!surface || !host) return;
   const $ = id => document.getElementById(id);
   let ROOM = Object.freeze({width:WALK_SIZE, depth:WALK_SIZE, height:30, wallThickness:0.18});
+  const PLAN_SCALE=FLOOR_SIZE/100;
   const EYE_HEIGHT = 1.65, RADIUS = 0.35, SPEED = 1.8;
-  const LIMIT = ROOM.width / 2 - RADIUS;
   const keys = new Set(), raycaster = new THREE.Raycaster(), pointer = new THREE.Vector2();
   const eye = new THREE.Vector3(0, EYE_HEIGHT, 14);
   const forward = new THREE.Vector3(), right = new THREE.Vector3(), direction = new THREE.Vector3();
   let renderer, scene, camera, roomCamera, axonCamera, axonControls, axonGroup, roomDetailGroup, floorGrid;
-  let space=null,skylight=null,factoryRoom=null,renderPipeline=null,section=null;
+  let space=null,skylight=null,factoryRoom=null,renderPipeline=null,section=null,lighting=null;
   let roomMeshes = [], ready = false, disposed = false, viewMode = 'room', twoPoint = false;
   let yaw = 0, pitch = 0, fly = false, active = false, drag = null;
   let immersive=false, pageScroll=0;
@@ -34,11 +35,11 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
   const held = (...codes) => codes.some(code => keys.has(code));
 
   function constrain(position) {
-    position.x = clamp(position.x,-LIMIT,LIMIT);
-    position.z = clamp(position.z,-LIMIT,LIMIT);
-    position.y = fly ? clamp(position.y,RADIUS,Math.min(ROOM.height,factoryRoom?.ceilingAt(position.x)||ROOM.height)-RADIUS) : (space?.state().active ? position.y : EYE_HEIGHT);
+    position.x = clamp(position.x,-ROOM.width/2+RADIUS,ROOM.width/2-RADIUS);
+    position.z = clamp(position.z,-ROOM.depth/2+RADIUS,ROOM.depth/2-RADIUS);
+    position.y = fly ? clamp(position.y,RADIUS,ROOM.height-RADIUS) : (space?.state().active ? position.y : EYE_HEIGHT);
     space?.constrain(position,RADIUS,{fly,eyeHeight:EYE_HEIGHT});
-    position.x=clamp(position.x,-LIMIT,LIMIT);position.z=clamp(position.z,-LIMIT,LIMIT);
+    position.x=clamp(position.x,-ROOM.width/2+RADIUS,ROOM.width/2-RADIUS);position.z=clamp(position.z,-ROOM.depth/2+RADIUS,ROOM.depth/2-RADIUS);
     return position;
   }
   function orient() {
@@ -63,12 +64,12 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
     $('walk-two-point').textContent = 'Two-point ' + (twoPoint ? 'on' : 'off');
     $('walk-two-point').setAttribute('aria-pressed',String(twoPoint));
     $('walk-view-toggle').textContent=axon?'Axonometric / switch':'Eye level / switch';$('walk-view-toggle').setAttribute('aria-pressed',String(axon));
-    $('walk-status').textContent = axon ? 'AXONOMETRIC / 5 M GRID' : (fly ? 'FLY' : 'WALK') + ' / EYE ' + eye.y.toFixed(2) + ' M';
+    $('walk-status').textContent = axon ? 'AXONOMETRIC / '+CELL_SIZE+' M GRID' : (fly ? 'FLY' : 'WALK') + ' / EYE ' + eye.y.toFixed(2) + ' M';
     $('walk-view-label').textContent = axon ? 'FLOOR PLAN' : 'WHITE ATMOSPHERE';
-    surface.querySelector('.walk-room-label span:last-child').textContent=axon?'100 x 100 M':'200 x 200 M';
+    surface.querySelector('.walk-room-label span:last-child').textContent=axon?FLOOR_SIZE+' x '+FLOOR_SIZE+' M':ROOM.width.toFixed(0)+' x '+ROOM.depth.toFixed(0)+' M';
     $('walk-caption-text').textContent = axon ? 'Drag to rotate · Wheel to zoom · Right / middle drag to pan' : 'WASD to walk · Drag to look · Q up / E down · Space to walk · Shift faster';
-    $('walk-dimensions').textContent = axon ? '100 \u00d7 100 M / 400 CELLS' : '200 \u00d7 200 \u00d7 '+ROOM.height.toFixed(1)+' M';
-    surface.setAttribute('aria-label',axon ? 'Orthographic floor view with four hundred two metre grid cells. Drag to rotate; wheel to zoom; right or middle drag to pan.' : 'Walk through a hundred by hundred metre sunlit exhibition with fog and reflective multilevel paths');
+    $('walk-dimensions').textContent = axon ? FLOOR_SIZE+' \u00d7 '+FLOOR_SIZE+' M / 400 CELLS' : ROOM.width.toFixed(0)+' \u00d7 '+ROOM.depth.toFixed(0)+' \u00d7 '+ROOM.height.toFixed(1)+' M';
+    surface.setAttribute('aria-label',axon ? 'Orthographic floor view with four hundred twenty metre grid cells. Drag to rotate; wheel to zoom; right or middle drag to pan.' : 'Walk through a four hundred by four hundred metre sunlit exhibition with fog and reflective multilevel paths');
     surface.dataset.view = viewMode;
     surface.dataset.navigationActive=String(active);surface.dataset.fly=String(fly);
     surface.dataset.eyeX=String(eye.x);surface.dataset.eyeY=String(eye.y);surface.dataset.eyeZ=String(eye.z);
@@ -160,7 +161,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
   function reset() {
     clearInput(); teleport = null;
     if (viewMode === 'axonometric') {
-      axonCamera.position.set(120,120,120); axonCamera.zoom = 1.08;
+      axonCamera.position.set(120*PLAN_SCALE,120*PLAN_SCALE,120*PLAN_SCALE); axonCamera.zoom = 1.08;
       axonControls.target.set(0,0,0); axonCamera.updateProjectionMatrix(); axonControls.update();
     } else {
       if(space?.state().active){space.enter();return;}
@@ -176,7 +177,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
     renderer.setSize(rect.width,rect.height,false);renderPipeline?.setSize(rect.width,rect.height);
     const aspect = rect.width / rect.height;
     roomCamera.aspect = aspect; roomCamera.updateProjectionMatrix();
-    const halfHeight = Math.max(110,160/aspect)/2;
+    const halfHeight = Math.max(110,160/aspect)*PLAN_SCALE/2;
     axonCamera.left = -halfHeight*aspect; axonCamera.right = halfHeight*aspect;
     axonCamera.top = halfHeight; axonCamera.bottom = -halfHeight;
     axonCamera.updateProjectionMatrix();
@@ -198,9 +199,9 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
   try {
     scene = new THREE.Scene();
     scene.background = new THREE.Color('#f2f2f2');
-    roomCamera = new THREE.PerspectiveCamera(62,1,0.05,250);
-    axonCamera = new THREE.OrthographicCamera(-100,100,55,-55,0.05,700);
-    axonCamera.position.set(120,120,120);
+    roomCamera = new THREE.PerspectiveCamera(62,1,0.05,250*PLAN_SCALE);
+    axonCamera = new THREE.OrthographicCamera(-100,100,55,-55,0.05,700*PLAN_SCALE);
+    axonCamera.position.set(120*PLAN_SCALE,120*PLAN_SCALE,120*PLAN_SCALE);
     axonCamera.zoom = 1.08;
     axonCamera.lookAt(0,0,0);
     camera = roomCamera;
@@ -220,7 +221,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
       mesh.receiveShadow=true;mesh.name = name; mesh.position.set(x,y,z); scene.add(mesh); roomMeshes.push(mesh);
       return mesh;
     }
-    box('floor',240,t,240,0,-t/2,0,floor);
+    box('floor',WALK_SIZE+40,t,WALK_SIZE+40,0,-t/2,0,floor);
     box('ceiling',40+2*t,t,40+2*t,0,ROOM.height+t/2,0,new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false}));
     factoryRoom=createFactoryRoom({scene,height:ROOM.height,wallMaterial:wall});roomMeshes.push(...factoryRoom.collisionMeshes());
     // Gentle contact shading and a fine perimeter seam clarify wall/floor junctions.
@@ -249,7 +250,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
     const planFloor = new THREE.Mesh(new THREE.PlaneGeometry(FLOOR_SIZE,FLOOR_SIZE),new THREE.MeshBasicMaterial({color:0xffffff,side:THREE.DoubleSide,toneMapped:false}));
     planFloor.name='axonometric-floor';planFloor.rotation.x=-Math.PI/2;axonGroup.add(planFloor);
     floorGrid = new THREE.GridHelper(FLOOR_SIZE,20,0xadb5bd,0xadb5bd);
-    floorGrid.name='five-metre-grid';floorGrid.position.y=0.004;
+    floorGrid.name='twenty-metre-grid';floorGrid.position.y=0.004;
     floorGrid.material.transparent=true;floorGrid.material.opacity=0.48;
     floorGrid.material.depthWrite=false;floorGrid.material.toneMapped=false;
     axonGroup.add(floorGrid);
@@ -277,8 +278,9 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
     return;
   }
 
+  lighting=createLightControls({scene,skylight,renderPipeline,invalidate:invalidateScene});
   const canvas = renderer.domElement;
-  const placement=createExhibitionPlacement({scene,canvas,getCamera:()=>camera,getRoomMeshes:()=>roomMeshes,isRoom:()=>viewMode==='room',orient,invalidate:invalidateScene,previewInvalidate:requestFrame,suspend:suspendNavigation,getMaxHeight:()=>57.5});
+  const placement=createExhibitionPlacement({scene,canvas,getCamera:()=>camera,getRoomMeshes:()=>roomMeshes,isRoom:()=>viewMode==='room',orient,invalidate:invalidateScene,previewInvalidate:requestFrame,suspend:suspendNavigation,getMaxHeight:()=>57.5*PLAN_SCALE});
   section=createExhibitionSection({scene,renderer,getMeshes:()=>{const current=space?.collisionMeshes()||[];if(current.length)return current;const meshes=[];for(const s of placement.spaceSources())s.object.traverse(o=>{if(o.isMesh)meshes.push(o);});return meshes;},invalidate:requestFrame});
   window.addEventListener('exhibition-placement-change',()=>section.refresh());
   space=createExhibitionSpace({scene,renderer,placement,getCamera:()=>camera,onSpaceLight:(result,active)=>{section?.refresh();skylight.updateCanopy(result,active);renderPipeline.updateSpace(result,active);},onSpaceBounds:frameSpace,getView:()=>viewMode,setView:setViewMode,navigate:value=>{clearInput();teleport=null;fly=false;eye.set(value.x,value.y,value.z);yaw=value.yaw;pitch=value.pitch||0;constrain(eye);ui();requestFrame();focusView();},invalidate:invalidateScene});
@@ -305,16 +307,23 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
   function setViewMode(mode) {
     if(!['room','axonometric'].includes(mode))throw new TypeError('Unknown gallery view.');
     clearInput();teleport=null;viewMode=mode;section?.setViewMode(mode);
-    const axon=mode==='axonometric';scene.background.set(axon?0xffffff:0xf0ede7);scene.fog=axon?null:new THREE.FogExp2(0xf0ede7,.0095);
+    const axon=mode==='axonometric';scene.background.set(axon?0xffffff:0xf0ede7);scene.fog=axon?null:new THREE.FogExp2(0xf0ede7,.0095/PLAN_SCALE);
     roomMeshes.forEach(mesh=>mesh.visible=!axon&&mesh.name==='floor');
-    factoryRoom.setVisible(false);roomDetailGroup.visible=false;axonGroup.visible=axon;skylight.setRoomMode(!axon);
+    factoryRoom.setVisible(false);roomDetailGroup.visible=false;axonGroup.visible=axon;skylight.setRoomMode(!axon);lighting?.setViewMode(mode);
     camera=axon?axonCamera:roomCamera;placement.setViewMode(mode);space?.setViewMode?.(mode);
     axonControls.enabled=axon&&active;
     ui();resize();requestFrame();
   }
-  function setRoomHeight(value){const height=clamp(Number(value)||30,30,180);if(Math.abs(height-ROOM.height)<.01)return;ROOM=Object.freeze({...ROOM,height});roomMeshes.find(m=>m.name==='ceiling').position.y=height+ROOM.wallThickness/2;factoryRoom.setHeight(height);roomMeshes=roomMeshes.filter(m=>['floor','ceiling'].includes(m.name)).concat(factoryRoom.collisionMeshes());roomMeshes.forEach(m=>m.visible=viewMode==='room'&&m.name==='floor');scene.traverse(o=>{if(o.isPointLight&&o.name==='gallery-ceiling-light')o.position.y=height-.45;});skylight.setHeight(height);constrain(eye);ui();invalidateScene();}
+  function setRoomHeight(value){const height=clamp(Number(value)||30,30,180*PLAN_SCALE);if(Math.abs(height-ROOM.height)<.01)return;ROOM=Object.freeze({...ROOM,height});roomMeshes.find(m=>m.name==='ceiling').position.y=height+ROOM.wallThickness/2;factoryRoom.setHeight(height);roomMeshes=roomMeshes.filter(m=>['floor','ceiling'].includes(m.name)).concat(factoryRoom.collisionMeshes());roomMeshes.forEach(m=>m.visible=viewMode==='room'&&m.name==='floor');scene.traverse(o=>{if(o.isPointLight&&o.name==='gallery-ceiling-light')o.position.y=height-.45;});skylight.setHeight(height);constrain(eye);ui();invalidateScene();}
 
-  function frameSpace(bounds){setRoomHeight(Math.max(30,bounds.max.y+3));requestFrame();}
+  function frameSpace(bounds){
+    // The 400m board is a layout reference, not an invisible wall squeezing a
+    // naturally larger growth. Keep its geometry/camera fixed; extend walk ground.
+    const size=bounds.getSize(new THREE.Vector3()),width=Math.max(WALK_SIZE,size.x+40),depth=Math.max(WALK_SIZE,size.z+40);
+    ROOM=Object.freeze({...ROOM,width,depth});
+    const floor=roomMeshes.find(m=>m.name==='floor');floor.geometry.dispose();floor.geometry=new THREE.BoxGeometry(width+40,ROOM.wallThickness,depth+40);
+    setRoomHeight(Math.max(30,bounds.max.y+3));requestFrame();
+  }
 
   function setTwoPoint(value) {
     twoPoint=!!value;
@@ -449,25 +458,25 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
         if(object.material)for(const material of (Array.isArray(object.material)?object.material:[object.material]))materials.add(material);
       });
       geometries.forEach(geometry=>geometry.dispose());materials.forEach(material=>material.dispose());
-      section?.dispose();space?.dispose();skylight?.dispose();factoryRoom?.dispose();renderPipeline?.dispose();scene.environment?.dispose();renderer.dispose();
+      lighting?.dispose();section?.dispose();space?.dispose();skylight?.dispose();factoryRoom?.dispose();renderPipeline?.dispose();scene.environment?.dispose();renderer.dispose();
     }
   });
   window.addEventListener('pageshow',() => {resize();});
   window.ExhibitionWalk = Object.freeze({
     state:() => ({
-      section:section.state(),space:space.state(),skylight:skylight.state(),ready,environment:'warm-dawn-fog',atmosphere:{fog:!!scene.fog,background:'#f0ede7',fogDensity:.0095,sunShadows:viewMode==='room',volumetric:skylight.state().volumetric.visible},room:{...ROOM,closed:false,wallCount:0,floor:true,ceiling:false},
+      lighting:lighting.state(),section:section.state(),space:space.state(),skylight:skylight.state(),ready,environment:'warm-dawn-fog',atmosphere:{fog:!!scene.fog,background:'#f0ede7',fogDensity:.0095,sunShadows:viewMode==='room',volumetric:skylight.state().volumetric.visible},room:{...ROOM,closed:false,wallCount:0,floor:true,ceiling:false},
       camera:viewMode==='room'?{x:eye.x,y:eye.y,z:eye.z,yaw,pitch}:{x:axonCamera.position.x,y:axonCamera.position.y,z:axonCamera.position.z},
       viewMode,twoPoint,projection:camera.isOrthographicCamera?'orthographic':'perspective',
       walkingCamera:{x:eye.x,y:eye.y,z:eye.z,yaw,pitch},fly,active,immersive,fullscreen:document.fullscreenElement===surface,
       axonometric:{zoom:axonCamera.zoom,target:axonControls.target.toArray(),wallsVisible:roomMeshes.filter(mesh=>mesh.name.includes('wall')&&mesh.visible).length,ceilingVisible:roomMeshes.find(mesh=>mesh.name==='ceiling').visible},
       factory:factoryRoom.state(),grid:{visible:axonGroup.visible,size:FLOOR_SIZE,divisions:20,cellSize:CELL_SIZE,cells:400,lines:floorGrid.geometry.attributes.position.count/2,opacity:floorGrid.material.opacity},
       floorJunctions:{visible:roomDetailGroup.visible,seam:true,softContactShading:true},
-      walkingBounds:{x:[-LIMIT,LIMIT],z:[-LIMIT,LIMIT],y:[RADIUS,ROOM.height-RADIUS]},
+      walkingBounds:{x:[-ROOM.width/2+RADIUS,ROOM.width/2-RADIUS],z:[-ROOM.depth/2+RADIUS,ROOM.depth/2-RADIUS],y:[RADIUS,ROOM.height-RADIUS]},
       displayCount:placement.state().modelCount,modelsLoaded:placement.state().modelCount,textureCount:placement.state().textureCount,placements:placement.state(),
       rendering:renderPipeline.state(),performance:{triangles:renderer.info.render.triangles,drawCalls:renderer.info.render.calls,pixelRatio:renderer.getPixelRatio(),shadows:renderer.shadowMap.enabled,shadowAutoUpdate:renderer.shadowMap.autoUpdate,continuousRendering:!!raf,frameCount},
       moving:!!teleport || movingByKeys()
     }),
-    section,reset,setViewMode,setTwoPoint,setRoomHeight,suspendNavigation,enterImmersive,leaveImmersive,placement,space,
+    lighting,section,reset,setViewMode,setTwoPoint,setRoomHeight,suspendNavigation,enterImmersive,leaveImmersive,placement,space,
     gridSegments:()=>Array.from(floorGrid.geometry.attributes.position.array),
     setCamera:value => {
       clearInput();teleport=null;
