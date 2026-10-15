@@ -238,7 +238,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
 
     // A separate exact 40m floor avoids exposing the room's wall thickness in plan.
     axonGroup = new THREE.Group();axonGroup.name='axonometric-floor-view';axonGroup.visible=false;scene.add(axonGroup);
-    const planFloor = new THREE.Mesh(new THREE.PlaneGeometry(40,40),new THREE.MeshBasicMaterial({color:0xf7f8f9,side:THREE.DoubleSide,toneMapped:false}));
+    const planFloor = new THREE.Mesh(new THREE.PlaneGeometry(40,40),new THREE.MeshBasicMaterial({color:0xf2f2f2,side:THREE.DoubleSide,toneMapped:false}));
     planFloor.name='axonometric-floor';planFloor.rotation.x=-Math.PI/2;axonGroup.add(planFloor);
     floorGrid = new THREE.GridHelper(40,20,0xadb5bd,0xadb5bd);
     floorGrid.name='two-metre-grid';floorGrid.position.y=0.004;
@@ -295,7 +295,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
   function setViewMode(mode) {
     if(!['room','axonometric'].includes(mode))throw new TypeError('Unknown gallery view.');
     clearInput();teleport=null;viewMode=mode;
-    const axon=mode==='axonometric';scene.background.set('#f2f2f2');
+    const axon=mode==='axonometric';scene.background.set(axon?'#ffffff':'#f2f2f2');
     roomMeshes.forEach(mesh=>mesh.visible=!axon);
     factoryRoom.setVisible(!axon);roomDetailGroup.visible=!axon;axonGroup.visible=axon;skylight.setRoomMode(!axon);
     camera=axon?axonCamera:roomCamera;placement.setViewMode(mode);
