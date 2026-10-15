@@ -9,6 +9,7 @@ await page.route('**/*',async route=>{const u=new URL(route.request().url());if(
 try{
  await page.goto(base+'__import-preview.html');
  for(const row of catalog.items){
+  if(fs.existsSync(path.join('site',row.previewUrl))&&!process.argv.includes('--force'))continue;
   await page.reload();
   const b64=await page.evaluate(async row=>{
    await customElements.whenDefined('model-viewer');const viewer=document.getElementById('v'),raw=await(await fetch(row.modelUrl)).blob(),source=await ModelColour.enhance(raw),display=await ModelPreviewFinish.prepare(source,{target:row.target});

@@ -34,10 +34,11 @@ async function importLocalModels(){
    }
    if(duplicate)continue;
    const image=await fetch(item.previewUrl);if(!image.ok)throw Error('An imported model preview is missing.');
-   const preview=await image.blob();
+   const preview=await image.blob();let obj=null;
+   if(item.objUrl){if(item.objUrl!==base+'model.obj')throw Error('Invalid local OBJ path.');const object=await fetch(item.objUrl);if(!object.ok)throw Error('An imported OBJ file is missing.');obj=await object.blob();}
    prepared.push({id:'import:'+hash,title:String(item.title||'Imported model').slice(0,120),group:String(item.group||'Imported models').slice(0,80),savedAt:item.savedAt||Date.now(),importSha256:hash,
     record:{id:hash,fingerprint:hash,modelUrl:'assets/generated-sculptures/'+hash+'/sculpture.glb',objUrl:'assets/generated-sculptures/'+hash+'/sculpture.obj',target:item.target==='city'?'city':'sculpture',triangles:Number(item.triangles)||0,localOnly:true,linkedMedia:{version:2,video:null,audio:null}},
-    glb,obj:null,preview,previewType:'model',previewVersion:window.ModelPreviewFinish?.version||'',camera:null,composition:null});
+    glb,obj,preview,previewType:'model',previewVersion:window.ModelPreviewFinish?.version||'',camera:null,composition:null});
    known.add(hash);
   }
   if(!prepared.length)return {added:0};
