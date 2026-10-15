@@ -18,3 +18,7 @@ Read AGENTS.md and README.md. Verify the project starts, fetch main, and create 
 Windows: double-click DOWNLOAD_TEAM_ASSETS.cmd. macOS/Linux: python3 scripts/download_assets.py. Use your own GitHub account after accepting the invitation. If authentication is missing, run git credential-manager github login --browser. The approximately 10 GB pack needs about 21 GB total free space; completed parts are reused, every part and installed file is SHA-256 checked. No AI weight download is required for existing-model editing.
 
 GitHub CLI users can authenticate with gh auth login. Official instructions: https://cli.github.com/manual/gh_auth_login. The helper can use either gh or Git Credential Manager without storing tokens in this repository.
+
+## Space-engine replacement
+
+Before integrating a new space-building method, read [SPACE_ENGINE_HANDOFF.md](SPACE_ENGINE_HANDOFF.md). The latest exhibition UI has a single factory entry in `src/exhibition-space.js`; port the new engine rather than replacing the exhibition with an older branch snapshot.

@@ -121,7 +121,7 @@ async function create(options){
  }
  async function restore(value){
   if(!valid(value))return;const ticket=++restoreRevision,run=epoch;
-  try{const saved=await json('/api/sculpture3d/jobs/'+value.id);const linkedMedia=value.linkedMedia||(options.associateMedia&&options.getComposition().layers.length?await options.associateMedia(options.getComposition()):null);if(run===epoch&&ticket===restoreRevision&&saved.status==='complete')use(saved,value.fingerprint,value.target||'sculpture',linkedMedia);}catch{ /* A project imported on another computer can regenerate its missing mesh. */ }
+  try{const saved=await json('/api/sculpture3d/jobs/'+value.id);const linkedMedia=options.associateMedia&&options.getComposition().layers.length&&(!value.linkedMedia||value.linkedMedia.version<2)?await options.associateMedia(options.getComposition()):value.linkedMedia||null;if(run===epoch&&ticket===restoreRevision&&saved.status==='complete')use(saved,value.fingerprint,value.target||'sculpture',linkedMedia);}catch{ /* A project imported on another computer can regenerate its missing mesh. */ }
  }
  viewer.addEventListener('load',async e=>{if(!record||viewer.src!==meshUrl||e.detail?.url!==meshUrl||loaded)return;const source=meshUrl;fitCamera();if(pendingCamera){applyCamera(pendingCamera);pendingCamera=null;}await viewer.updateComplete;if(!record||meshUrl!==source||viewer.src!==source)return;viewer.jumpCameraToGoal();loaded=true;loadingError=false;render();if(pendingReveal){pendingReveal=false;$('model-stage').scrollIntoView({behavior:'smooth',block:'nearest'});}if(libraryEntry)gallery.ready(incomingDirection);});
  viewer.addEventListener('error',()=>{if(!record)return;loaded=false;loadingError=true;lastError='The generated mesh is available, but its 3D preview could not load.';status.textContent=lastError;render();});
@@ -150,7 +150,7 @@ async function create(options){
   const ticket=++epoch;restoreRevision++;busy=false;loaded=false;render();
   if(typeof entry==='string')entry=await SavedSculptures.get(entry);if(ticket!==epoch)return false;
   if(!valid(entry?.record)||!(entry.glb instanceof Blob))throw Error('This saved model is invalid.');
-  if(options.associateMedia&&!entry.record.linkedMedia&&entry.composition){const linkedMedia=await options.associateMedia(entry.composition);if(ticket!==epoch)return false;entry={...entry,record:{...entry.record,linkedMedia}};}
+  if(options.associateMedia&&(!entry.record.linkedMedia||entry.record.linkedMedia.version<2)&&entry.composition){const linkedMedia=await options.associateMedia(entry.composition);if(entry.record.linkedMedia?.video)linkedMedia.video={...entry.record.linkedMedia.video,muted:true};if(ticket!==epoch)return false;if(!entry.ephemeral)await SavedSculptures.updateMedia(entry.id,linkedMedia);if(ticket!==epoch)return false;entry={...entry,record:{...entry.record,linkedMedia}};}
   busy=false;record=structuredClone(entry.record);libraryEntry=entry;loaded=false;loadingError=false;lastError='';
   $('model-name').value=entry.title;$('model-group').value=entry.group||'';pendingCamera=null;incomingDirection=direction;interaction.reset();await gallery.set(entry);if(ticket!==epoch)return false;render();await loadMesh(gallery.source(entry.id)||entry.glb);return ticket===epoch;
  }
