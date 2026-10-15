@@ -17,7 +17,7 @@ async function create(){
    for(let attempt=0;attempt<3;attempt++){
     const matcher=SculptureLink.createMatcher(parts.filter(p=>!excluded.has(p.id)),()=>context,id=>metrics.get(id)||byId.get(id)?.shape);
     let match=matcher(l,info.object,measured);if(!match)break;
-    if(preference){const candidates=[],skip=new Set(excluded);for(let i=0;i<5;i++){const next=SculptureLink.createMatcher(parts.filter(p=>!skip.has(p.id)),()=>context,id=>metrics.get(id)||byId.get(id)?.shape)(l,info.object,measured);if(!next)break;candidates.push({...next,url:byId.get(next.id).url});skip.add(next.id);}match=await ExhibitionColourPreference.pick(candidates,preference)||match;}
+    if(preference){const candidates=[],skip=new Set(excluded);for(let i=0;i<12;i++){const next=SculptureLink.createMatcher(parts.filter(p=>!skip.has(p.id)),()=>context,id=>metrics.get(id)||byId.get(id)?.shape)(l,info.object,measured);if(!next)break;candidates.push({...next,url:byId.get(next.id).url});skip.add(next.id);}match=await ExhibitionColourPreference.pick(candidates,preference)||match;}
     try{await load(match.id);l.vaPartId=match.id;l.vaRotation=match.angle;l.vaMatchReason=match.reason;success=true;break;}
     catch(e){last=e;excluded.add(match.id);}
    }

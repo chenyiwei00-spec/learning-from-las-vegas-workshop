@@ -15,7 +15,7 @@ const placed=[source('red',-4,-2),source('blue',3,3,0x2267ce)];
 const input=await preparePlacedSources(placed,{...SETTINGS,moduleCount:3}),a=generateSurreal(input.items,input.sources,input.settings),b=generateSurreal(input.items,input.sources,input.settings);
 assert.equal(a.nodes.length,3);assert(a.validation.verticalRange>2,'A multilevel space must have real floor height variation.');assert(a.validation.maxGrade>.025,'Routes must include slopes.');assert(a.validation.routesClear&&a.validation.topology.components===1);
 assert.equal(a.validation.topology.boundaryEdges,0);
-const roadTopology=topology(a.meshes.find(m=>m.road));assert.equal(roadTopology.boundaryEdges,0);assert.equal(roadTopology.nonManifoldEdges,0);
+const roadTopology=topology({...a.meshes.find(m=>m.road),index:a.meshes.find(m=>m.road).sectionIndex});assert.equal(roadTopology.boundaryEdges,0);assert.equal(roadTopology.nonManifoldEdges,0);
 a.meshes.forEach((m,i)=>{assert.deepEqual(m.positions,b.meshes[i].positions);assert.deepEqual(m.colors,b.meshes[i].colors);if(m.normals)assert.deepEqual(m.normals,b.meshes[i].normals);});
 for(const item of input.items){const n=a.nodes.find(n=>n.sourceId===item.id);assert.equal(n.center.x,item.x);assert.equal(n.center.z,item.z);}
 const idsChanged=placed.toReversed().map((p,i)=>({...p,id:'new-instance-'+i,name:'renamed'}));
