@@ -100,7 +100,6 @@
   function render(){
     const result=ArchiveSearch.run(index,state);current=!state.media&&!state.q&&state.sort==='relevance'?mixMedia(result.items):result.items;state.page=Math.min(state.page,Math.max(1,Math.ceil(result.total/PAGE_SIZE)));
     $('query').value=state.q;$('sort').value=state.sort;
-    $('archive-statement').textContent=state.archive==='las-vegas'?'A city of copies. A culture of its own.':state.archive==='va'?'A museum visit, recorded through objects, spaces and sounds.':'Copies, collections and worlds made from elsewhere.';
     $('result-count').textContent=format(result.total)+' '+(result.total===1?'item':'items');
     const start=(state.page-1)*PAGE_SIZE+1,end=Math.min(state.page*PAGE_SIZE,result.total);
     $('result-context').textContent=archiveName(state.archive)+' \u00b7 '+mediaName(state.media)+(state.element?' \u00b7 '+state.element:'')+(state.collection?' \u00b7 '+collectionMap.get(state.collection).name:'')+(state.q?' \u00b7 Matching "'+state.q+'"':'')+(result.total?' \u00b7 Showing '+format(start)+'\u2013'+format(end):'');
