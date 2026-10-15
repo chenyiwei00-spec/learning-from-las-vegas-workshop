@@ -148,7 +148,7 @@ async function gallery(){
 
  grid.addEventListener('click',async e=>{const card=e.target.closest('[data-saved]');if(!card)return;
   try{
-   if(e.target.closest('[data-open]')||(exhibition&&!e.target.closest('button,input,select,a'))){const item=await get(card.dataset.saved);if((item?.composition?.workspace==='exhibition-model-loop-v1'||item?.composition?.format==='borrowed-worlds-exhibition-collage'||(!item?.composition&&item?.record?.localOnly))&&!document.body.classList.contains('exhibition-page')){location.href='exhibition.html?saved='+encodeURIComponent(card.dataset.saved);return;}window.dispatchEvent(new CustomEvent('saved-sculpture-open',{detail:{id:card.dataset.saved}}));return;}
+   if(e.target.closest('[data-open]')||(!e.target.closest('button,input,select,a'))){window.dispatchEvent(new CustomEvent('saved-sculpture-open',{detail:{id:card.dataset.saved}}));return;}
    if(e.target.closest('[data-delete]')){await remove(card.dataset.saved);document.getElementById('history-status').textContent='Saved model removed from history.';return;}
    const entry=await get(card.dataset.saved);if(!entry)throw Error('This saved model was removed.');
    if(e.target.closest('[data-place]')){await ExhibitionLibrary.placeSaved(entry.id);return;}

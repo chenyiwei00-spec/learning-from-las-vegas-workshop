@@ -15,7 +15,7 @@ document.addEventListener('click',e=>{
  if(view&&embedded){e.preventDefault();navigate(view,url.search);}
 },true);
 document.addEventListener('fullscreenchange',()=>{
- const target=document.fullscreenElement;nav.classList.toggle('workshop-fullscreen-nav',!!target);(target||document.body).prepend(nav);
+ document.documentElement.dataset.workshopFullscreen=String(!!document.fullscreenElement);
 });
 window.addEventListener('message',e=>{
  if(e.origin!==location.origin||e.source!==parent||e.data?.type!=='workshop-visibility')return;
