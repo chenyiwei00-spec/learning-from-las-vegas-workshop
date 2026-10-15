@@ -3,5 +3,6 @@
   "sharedSiteAssets": "external-assets/site-assets",
   "cutoutRoot": "external-assets/collage-objects",
   "generationModelRoot": "external-assets/single-photo-3d",
-  "relevanceModelRoot": "qa/exhibition-loop/clip"
+  "relevanceModelRoot": "qa/exhibition-loop/clip",
+  "inhabitableModelRoot": "external-assets/inhabitable-sculptures"
 }

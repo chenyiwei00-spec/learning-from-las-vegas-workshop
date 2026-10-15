@@ -6,3 +6,9 @@
 *.md text eol=lf
 *.cmd text eol=crlf
 *.sh text eol=lf
+extensions/inhabitable-sculpture/*.html text eol=lf
+site/inhabitable-sculpture/*.html text eol=lf
+# Upstream shader template strings and verbatim font licences retain their whitespace.
+site/inhabitable-sculpture/assets/*.js whitespace=-trailing-space,-space-before-tab
+extensions/inhabitable-sculpture/src/assets/fonts/*-OFL.txt whitespace=-trailing-space
+site/inhabitable-sculpture/licenses/*-OFL.txt whitespace=-trailing-space
