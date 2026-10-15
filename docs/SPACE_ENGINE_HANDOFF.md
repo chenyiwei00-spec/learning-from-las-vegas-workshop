@@ -82,11 +82,12 @@ rather than passing Object3D instances between runtimes.
 
 ## Teammate branch integration
 
-A remote branch currently contains the independent inhabitable-sculpture module:
-`work/linxichen07-design/inhabitable-integration`. It is based on an older
-exhibition interface. Port its engine/adapter into this latest main, preserving
-the current libraries and controls. The module has not been merged or activated
-by this interface update; the engine author should verify the final adapter.
+The independent single-sculpture prototype is available through the exhibition's
+**Inhabit** entry. Its adapter has been ported onto the latest interface, retaining
+the current libraries, model preview, MAKE SPACE controls, agents and media.
+The optional same-origin GLB bridge keeps its runtime and independent buildings
+separate from the existing MAKE SPACE aggregation engine. It does not register a
+competing MAKE SPACE handler. See [INHABITABLE_SCULPTURE_ZH.md](INHABITABLE_SCULPTURE_ZH.md).
 
 After implementation:
 
