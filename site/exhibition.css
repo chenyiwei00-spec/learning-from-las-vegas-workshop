@@ -578,3 +578,12 @@ body[data-archive-agent-busy=true] .agent-library-control{display:none}
 
 /* Native section controls must receive input instead of hitting the scene underneath. */
 .walk-section-panel,.walk-section-panel input,.walk-section-panel select{pointer-events:auto;touch-action:none}.walk-section-panel{padding:5px 8px;background:#fffffff0;cursor:default}
+
+/* Human-view sun controls stay outside the canvas navigation gestures. */
+.walk-lighting-panel{pointer-events:auto;touch-action:none;width:min(290px,100%);padding:14px 16px;background:#fffffff5;border:1px solid var(--exhibition-line,#ddd);font:10px/1.4 Arial,sans-serif;cursor:default}
+.walk-lighting-panel[hidden]{display:none}
+.walk-light-heading{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:10px;letter-spacing:.8px}
+.walk-lighting-panel .walk-light-heading button{min-height:24px;padding:3px 9px;font-size:9px}
+.walk-lighting-panel label{display:grid;grid-template-columns:1fr auto;gap:7px 16px;margin-top:12px}
+.walk-lighting-panel input{grid-column:1/-1;display:block;width:100%;margin:0;accent-color:#222;cursor:ew-resize}
+.walk-lighting-panel output{font-variant-numeric:tabular-nums}

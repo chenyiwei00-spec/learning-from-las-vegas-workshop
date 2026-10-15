@@ -6,7 +6,7 @@ import {createArchitecture} from './inhabitable/form-scene.js';
 import {floorAt,bodyClear,floorClear} from './inhabitable/surreal-navigation.js';
 import {layoutSnapshot,layoutSignature,preparePlacedSources,locateInHall,checkSettings,layoutSeed} from './exhibition-inhabitable-input.js';
 import {roadSupport} from './inhabitable/road-surface.js';
-import {GENERATED_SPACE_SCALE as SPACE_SCALE,WALK_SIZE,CELL_SIZE,FLOOR_HALF,worldCell} from './exhibition-dimensions.js';
+import {GENERATED_SPACE_SCALE as SPACE_SCALE,CELL_SIZE,worldCell} from './exhibition-dimensions.js';
 export function createInhabitableSpace({scene,renderer,placement,getView,getCamera,setView,navigate,invalidate,onSpaceBounds,onSpaceLight}){
  const $=id=>document.getElementById(id),surface=$('walk-surface'),KEY='learning-vegas-inhabitable-space-v1';
  let result=null,active=false,busy=false,stale=false,error='',signature='',settings={...SETTINGS,layoutVersion:2},generatedSettings=null,worker=null,ticket=0,cancelPending=null,disposed=false,lastSafe=null,progress=0,sourceSelection=null,settingsRevision=0,wasFlying=false,lastWalkSafe=null,archiveBlob=null;
@@ -51,7 +51,7 @@ export function createInhabitableSpace({scene,renderer,placement,getView,getCame
  function candidate(plan,input,scale=SPACE_SCALE){
   const visiblePlan={...plan,meshes:plan.meshes.filter(m=>m.name!=='Surrounding ground')},group=createArchitecture(visiblePlan);group.name='Inhabitable architecture / placed sculpture aggregation';
   group.scale.setScalar(scale);
-  try{const {offset,bounds}=locateInHall(group,input.centre,WALK_SIZE/2);const meshes=[];group.traverse(o=>{if(o.isMesh)meshes.push(o);});
+  try{const {offset,bounds}=locateInHall(group,input.centre,Infinity);const meshes=[];group.traverse(o=>{if(o.isMesh)meshes.push(o);});
    group.userData={engine:'inhabitable-v1',snapshot:true,settings:plan.settings,sources:input.attribution,validation:plan.validation,spaceScale:scale};
    const footprints=contactFootprint(plan,offset,scale);
    return {scale,support:roadSupport(plan.meshes.find(m=>m.road)),group,meshes,plan,offset,bounds,footprints,attribution:input.attribution,layout:Object.entries(input.attribution).map(([id,a])=>({id,modelId:a.modelId,name:a.name,...a.layout})),triangles:plan.meshes.reduce((n,m)=>n+(m.index?.length||m.positions.length/3)/3,0)};
@@ -64,7 +64,7 @@ export function createInhabitableSpace({scene,renderer,placement,getView,getCame
    const chosen={...checkSettings(override||settings),layoutDriven:true,moduleCount:Math.max(placement.spaceSources().length,(override||settings).layoutVersion===2?(override||settings).moduleCount:9),layoutVersion:2,seed:layoutSeed(placement.spaceSources())};
    const input=await preparePlacedSources(placement.spaceSources(),chosen,(p,m)=>{progress=p*.05;say(m);ui();});if(disposed)throw Error('The exhibition was closed.');
    const plan=await compute(input);if(disposed)throw Error('The exhibition was closed.');if(key!==layoutSignature(placement))throw Error('The placed models changed during generation. Click Make space again.');
-   next=candidate(plan,input);onSpaceBounds?.(next.bounds);disposeResult(result);result=next;next=null;scene.add(result.group,result.footprints);
+   next=candidate(plan,input,input.worldScale);onSpaceBounds?.(next.bounds);disposeResult(result);result=next;next=null;scene.add(result.group,result.footprints);
    archiveBlob=null;signature=key;settings=settingsRevision!==revisionAtStart?settings:restore?pendingAtStart:{...chosen};generatedSettings={...chosen};stale=JSON.stringify(settings)!==JSON.stringify(generatedSettings);lastSafe=null;wasFlying=false;lastWalkSafe=null;sourceSelection=null;progress=100;visibility(true);
    surface.dataset.spaceSeed=String(chosen.seed);surface.dataset.spaceRoutesClear=String(plan.validation.routesClear);surface.dataset.spaceTriangles=String(result.triangles);
    say(stale?'SPACE READY / CHANGES STAGED FOR UPDATE':'SPACE READY / '+plan.nodes.length+' FRAGMENTS / '+chosen.corridorWidth.toFixed(1)+' M ROUTE');
@@ -90,33 +90,29 @@ export function createInhabitableSpace({scene,renderer,placement,getView,getCame
  }
  function constrain(position,radius=.35,{fly=false,eyeHeight=1.65}={}){
   if(!active||!result)return position;
+  // Flight deliberately bypasses architecture collision, including closed walls.
+  // Keep the last supported walking point separate for a safe return to walking.
+  if(fly){lastSafe={x:position.x,z:position.z,foot:position.y-eyeHeight};wasFlying=true;surface.dataset.spaceFootHeight=String(lastSafe.foot);return position;}
   const wanted={x:position.x,z:position.z,foot:Math.max(0,position.y-eyeHeight)};
   let start=lastSafe||{...wanted};
   if(!fly&&wasFlying){
    const p=localPoint(start),h=supportAt(p.x,p.z,(start.foot-result.offset.y)/result.scale,radius,Infinity);
    // Returning to walking lands on the highest clear supporting floor below.
    if(h!==null)start={...start,foot:h*result.scale+result.offset.y};else if(lastWalkSafe)start={...lastWalkSafe};
+   wanted.x=start.x;wanted.z=start.z;wanted.foot=start.foot;
   }
-  wasFlying=fly;
-  const distance=Math.hypot(wanted.x-start.x,wanted.z-start.z,fly?wanted.foot-start.foot:0),steps=Math.max(1,Math.ceil(distance/.10));
+  wasFlying=false;
+  const distance=Math.hypot(wanted.x-start.x,wanted.z-start.z),steps=Math.max(1,Math.ceil(distance/.10));
   let safe=start;
   for(let i=1;i<=steps;i++){
    const x=start.x+(wanted.x-start.x)*i/steps,z=start.z+(wanted.z-start.z)*i/steps,p=localPoint({x,z});
-   let h;
-   if(fly){
-    h=(start.foot+(wanted.foot-start.foot)*i/steps-result.offset.y)/result.scale;
-    const floor=supportAt(p.x,p.z,(safe.foot-result.offset.y)/result.scale,radius,.25);
-    if(floor!==null&&h<floor&&safe.foot>=floor*result.scale+result.offset.y-.02)h=floor;
-    if(!clearAt(p.x,p.z,h,radius))break;
-   }else{
-    h=supportAt(p.x,p.z,(safe.foot-result.offset.y)/result.scale,radius);
+   const h=supportAt(p.x,p.z,(safe.foot-result.offset.y)/result.scale,radius);
     if(h===null){
      // Slide along walls rather than freezing when walking diagonally into one.
      const alternatives=[{x,z:safe.z},{x:safe.x,z}].sort((a,b)=>Math.hypot(wanted.x-a.x,wanted.z-a.z)-Math.hypot(wanted.x-b.x,wanted.z-b.z));
      for(const v of alternatives){const local=localPoint(v),floor=supportAt(local.x,local.z,(safe.foot-result.offset.y)/result.scale,radius);if(floor!==null){safe={...v,foot:floor*result.scale+result.offset.y};break;}}
      continue;
     }
-   }
    safe={x,z,foot:h*result.scale+result.offset.y};
   }
   lastSafe=safe;if(!fly)lastWalkSafe={...safe};position.set(safe.x,safe.foot+eyeHeight,safe.z);surface.dataset.spaceFootHeight=String(safe.foot);return position;

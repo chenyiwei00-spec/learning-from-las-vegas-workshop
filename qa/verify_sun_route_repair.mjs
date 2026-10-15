@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import {sunForTime,resolveSun} from '../src/exhibition-solar.js';
+import {buildWideRoutes,validateCirculation} from '../src/inhabitable/surreal-navigation.js';
+const morning=resolveSun({time:8}),noon=resolveSun({time:12}),evening=resolveSun({time:17}),night=resolveSun({time:0});
+assert(noon.elevation>morning.elevation);assert(noon.elevation>evening.elevation);assert.equal(night.intensity,0);
+assert(morning.direction.x>0&&evening.direction.x<0);assert.equal(resolveSun({time:12,azimuth:90,elevation:30}).elevation,30);
+assert(Math.abs(resolveSun({time:12,azimuth:90,elevation:30}).direction.y-.5)<1e-8);
+for(let time=0;time<=24;time+=.25)assert(Number.isFinite(sunForTime(time).elevation));
+const step=.25,n=65,layers=1,nav={step,nx:n,nz:n,layers,minX:-8,minZ:-8,counts:new Uint8Array(n*n).fill(1),heights:new Float32Array(n*n).fill(.055),corners:new Float32Array(n*n*4).fill(.055)};
+const g={minX:-8,minY:-1,minZ:-8,step:.25,nx:n,ny:25,nz:n,values:new Float32Array(n*25*n).fill(100)};
+for(let z=0;z<n;z++)for(let y=0;y<25;y++)for(let x=0;x<n;x++)if(Math.abs(-8+x*.25)<.5&&Math.abs(-8+z*.25)<2.1&&y>4)g.values[(z*25+y)*n+x]=-1;
+const surfaces=new Uint8Array(g.values.length),node=x=>({id:String(x),view:{x,z:0,y:.055},floor:0,entry:{x,z:0,y:.055}}),nodes=[node(-4),node(4)],entrance={x:-6,z:0,y:.055},exit={x:6,z:0,y:.055};
+const blocked=[{role:'initial carved connection',points:[{x:-4,y:0,z:0},{x:4,y:0,z:0}]}];
+assert.throws(()=>validateCirculation(nodes,blocked,g,surfaces,1.8,nav),/obstructs/);
+const actual=buildWideRoutes(nav,nodes,entrance,exit,g,surfaces,1.8,[{a:0,b:1}],1),valid=validateCirculation(nodes,actual,g,surfaces,1.8,nav,1);
+assert(valid.samples>0);assert(actual.some(p=>p.points.some(v=>Math.abs(v.z)>2.1)));
+console.log('PASS: morning/noon/evening/night and independent solar angles; an obstructed initial route is replaced by a fully validated supported detour.');
