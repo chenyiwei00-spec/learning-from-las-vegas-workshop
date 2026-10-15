@@ -15,10 +15,10 @@ export function surfaceGrid(meshes,g){
   }
  }return data;
 }
-export function bodyClear(g,surfaces,x,floor,z,radius=.23){
+export function bodyClear(g,surfaces,x,floor,z,radius=.23,outsideClear=false){
  for(const y of [.65,1.2,1.65,2.35])for(const [dx,dz] of [[0,0],[radius,0],[-radius,0],[0,radius],[0,-radius]]){
   const px=x+dx,pz=z+dz,py=floor+y,ix=Math.round((px-g.minX)/g.step),iy=Math.round((py-g.minY)/g.step),iz=Math.round((pz-g.minZ)/g.step);
-  if(ix<0||iy<0||iz<0||ix>=g.nx||iy>=g.ny||iz>=g.nz)return false;
+  if(ix<0||iy<0||iz<0||ix>=g.nx||iy>=g.ny||iz>=g.nz){if(outsideClear)continue;return false;}
   if(sampleField(g,px,py,pz)<.03||surfaces[(iz*g.ny+iy)*g.nx+ix])return false;
  }return true;
 }

@@ -2,18 +2,18 @@ import * as THREE from 'three';
 import {GLTFExporter} from 'three/examples/jsm/exporters/GLTFExporter.js';
 import {SETTINGS} from './inhabitable/form-state.js';
 import {createArchitecture} from './inhabitable/form-scene.js';
-import {floorAt,bodyClear,floorClear} from './inhabitable/surreal-navigation.js';
+import {floorAt,bodyClear,floorClear,renderedFloor} from './inhabitable/surreal-navigation.js';
 import {layoutSnapshot,layoutSignature,preparePlacedSources,locateInHall,checkSettings} from './exhibition-inhabitable-input.js';
 import {FLOOR_HALF} from './exhibition-dimensions.js';
 export function createInhabitableSpace({scene,renderer,placement,getView,getCamera,setView,navigate,invalidate,onSpaceBounds,onSpaceLight}){
  const $=id=>document.getElementById(id),surface=$('walk-surface'),KEY='learning-vegas-inhabitable-space-v1';
- let result=null,active=false,busy=false,stale=false,error='',signature='',settings={...SETTINGS},generatedSettings=null,worker=null,ticket=0,cancelPending=null,disposed=false,lastSafe=null,progress=0,sourceSelection=null,settingsRevision=0;
+ let result=null,active=false,busy=false,stale=false,error='',signature='',settings={...SETTINGS},generatedSettings=null,worker=null,ticket=0,cancelPending=null,disposed=false,lastSafe=null,progress=0,sourceSelection=null,settingsRevision=0,wasFlying=false,lastWalkSafe=null;
  const ray=new THREE.Raycaster(),pointer=new THREE.Vector2();let pointerDown=null,feedbackTimer;
  const feedback=$('exhibition-space-feedback');
  const say=text=>{$('exhibition-space-status').textContent=text;feedback.textContent=text;feedback.hidden=false;clearTimeout(feedbackTimer);};
  function ui(){
   const button=$('exhibition-make-space');button.disabled=busy||!placement.state().modelCount||!!window.ExhibitionAgentDrafts?.state().busy;
-  const label=busy?'Making space...':result?'Update space':'Make space';button.textContent=busy?Math.round(progress)+'%':'+';button.title=label;button.setAttribute('aria-label',label);$('exhibition-space-keyword').textContent=label.toUpperCase();
+  const label='Make space';button.textContent=busy?Math.round(progress)+'%':'+';button.title=label;button.setAttribute('aria-label',label);$('exhibition-space-keyword').textContent=label.toUpperCase();
   $('exhibition-space-options').hidden=false;$('space-options-empty').hidden=!!result;
   $('exhibition-space-original').hidden=!result;$('exhibition-space-original').textContent=active?'Original models':'Show space';$('exhibition-space-original').disabled=busy;
   $('exhibition-enter-space').hidden=!result||!active;$('exhibition-enter-space').disabled=busy;
@@ -46,46 +46,77 @@ export function createInhabitableSpace({scene,renderer,placement,getView,getCame
   try{
    const chosen=checkSettings(override||settings);if(result&&!stale&&!restore&&!override)chosen.seed=((Math.imul(chosen.seed,1664525)+1013904223)>>>0)%1000000;
    const input=await preparePlacedSources(placement.spaceSources(),chosen,(p,m)=>{progress=p*.05;say(m);ui();});if(disposed)throw Error('The exhibition was closed.');
-   const plan=await compute(input);if(disposed)throw Error('The exhibition was closed.');if(key!==layoutSignature(placement))throw Error('The placed models changed during generation. Update space again.');
+   const plan=await compute(input);if(disposed)throw Error('The exhibition was closed.');if(key!==layoutSignature(placement))throw Error('The placed models changed during generation. Click Make space again.');
    next=candidate(plan,input);onSpaceBounds?.(next.bounds);disposeResult(result);result=next;next=null;scene.add(result.group);
-   signature=key;settings=settingsRevision!==revisionAtStart?settings:restore?pendingAtStart:{...chosen};generatedSettings={...chosen};stale=JSON.stringify(settings)!==JSON.stringify(generatedSettings);lastSafe=null;sourceSelection=null;progress=100;visibility(true);
+   signature=key;settings=settingsRevision!==revisionAtStart?settings:restore?pendingAtStart:{...chosen};generatedSettings={...chosen};stale=JSON.stringify(settings)!==JSON.stringify(generatedSettings);lastSafe=null;wasFlying=false;lastWalkSafe=null;sourceSelection=null;progress=100;visibility(true);
    surface.dataset.spaceSeed=String(chosen.seed);surface.dataset.spaceRoutesClear=String(plan.validation.routesClear);surface.dataset.spaceTriangles=String(result.triangles);
    say(stale?'SPACE READY / CHANGES STAGED FOR UPDATE':'SPACE READY / '+plan.nodes.length+' FRAGMENTS / '+chosen.corridorWidth.toFixed(1)+' M ROUTE');return true;
   }catch(e){disposeResult(next);error=e.message;say(error);return false;}finally{busy=false;ui();}
  }
  function localPoint(position){return {x:position.x-result.offset.x,z:position.z-result.offset.z};}
- function clearAt(x,z,h,radius){return bodyClear(result.plan.volumeGrid,result.plan.volumeGrid.surfaces,x,h,z,radius)&&floorClear(result.plan.nav,x,z,h,radius);}
+ function clearAt(x,z,h,radius){return bodyClear(result.plan.volumeGrid,result.plan.volumeGrid.surfaces,x,h,z,radius,true)&&floorClear(result.plan.nav,x,z,h,radius);}
+ // The same rendered terrain triangles support walking, landings and collision.
+ function supportAt(x,z,reference,radius,maxDrop=.22){
+  const nav=result.plan.nav,ix=Math.round((x-nav.minX)/nav.step),iz=Math.round((z-nav.minZ)/nav.step);
+  const candidates=[];
+  if(ix>=0&&iz>=0&&ix<nav.nx&&iz<nav.nz){const id=iz*nav.nx+ix;for(let k=0;k<nav.counts[id];k++)candidates.push(renderedFloor(nav,id,k,x,z));}
+  candidates.push(-result.offset.y); // Real existing hall floor, where unobstructed.
+  return candidates.sort((a,b)=>b-a).find(h=>h<=reference+.22&&h>=reference-maxDrop&&clearAt(x,z,h,radius))??null;
+ }
  function enter(){
-  if(!result||busy)return;visibility(true);const p=result.plan.entrance,q=result.plan.gathering,h=floorAt(result.plan.nav,p.x,p.z,p.y,1)??p.y??0;
-  lastSafe={x:p.x+result.offset.x,z:p.z+result.offset.z,foot:h+result.offset.y};
+  if(!result||busy)return;visibility(true);const path=result.plan.paths.find(p=>p.role==='carved entrance'),p=path?.points[0]||result.plan.entrance;
+  const q=path?.points.find(v=>Math.hypot(v.x-p.x,v.z-p.z)>.6)||result.plan.gathering,h=floorAt(result.plan.nav,p.x,p.z,p.y,1)??p.y??0;
+  lastSafe={x:p.x+result.offset.x,z:p.z+result.offset.z,foot:h+result.offset.y};wasFlying=false;lastWalkSafe={...lastSafe};
+  $('exhibition-space-options').open=false;
   setView('room');navigate({x:lastSafe.x,z:lastSafe.z,y:lastSafe.foot+1.65,yaw:Math.atan2(p.x-q.x,p.z-q.z),pitch:0});
-  say('INSIDE SPACE / WASD TO WALK');invalidate();
+  say('INSIDE SPACE / WASD WALK / Q UP / E DOWN / SPACE TO LAND');invalidate();
  }
  function constrain(position,radius=.35,{fly=false,eyeHeight=1.65}={}){
   if(!active||!result)return position;
-  if(fly){const p=localPoint(position),foot=position.y-eyeHeight-result.offset.y;if(bodyClear(result.plan.volumeGrid,result.plan.volumeGrid.surfaces,p.x,foot,p.z,radius)){lastSafe={x:position.x,z:position.z,foot:position.y-eyeHeight};}else if(lastSafe)position.set(lastSafe.x,lastSafe.foot+eyeHeight,lastSafe.z);return position;}
-  const wanted={x:position.x,z:position.z},start=lastSafe||{...wanted,foot:Math.max(0,position.y-eyeHeight)},steps=Math.max(1,Math.ceil(Math.hypot(wanted.x-start.x,wanted.z-start.z)/.12));let safe=start;
-  for(let i=1;i<=steps;i++){
-   const x=start.x+(wanted.x-start.x)*i/steps,z=start.z+(wanted.z-start.z)*i/steps,p=localPoint({x,z}),near=safe.foot-result.offset.y;
-   let h=floorAt(result.plan.nav,p.x,p.z,near,.22);
-   if(h===null&&Math.abs(safe.foot)<.22)h=-result.offset.y; // The existing main hall floor is real support outside the generated route.
-   if(h===null||!clearAt(p.x,p.z,h,radius))break;safe={x,z,foot:h+result.offset.y};
+  const wanted={x:position.x,z:position.z,foot:Math.max(0,position.y-eyeHeight)};
+  let start=lastSafe||{...wanted};
+  if(!fly&&wasFlying){
+   const p=localPoint(start),h=supportAt(p.x,p.z,start.foot-result.offset.y,radius,Infinity);
+   // Returning to walking lands on the highest clear supporting floor below.
+   if(h!==null)start={...start,foot:h+result.offset.y};else if(lastWalkSafe)start={...lastWalkSafe};
   }
-  lastSafe=safe;position.set(safe.x,safe.foot+eyeHeight,safe.z);surface.dataset.spaceFootHeight=String(safe.foot);return position;
+  wasFlying=fly;
+  const distance=Math.hypot(wanted.x-start.x,wanted.z-start.z,fly?wanted.foot-start.foot:0),steps=Math.max(1,Math.ceil(distance/.10));
+  let safe=start;
+  for(let i=1;i<=steps;i++){
+   const x=start.x+(wanted.x-start.x)*i/steps,z=start.z+(wanted.z-start.z)*i/steps,p=localPoint({x,z});
+   let h;
+   if(fly){
+    h=start.foot+(wanted.foot-start.foot)*i/steps-result.offset.y;
+    const floor=supportAt(p.x,p.z,safe.foot-result.offset.y,radius,.25);
+    if(floor!==null&&h<floor&&safe.foot>=floor+result.offset.y-.02)h=floor;
+    if(!clearAt(p.x,p.z,h,radius))break;
+   }else{
+    h=supportAt(p.x,p.z,safe.foot-result.offset.y,radius);
+    if(h===null){
+     // Slide along walls rather than freezing when walking diagonally into one.
+     const alternatives=[{x,z:safe.z},{x:safe.x,z}].sort((a,b)=>Math.hypot(wanted.x-a.x,wanted.z-a.z)-Math.hypot(wanted.x-b.x,wanted.z-b.z));
+     for(const v of alternatives){const local=localPoint(v),floor=supportAt(local.x,local.z,safe.foot-result.offset.y,radius);if(floor!==null){safe={...v,foot:floor+result.offset.y};break;}}
+     continue;
+    }
+   }
+   safe={x,z,foot:h+result.offset.y};
+  }
+  lastSafe=safe;if(!fly)lastWalkSafe={...safe};position.set(safe.x,safe.foot+eyeHeight,safe.z);surface.dataset.spaceFootHeight=String(safe.foot);return position;
  }
  async function exportGLB(){
   if(!result||busy)return false;busy=true;ui();say('Preparing GLB...');const value=result,visible=value.group.visible;
   try{value.group.visible=true;const buffer=await new GLTFExporter().parseAsync(value.group,{binary:true});download(new Blob([buffer],{type:'model/gltf-binary'}),'learning-vegas-inhabitable-space.glb');say('SPACE EXPORTED / GLB SNAPSHOT');return true;}catch(e){error=e.message;say(error);return false;}finally{value.group.visible=visible;busy=false;ui();invalidate();}
  }
  function download(blob,name){const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),30000);}
- const settingChange=e=>{const el=e.target,key=el.dataset.spaceSetting;if(!key||el.value==='')return;try{settings=checkSettings({...settings,[key]:+el.value});settingsRevision++;stale=!!result&&(layoutSignature(placement)!==signature||JSON.stringify(settings)!==JSON.stringify(generatedSettings));say(stale?'SETTINGS CHANGED / UPDATE SPACE':result?'SPACE READY':'SETTINGS READY / MAKE SPACE');persist();ui();}catch(err){say(err.message);ui();}};
+ const settingChange=e=>{const el=e.target,key=el.dataset.spaceSetting;if(!key||el.value==='')return;try{settings=checkSettings({...settings,[key]:+el.value});settingsRevision++;stale=!!result&&(layoutSignature(placement)!==signature||JSON.stringify(settings)!==JSON.stringify(generatedSettings));say(stale?'SETTINGS CHANGED / MAKE SPACE':result?'SPACE READY':'SETTINGS READY / MAKE SPACE');persist();ui();}catch(err){say(err.message);ui();}};
  for(const el of document.querySelectorAll('[data-space-setting]')){el.addEventListener('input',settingChange);el.addEventListener('change',settingChange);}
  const saveRecipe=()=>download(new Blob([JSON.stringify({format:'learning-vegas-inhabitable-space',version:1,settings:generatedSettings||settings,pendingSettings:settings,layout:layoutSnapshot(placement)},null,2)],{type:'application/json'}),'learning-vegas-space-recipe.json');
  const loadRecipe=async e=>{try{if(busy)throw Error('Wait for this generation before loading a recipe.');const file=e.target.files?.[0];if(!file||file.size>2000000)throw Error('Choose a space recipe under 2 MB.');const doc=JSON.parse(await file.text());if(doc.format!=='learning-vegas-inhabitable-space'||doc.version!==1||!Array.isArray(doc.layout))throw Error('Choose a saved MAKE SPACE recipe.');
    const chosen=checkSettings(doc.settings),now=layoutSnapshot(placement);if(doc.layout.length!==now.length||doc.layout.some(s=>!now.some(n=>n.id===s.id&&n.modelId===s.modelId)))throw Error('This recipe needs the same placed models. Restore those models first.');
    await placement.applyLayout(doc.layout);settings=chosen;stale=!!result;await generate({override:chosen});
   }catch(err){error=err.message;say(error);}finally{e.target.value='';ui();}};
- function placementChange(){if(result){stale=layoutSignature(placement)!==signature||JSON.stringify(settings)!==JSON.stringify(generatedSettings);say(stale?'LAYOUT CHANGED / UPDATE SPACE':'SPACE READY');}ui();persist();}
+ function placementChange(){if(result){stale=layoutSignature(placement)!==signature||JSON.stringify(settings)!==JSON.stringify(generatedSettings);say(stale?'LAYOUT CHANGED / MAKE SPACE':'SPACE READY');}ui();persist();}
  function down(e){pointerDown=[e.clientX,e.clientY];}
  function up(e){if(!active||!result||!pointerDown||Math.hypot(e.clientX-pointerDown[0],e.clientY-pointerDown[1])>5)return;pointerDown=null;const r=renderer.domElement.getBoundingClientRect();pointer.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);const camera=getCamera?.();if(!camera)return;ray.setFromCamera(pointer,camera);const hit=ray.intersectObjects(result.meshes,false).find(h=>h.object.userData.sourceId||h.object.userData.sourceIds);if(!hit)return;
   const u=hit.object.userData,attr=hit.object.geometry.attributes.sourceTag,tag=attr&&hit.face?Math.round(attr.getX(hit.face.a)):0,id=u.sourceIds?.[tag]||u.sourceId,source=result.attribution[id];sourceSelection={id,name:source?.name||'Source fragment',operation:u.operation};say('FROM '+sourceSelection.name+' / '+(u.operation||'Transformed source fragment'));$('exhibition-space-status').title=u.operation||'';surface.dataset.spaceSource=sourceSelection.name;

@@ -33,7 +33,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
   function constrain(position) {
     position.x = clamp(position.x,-LIMIT,LIMIT);
     position.z = clamp(position.z,-LIMIT,LIMIT);
-    position.y = fly ? clamp(position.y,RADIUS,Math.min(ROOM.height,factoryRoom?.ceilingAt(position.x)||ROOM.height)-RADIUS) : EYE_HEIGHT;
+    position.y = fly ? clamp(position.y,RADIUS,Math.min(ROOM.height,factoryRoom?.ceilingAt(position.x)||ROOM.height)-RADIUS) : (space?.state().active ? position.y : EYE_HEIGHT);
     space?.constrain(position,RADIUS,{fly,eyeHeight:EYE_HEIGHT});
     position.x=clamp(position.x,-LIMIT,LIMIT);position.z=clamp(position.z,-LIMIT,LIMIT);
     return position;
@@ -62,10 +62,12 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
     $('walk-view-toggle').textContent=axon?'Axonometric / switch':'Eye level / switch';$('walk-view-toggle').setAttribute('aria-pressed',String(axon));
     $('walk-status').textContent = axon ? 'AXONOMETRIC / 2 M GRID' : (fly ? 'FLY' : 'WALK') + ' / EYE ' + eye.y.toFixed(2) + ' M';
     $('walk-view-label').textContent = axon ? 'FLOOR PLAN' : 'WHITE ROOM';
-    $('walk-caption-text').textContent = axon ? 'Drag to rotate · Wheel to zoom · Right / middle drag to pan' : 'Click to explore · Drag to look · WASD to walk · Shift to move faster';
+    $('walk-caption-text').textContent = axon ? 'Drag to rotate · Wheel to zoom · Right / middle drag to pan' : 'WASD to walk · Drag to look · Q up / E down · Space to walk · Shift faster';
     $('walk-dimensions').textContent = axon ? '40 \u00d7 40 M / 400 CELLS' : '40 \u00d7 40 \u00d7 '+ROOM.height.toFixed(1)+' M';
     surface.setAttribute('aria-label',axon ? 'Orthographic floor view with four hundred two metre grid cells. Drag to rotate; wheel to zoom; right or middle drag to pan.' : 'Walk through a forty by forty metre white studio hall with windows');
     surface.dataset.view = viewMode;
+    surface.dataset.navigationActive=String(active);surface.dataset.fly=String(fly);
+    surface.dataset.eyeX=String(eye.x);surface.dataset.eyeY=String(eye.y);surface.dataset.eyeZ=String(eye.z);
   }
   function clearInput() {
     keys.clear();
@@ -83,7 +85,6 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
     if(document.activeElement===surface)surface.blur();
   }
   function focusView() {
-    if(!immersive){suspendNavigation();return;}
     active = true;
     if (axonControls) axonControls.enabled = viewMode === 'axonometric';
     surface.focus({preventScroll:true});
@@ -138,8 +139,8 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
       if (held('KeyS','ArrowDown')) direction.sub(forward);
       if (held('KeyD','ArrowRight')) direction.add(right);
       if (held('KeyA','ArrowLeft')) direction.sub(right);
-      if (fly && held('KeyE')) direction.y += 1;
-      if (fly && held('KeyQ')) direction.y -= 1;
+      if (fly && held('KeyQ')) direction.y += 1;
+      if (fly && held('KeyE')) direction.y -= 1;
       const multiplier = held('ControlLeft','ControlRight') ? 6 : held('ShiftLeft','ShiftRight') ? 3 : 1;
       if (direction.lengthSq()) eye.addScaledVector(direction.normalize(),SPEED*multiplier*dt);
       constrain(eye);
@@ -157,6 +158,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
       axonCamera.position.set(48,48,48); axonCamera.zoom = 1;
       axonControls.target.set(0,0,0); axonCamera.updateProjectionMatrix(); axonControls.update();
     } else {
+      if(space?.state().active){space.enter();return;}
       fly = false; eye.set(0,EYE_HEIGHT,7); yaw = 0; pitch = 0;
     }
     ui(); requestFrame();
@@ -314,7 +316,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
   ui();resize();
   canvas.addEventListener('contextmenu',event => event.preventDefault());
   canvas.addEventListener('pointerdown',event => {
-    if (!immersive || viewMode === 'axonometric' || event.button > 2) return;
+    if (!active || viewMode === 'axonometric' || event.button > 2) return;
     event.preventDefault(); focusView(); teleport = null;
     const hit = event.button === 2 ? hitAt(event) : null;
     const pivot = hit?.point.clone() || eye.clone().add(camera.getWorldDirection(new THREE.Vector3()).multiplyScalar(5));
@@ -391,13 +393,15 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
       return;
     }
     if (navigationKeys.has(event.code)) {
-      event.preventDefault(); keys.add(event.code); requestFrame();
+      event.preventDefault();
+      if(event.code==='KeyQ'||event.code==='KeyE')fly=true;
+      keys.add(event.code); requestFrame();
     }
   });
   document.addEventListener('keyup',event => {
     if (keys.delete(event.code)) requestFrame();
   });
-  surface.addEventListener('focus',() => {active=immersive;if(axonControls)axonControls.enabled=immersive&&viewMode==='axonometric';});
+  surface.addEventListener('focus',() => {active=true;if(axonControls)axonControls.enabled=viewMode==='axonometric';});
   surface.addEventListener('blur',() => {active=false;axonControls.enabled=false;clearInput();teleport=null;});
   document.addEventListener('pointerdown',event => {
     if (!surface.contains(event.target)) {active=false;axonControls.enabled=false;clearInput();teleport=null;surface.blur();}
@@ -408,14 +412,17 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
     else requestFrame();
   });
   $('walk-two-point').addEventListener('click',() => {setTwoPoint(!twoPoint);focusView();});
-  $('walk-view-toggle').addEventListener('click',() => {setViewMode(viewMode==='room'?'axonometric':'room');focusView();});
+  $('walk-view-toggle').addEventListener('click',() => {
+    if(viewMode==='axonometric'&&space.state().active){space.enter();return;}
+    setViewMode(viewMode==='room'?'axonometric':'room');focusView();
+  });
   $('walk-reset').addEventListener('click',() => {reset();focusView();});
   document.addEventListener('fullscreenchange',() => {
     const fullscreen = document.fullscreenElement === surface;
     if(!document.fullscreenElement&&immersive){leaveImmersive();return;}
     clearInput(); resize();
     if(surface.dataset.modelBrowse==='true'||(document.fullscreenElement&&document.fullscreenElement!==surface)||(surface.dataset.workspaceOpen&&surface.dataset.workspaceOpen!=='none'))suspendNavigation();
-    else focusView();
+    else if(immersive)focusView();else suspendNavigation();
   });
   canvas.addEventListener('webglcontextlost',event => {
     event.preventDefault();ready=false;clearInput();
