@@ -12,7 +12,7 @@ import {Sky} from 'three/examples/jsm/objects/Sky.js';
 
 /** Human-view HDR pipeline; reflections/AO share the geometry buffer and render only on demand. */
 export function createExhibitionRender({renderer,scene,camera}){
- let composer=null,ssr=null,ao=null,scattering=null,selectedRoads=[];
+ let composer=null,ssr=null,ao=null,scattering=null,grade=null,spaceActive=false,selectedRoads=[];
  function ensurePipeline(){if(composer)return;
  composer=new EffectComposer(renderer);ssr=new SSRPass({renderer,scene,camera,width:800,height:600,selects:[]});
  ssr.resolutionScale=.5;ssr.opacity=0;ssr.maxDistance=26;ssr.thickness=.16;ssr.infiniteThick=false;ssr.bouncing=false;ssr.fresnel=true;ssr.distanceAttenuation=true;
@@ -43,7 +43,7 @@ export function createExhibitionRender({renderer,scene,camera}){
  });
  const finiteHDR=new ShaderPass({uniforms:{tDiffuse:{value:null}},vertexShader:'varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',fragmentShader:'uniform sampler2D tDiffuse;varying vec2 vUv;void main(){vec4 p=texture2D(tDiffuse,vUv);if(!(p.r>=0.))p.r=0.;if(!(p.g>=0.))p.g=0.;if(!(p.b>=0.))p.b=0.;gl_FragColor=vec4(min(p.rgb,vec3(64.)),1.);}'});
  const bloom=new UnrealBloomPass(new THREE.Vector2(800,600),.16,.35,3.8);
- const grade=new ShaderPass({uniforms:{tDiffuse:{value:null}},vertexShader:'varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',fragmentShader:'uniform sampler2D tDiffuse;varying vec2 vUv;void main(){vec4 p=texture2D(tDiffuse,vUv);float y=dot(p.rgb,vec3(.2126,.7152,.0722));vec3 c=max(vec3(0.),vec3(y)+(p.rgb-vec3(y))*1.13);c*=mix(.53,1.18,smoothstep(.025,1.1,y));gl_FragColor=vec4(c,p.a);}'});
+ grade=new ShaderPass({uniforms:{tDiffuse:{value:null},pigmentChroma:{value:1.13}},vertexShader:'varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',fragmentShader:'uniform sampler2D tDiffuse;uniform float pigmentChroma;varying vec2 vUv;void main(){vec4 p=texture2D(tDiffuse,vUv);float y=dot(p.rgb,vec3(.2126,.7152,.0722));vec3 c=max(vec3(0.),vec3(y)+(p.rgb-vec3(y))*pigmentChroma);c*=mix(.53,1.18,smoothstep(.025,1.1,y));gl_FragColor=vec4(c,p.a);}'});
  composer.addPass(ssr);composer.addPass(ao);composer.addPass(scattering);composer.addPass(finiteHDR);composer.addPass(bloom);composer.addPass(grade);composer.addPass(new OutputPass());
  ssr.selects=selectedRoads;resizePipeline();
  }
@@ -66,12 +66,12 @@ export function createExhibitionRender({renderer,scene,camera}){
  return {
 
   setLighting:light=>{scene.environmentIntensity=.025+.215*light.daylight;},
-  updateSpace:(value,active)=>{const roads=[];if(value&&active)value.group.traverse(o=>{if(o.isMesh&&o.userData.road&&o.material.metalness>.8)roads.push(o);});selectedRoads=roads;if(ssr)ssr.selects=roads;
+  updateSpace:(value,active)=>{spaceActive=!!value&&!!active;const roads=[];if(value&&active)value.group.traverse(o=>{if(o.isMesh&&o.userData.road&&o.material.metalness>.8)roads.push(o);});selectedRoads=roads;if(ssr)ssr.selects=roads;
    if(roads.length&&value&&active&&value!==cached){cached=value;pending=value;}
   },
   setSize:(w,h)=>{const scale=Math.min(1,1400/Math.max(w,h)),W=Math.max(1,Math.round(w*scale)),H=Math.max(1,Math.round(h*scale));if(W===width&&H===height)return;width=W;height=H;if(composer)resizePipeline();},
-  render:(room,viewCamera)=>{enabled=!!room;scene.environment=room?whiteTarget.texture:skyTarget.texture;if(!room){renderer.render(scene,viewCamera);return;}ensurePipeline();capture();ssr.ssrMaterial.uniforms.cameraProjectionMatrix.value.copy(camera.projectionMatrix);ssr.ssrMaterial.uniforms.cameraInverseProjectionMatrix.value.copy(camera.projectionMatrixInverse);scattering.uniforms.inverseProjection.value.copy(camera.projectionMatrixInverse);scattering.uniforms.cameraWorld.value.copy(camera.matrixWorld);const sun=scene.getObjectByName('gallery-sunlight'),hadShadow=!!sun?.shadow.map;scattering.uniforms.sunStrength.value=(sun?.intensity||0)/9;if(sun?.shadow.map){scattering.uniforms.sunDirection.value.copy(sun.position).sub(sun.target.position).normalize();scattering.uniforms.sunDepth.value=sun.shadow.map.texture;scattering.uniforms.sunMatrix.value=sun.shadow.matrix;scattering.uniforms.shadowReady.value=1;}composer.render();frames++;return !hadShadow&&!!sun?.shadow.map;},
-  state:()=>({enabled,passes:['screen-space-reflection','contact-occlusion','shadow-raymarched-scattering','bloom','colour-grade','HDR-output'],width,height,reflectionScale:.5,allocated:!!composer,mirrorMeshes:selectedRoads.length,environmentCaptures:renders,frames}),
+  render:(room,viewCamera)=>{enabled=!!room;scene.environment=room?whiteTarget.texture:skyTarget.texture;if(!room){renderer.render(scene,viewCamera);return;}ensurePipeline();grade.uniforms.pigmentChroma.value=spaceActive?1.45:1.13;capture();ssr.ssrMaterial.uniforms.cameraProjectionMatrix.value.copy(camera.projectionMatrix);ssr.ssrMaterial.uniforms.cameraInverseProjectionMatrix.value.copy(camera.projectionMatrixInverse);scattering.uniforms.inverseProjection.value.copy(camera.projectionMatrixInverse);scattering.uniforms.cameraWorld.value.copy(camera.matrixWorld);const sun=scene.getObjectByName('gallery-sunlight'),hadShadow=!!sun?.shadow.map;scattering.uniforms.sunStrength.value=(sun?.intensity||0)/9;if(sun?.shadow.map){scattering.uniforms.sunDirection.value.copy(sun.position).sub(sun.target.position).normalize();scattering.uniforms.sunDepth.value=sun.shadow.map.texture;scattering.uniforms.sunMatrix.value=sun.shadow.matrix;scattering.uniforms.shadowReady.value=1;}composer.render();frames++;return !hadShadow&&!!sun?.shadow.map;},
+  state:()=>({enabled,spacePigmentChroma:spaceActive?1.45:1.13,passes:['screen-space-reflection','contact-occlusion','shadow-raymarched-scattering','bloom','colour-grade','HDR-output'],width,height,reflectionScale:.5,allocated:!!composer,mirrorMeshes:selectedRoads.length,environmentCaptures:renders,frames}),
   dispose:()=>{if(composer){for(const p of composer.passes)p.dispose?.();composer.dispose();}cubeTarget.dispose();captured?.dispose();skyTarget.dispose();whiteTarget.dispose();scene.environment=previousEnvironment;}
  };
 }
