@@ -4,6 +4,7 @@ async function modelPreview(row,mode){
  while(document.hidden||window.ExhibitionAgent?.state().busy||window.ExhibitionAgentDrafts?.state().busy||window.ExhibitionMedia?.state().videoPlaying||window.ExhibitionMedia?.state().audioPlaying||(()=>{const v=document.getElementById('generated-sculpture-viewer'),r=v?.getBoundingClientRect();return v?.autoRotate&&r?.bottom>0&&r.top<innerHeight;})())await new Promise(r=>setTimeout(r,400));
 
  if(!(row.glb instanceof Blob))return row.preview;
+ if(row.record?.target==='space'&&window.ExhibitionWalk?.previewSpaceCard)return ExhibitionWalk.previewSpaceCard(row);
  await customElements.whenDefined('model-viewer');
  const viewer=document.createElement('model-viewer'),url=URL.createObjectURL(row.record?.target==='space'?row.glb:await ModelColour.enhance(row.glb));
  viewer.setAttribute('aria-hidden','true');viewer.tabIndex=-1;viewer.setAttribute('loading','eager');viewer.setAttribute('interaction-prompt','none');viewer.setAttribute('exposure','1');viewer.setAttribute('shadow-intensity','.25');
@@ -28,7 +29,7 @@ async function modelPreview(row,mode){
   return viewer.toBlob({mimeType:'image/png',idealAspect:false});
  }finally{viewer.removeAttribute('src');viewer.remove();URL.revokeObjectURL(url);}
 }
-function preview(row,{mode='saved'}={}){const key=mode+':'+row.id+':'+(row.updatedAt||row.savedAt)+':'+JSON.stringify(row.camera||{})+':'+row.preview.size;if(cache.has(key))return cache.get(key);const job=queue.catch(()=>{}).then(()=>modelPreview(row,mode).catch(()=>row.preview));queue=job;cache.set(key,job);if(cache.size>100)cache.delete(cache.keys().next().value);return job;}
+function preview(row,{mode='saved'}={}){const key=(row.record?.target==='space'?'axon-space-v1:':'')+mode+':'+row.id+':'+(row.updatedAt||row.savedAt)+':'+JSON.stringify(row.camera||{})+':'+row.preview.size;if(cache.has(key))return cache.get(key);const job=queue.catch(()=>{}).then(()=>modelPreview(row,mode).catch(()=>row.preview));queue=job;cache.set(key,job);if(cache.size>100)cache.delete(cache.keys().next().value);return job;}
 function cleanup(){for(const [im,url]of urls)if(!im.isConnected){URL.revokeObjectURL(url);urls.delete(im);}}
 function attach(grid,rows,options={}){
  cleanup();observers.get(grid)?.disconnect();const byId=new Map(rows.map(r=>[r.id,r]));

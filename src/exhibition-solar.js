@@ -7,6 +7,6 @@ export function sunForTime(time=8){
 }
 export function resolveSun(value={}){
  const base=sunForTime(value.time),azimuth=clamp(Number.isFinite(value.azimuth)?value.azimuth:base.azimuth,0,360),elevation=clamp(Number.isFinite(value.elevation)?value.elevation:base.elevation,-90,85);
- const daylight=THREE.MathUtils.smoothstep(elevation,-6,12),warmth=1-THREE.MathUtils.smoothstep(elevation,4,48),a=azimuth*r,e=elevation*r;
- return {...base,azimuth,elevation,daylight,intensity:daylight*(6+3*Math.sin(Math.max(0,e))),colour:new THREE.Color(0xfff1dc).lerp(new THREE.Color(0xffc37c),warmth),direction:new THREE.Vector3(Math.sin(a)*Math.cos(e),Math.sin(e),Math.cos(a)*Math.cos(e))};
+ const daylight=THREE.MathUtils.smoothstep(elevation,-6,12),a=azimuth*r,e=elevation*r;
+ return {...base,azimuth,elevation,daylight,intensity:daylight*(6+3*Math.sin(Math.max(0,e))),colour:new THREE.Color(0xffffff),direction:new THREE.Vector3(Math.sin(a)*Math.cos(e),Math.sin(e),Math.cos(a)*Math.cos(e))};
 }

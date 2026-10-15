@@ -7,6 +7,7 @@ import {GTAOPass} from 'three/examples/jsm/postprocessing/GTAOPass.js';
 import {ShaderPass} from 'three/examples/jsm/postprocessing/ShaderPass.js';
 import {UnrealBloomPass} from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import {OutputPass} from 'three/examples/jsm/postprocessing/OutputPass.js';
+import {RoomEnvironment} from 'three/examples/jsm/environments/RoomEnvironment.js';
 import {Sky} from 'three/examples/jsm/objects/Sky.js';
 
 /** Human-view HDR pipeline; reflections/AO share the geometry buffer and render only on demand. */
@@ -32,10 +33,10 @@ export function createExhibitionRender({renderer,scene,camera}){
   float mu=dot(ray,sunDirection),phase=.32+.90*pow(max(0.,mu),5.);
   for(int i=0;i<24;i++){float t=(float(i)+jitter)/24.0;vec3 p=start+ray*L*t;vec4 q=sunMatrix*vec4(p,1.);q.xyz/=q.w;float lit=1.;
    if(shadowReady>.5&&q.x>0.&&q.x<1.&&q.y>0.&&q.y<1.&&q.z>0.&&q.z<1.)lit=step(q.z-.00065,unpackRGBAToDepth(texture2D(sunDepth,q.xy)));
-   float density=.012/worldScale*exp(-max(0.,p.y)*.024/worldScale),scatter=1.-exp(-density*L/24.);
+   float density=.018/worldScale*exp(-max(0.,p.y)*.024/worldScale),scatter=1.-exp(-density*L/24.);
    amount+=lit*scatter*transmittance;transmittance*=1.-scatter;
   }
-  vec3 haze=vec3(1.0,.76,.40)*amount*phase*1.5;
+  vec3 haze=vec3(1.0)*amount*phase*1.5;
   pixel.rgb*=mix(.82,1.,transmittance);
   gl_FragColor=vec4(pixel.rgb+haze*sunStrength,pixel.a);
  }`
@@ -48,7 +49,7 @@ export function createExhibitionRender({renderer,scene,camera}){
  }
  const skyScene=new THREE.Scene(),sky=new Sky();sky.scale.setScalar(500);skyScene.add(sky);
  Object.assign(sky.material.uniforms.turbidity,{value:2});Object.assign(sky.material.uniforms.rayleigh,{value:1.8});sky.material.uniforms.mieCoefficient.value=.003;sky.material.uniforms.sunPosition.value.set(-.78,.32,.56);
- const pmrem=new THREE.PMREMGenerator(renderer),skyTarget=pmrem.fromScene(skyScene,.04);pmrem.dispose();sky.geometry.dispose();sky.material.dispose();
+ const pmrem=new THREE.PMREMGenerator(renderer),skyTarget=pmrem.fromScene(skyScene,.04),whiteRoom=new RoomEnvironment(),whiteTarget=pmrem.fromScene(whiteRoom,.04);whiteRoom.dispose();pmrem.dispose();sky.geometry.dispose();sky.material.dispose();
  const previousEnvironment=scene.environment;scene.environment=skyTarget.texture;scene.environmentIntensity=.24;
  const cubeTarget=new THREE.WebGLCubeRenderTarget(128,{type:THREE.HalfFloatType,generateMipmaps:true,minFilter:THREE.LinearMipmapLinearFilter}),cube=new THREE.CubeCamera(.1,200,cubeTarget);let cached=null,captured=null,pending=null,renders=0,frames=0,enabled=false,width=0,height=0;
  function capture(){
@@ -69,8 +70,8 @@ export function createExhibitionRender({renderer,scene,camera}){
    if(roads.length&&value&&active&&value!==cached){cached=value;pending=value;}
   },
   setSize:(w,h)=>{const scale=Math.min(1,1400/Math.max(w,h)),W=Math.max(1,Math.round(w*scale)),H=Math.max(1,Math.round(h*scale));if(W===width&&H===height)return;width=W;height=H;if(composer)resizePipeline();},
-  render:(room,viewCamera)=>{enabled=!!room;if(!room){renderer.render(scene,viewCamera);return;}ensurePipeline();capture();ssr.ssrMaterial.uniforms.cameraProjectionMatrix.value.copy(camera.projectionMatrix);ssr.ssrMaterial.uniforms.cameraInverseProjectionMatrix.value.copy(camera.projectionMatrixInverse);scattering.uniforms.inverseProjection.value.copy(camera.projectionMatrixInverse);scattering.uniforms.cameraWorld.value.copy(camera.matrixWorld);const sun=scene.getObjectByName('gallery-sunlight'),hadShadow=!!sun?.shadow.map;scattering.uniforms.sunStrength.value=(sun?.intensity||0)/9;if(sun?.shadow.map){scattering.uniforms.sunDirection.value.copy(sun.position).sub(sun.target.position).normalize();scattering.uniforms.sunDepth.value=sun.shadow.map.texture;scattering.uniforms.sunMatrix.value=sun.shadow.matrix;scattering.uniforms.shadowReady.value=1;}composer.render();frames++;return !hadShadow&&!!sun?.shadow.map;},
+  render:(room,viewCamera)=>{enabled=!!room;scene.environment=room?whiteTarget.texture:skyTarget.texture;if(!room){renderer.render(scene,viewCamera);return;}ensurePipeline();capture();ssr.ssrMaterial.uniforms.cameraProjectionMatrix.value.copy(camera.projectionMatrix);ssr.ssrMaterial.uniforms.cameraInverseProjectionMatrix.value.copy(camera.projectionMatrixInverse);scattering.uniforms.inverseProjection.value.copy(camera.projectionMatrixInverse);scattering.uniforms.cameraWorld.value.copy(camera.matrixWorld);const sun=scene.getObjectByName('gallery-sunlight'),hadShadow=!!sun?.shadow.map;scattering.uniforms.sunStrength.value=(sun?.intensity||0)/9;if(sun?.shadow.map){scattering.uniforms.sunDirection.value.copy(sun.position).sub(sun.target.position).normalize();scattering.uniforms.sunDepth.value=sun.shadow.map.texture;scattering.uniforms.sunMatrix.value=sun.shadow.matrix;scattering.uniforms.shadowReady.value=1;}composer.render();frames++;return !hadShadow&&!!sun?.shadow.map;},
   state:()=>({enabled,passes:['screen-space-reflection','contact-occlusion','shadow-raymarched-scattering','bloom','colour-grade','HDR-output'],width,height,reflectionScale:.5,allocated:!!composer,mirrorMeshes:selectedRoads.length,environmentCaptures:renders,frames}),
-  dispose:()=>{if(composer){for(const p of composer.passes)p.dispose?.();composer.dispose();}cubeTarget.dispose();captured?.dispose();skyTarget.dispose();scene.environment=previousEnvironment;}
+  dispose:()=>{if(composer){for(const p of composer.passes)p.dispose?.();composer.dispose();}cubeTarget.dispose();captured?.dispose();skyTarget.dispose();whiteTarget.dispose();scene.environment=previousEnvironment;}
  };
 }

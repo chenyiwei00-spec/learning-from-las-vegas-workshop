@@ -26,8 +26,8 @@ export function inverse(m,x,y,z){
 }
 export function moduleDistance(m,x,y,z){
  const p=inverse(m,x,y,z),theta=Math.atan2(p[2],p[0]),r=profile(m.a,p[1]/m.a.height,theta);
- const envelope=Math.max(r,m.a.maxRadius*.78);
- return Math.max((Math.hypot(p[0],p[2])-envelope)*Math.min(m.scaleX,m.scaleZ),-p[1]*m.scaleY,(p[1]-m.a.height*.71)*m.scaleY);
+ const envelope=Math.max(r,m.a.maxRadius*.60);
+ return Math.max((Math.hypot(p[0],p[2])-envelope)*Math.min(m.scaleX,m.scaleZ),-p[1]*m.scaleY,(p[1]-m.a.height*(.76+.06*Math.sin(m.phase)))*m.scaleY);
 }
 export function massFunction(modules,blend){
  const contacts=modules.filter(m=>m.parent!==null).map(m=>{const p=modules[m.parent];return {a:p,b:m,x:(m.x+p.x)/2,z:(m.z+p.z)/2,y:(m.floor+p.floor)/2+2.7};});
@@ -35,18 +35,18 @@ export function massFunction(modules,blend){
    if(c.b.layoutDriven){
     // A fused overhead connection follows the nearest-neighbour layout edge.
     const dx=c.b.x-c.a.x,dz=c.b.z-c.a.z,t=clamp(((x-c.a.x)*dx+(z-c.a.z)*dz)/(dx*dx+dz*dz||1),0,1);
-    const roof=(1-t)*(c.a.floor+c.a.a.height*c.a.scaleY*.57)+t*(c.b.floor+c.b.a.height*c.b.scaleY*.57);
-    const tube=Math.hypot(x-c.a.x-dx*t,z-c.a.z-dz*t,y-roof)-(1.65+blend*.4);
+    const roof=Math.sin(t*Math.PI)*(.6+.4*Math.sin(c.b.phase))+(1-t)*(c.a.floor+c.a.a.height*c.a.scaleY*.57)+t*(c.b.floor+c.b.a.height*c.b.scaleY*.57);
+    const tube=Math.hypot(x-c.a.x-dx*t,z-c.a.z-dz*t,y-roof)-(1.15+blend*.35);
     d=smoothMin(d,tube,blend);
    }}return Math.max(d-seam,-.70-y);};
 }
 export function makeVoids(nodes,paths,atriums,s,bounds){
- const primitives=[],bins=new Map(),binSize=3.5,pad=1.0+(s.routePadding||0);
- for(const n of nodes){const radius=n.radius,top=n.floor+3.6+s.voidDensity*1.7;primitives.push({type:'room',node:n,x:n.center.x,z:n.center.z,rx:radius,rz:radius*(.9+n.variation*.18),bottom:n.floor-.23,top,
+ const primitives=[],bins=new Map(),binSize=3.5,pad=(s.layoutDriven?.65:1.0)+(s.routePadding||0),actorScale=s.layoutDriven?1/(s.worldScale||1):1;
+ for(const n of nodes){const radius=n.radius,top=n.floor+(s.layoutDriven?Math.max(1.0,2.8*actorScale+.4):3.6+s.voidDensity*1.7);primitives.push({type:'room',node:n,x:n.center.x,z:n.center.z,rx:radius,rz:radius*(.9+n.variation*.18),bottom:n.floor-.23,top,
  bounds:{minX:n.center.x-radius*1.3,maxX:n.center.x+radius*1.3,minZ:n.center.z-radius*1.3,maxZ:n.center.z+radius*1.3,minY:n.floor-.5,maxY:top+.7}});}
  for(const path of paths)for(let k=1;k<path.points.length;k++){
   const a=path.points[k-1],b=path.points[k],radius=path.carveRadius??(s.corridorWidth/2+pad);
-  primitives.push({type:'passage',a,b,radius,bottom:-.25,clearance:path.clearance??(3.4+s.voidDensity*.9),
+  primitives.push({type:'passage',a,b,radius,bottom:-.25,clearance:path.clearance??(s.layoutDriven?Math.max(.9,2.7*actorScale+.35):3.4+s.voidDensity*.9),
   bounds:{minX:Math.min(a.x,b.x)-radius-.3,maxX:Math.max(a.x,b.x)+radius+.3,minZ:Math.min(a.z,b.z)-radius-.3,maxZ:Math.max(a.z,b.z)+radius+.3,minY:Math.min(a.y,b.y)-.5,maxY:Math.max(a.y,b.y)+4.8}});
  }
  for(const a of atriums)primitives.push({type:'atrium',...a,bottom:a.floor-.23,top:bounds.maxY+2,bounds:{minX:a.x-a.radius*1.25,maxX:a.x+a.radius*1.25,minZ:a.z-a.radius*1.25,maxZ:a.z+a.radius*1.25,minY:a.floor-.5,maxY:bounds.maxY+2}});

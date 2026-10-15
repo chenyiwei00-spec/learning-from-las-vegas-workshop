@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import {sunForTime,resolveSun} from '../src/exhibition-solar.js';
 import {buildWideRoutes,validateCirculation} from '../src/inhabitable/surreal-navigation.js';
 const morning=resolveSun({time:8}),noon=resolveSun({time:12}),evening=resolveSun({time:17}),night=resolveSun({time:0});
+for(const light of [morning,noon,evening])assert.equal(light.colour.getHex(),0xffffff);
 assert(noon.elevation>morning.elevation);assert(noon.elevation>evening.elevation);assert.equal(night.intensity,0);
 assert(morning.direction.x>0&&evening.direction.x<0);assert.equal(resolveSun({time:12,azimuth:90,elevation:30}).elevation,30);
 assert(Math.abs(resolveSun({time:12,azimuth:90,elevation:30}).direction.y-.5)<1e-8);
