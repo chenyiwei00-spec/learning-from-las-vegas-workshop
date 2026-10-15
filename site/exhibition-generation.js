@@ -6,7 +6,7 @@ function create(options){
  const signal=()=>{options.onChange?.();window.dispatchEvent(new Event('exhibition-generation-change'));};
  async function json(url,init){
   const response=await fetch(url,init);let value;try{value=await response.json();}catch{throw Error('The local 3D service did not return a valid response.');}
-  if(!response.ok)throw Error(value.error||'Local 3D request failed.');return value;
+  if(!response.ok){const e=Error(value.error||'Local 3D request failed.');e.status=response.status;e.activeJob=value.activeJob;throw e;}return value;
  }
  async function run(){
   if(busy)throw Error('A model is already generating.');
@@ -17,7 +17,11 @@ function create(options){
   busy=true;job=null;result=null;error='';preview=image;message='Preparing your 3D model';signal();
   try{
    const fingerprint=await Sculpture3D.fingerprint(snapshot);
-   job=await json('/api/sculpture3d/jobs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image,composition:snapshot,fingerprint})});signal();
+   const request={method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image,composition:snapshot,fingerprint})};
+   // A completed output can precede CUDA/process teardown. Queue this exact input instead of dropping it.
+   const queuedAt=Date.now();let submitAttempts=0;
+   for(;;){try{job=await json('/api/sculpture3d/jobs',request);break;}catch(e){if(e.status!==409||Date.now()-queuedAt>900000)throw e;message='Waiting for the previous model to release the generator';signal();await new Promise(r=>setTimeout(r,Math.min(4000,1000+submitAttempts++*250)));}}
+   signal();
    let activeWait=0,lastPoll=Date.now();
    while(!['complete','failed'].includes(job.status)){
     const now=Date.now(),gap=now-lastPoll;lastPoll=now;if(gap<30000)activeWait+=gap;

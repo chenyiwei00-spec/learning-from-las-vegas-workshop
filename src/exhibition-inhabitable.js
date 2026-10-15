@@ -16,7 +16,7 @@ export function createInhabitableSpace({scene,renderer,placement,getView,getCame
  const containsPlacedSpace=()=>placement.spaceSources().some(s=>s.target==='space');
  function ui(){
   const blocked=containsPlacedSpace();
-  const button=$('exhibition-make-space');button.disabled=blocked||busy||!placement.state().modelCount||!!window.ExhibitionAgentDrafts?.state().busy||!!window.ExhibitionAgent?.state().busy;
+  const button=$('exhibition-make-space');button.disabled=blocked||busy||!placement.state().modelCount;
   const label='Make space';button.textContent=busy?Math.round(progress)+'%':'+';button.title=blocked?'Saved spaces can be arranged, but cannot make another space.':label;button.setAttribute('aria-label',label);$('exhibition-space-keyword').textContent=label.toUpperCase();
   $('exhibition-space-options').hidden=false;$('space-options-empty').hidden=!!result;
   $('exhibition-space-original').hidden=!result;$('exhibition-space-original').textContent=active?'Original models':'Show space';$('exhibition-space-original').disabled=busy;
@@ -60,7 +60,7 @@ export function createInhabitableSpace({scene,renderer,placement,getView,getCame
   }catch(e){disposeResult({group});throw e;}
  }
  async function generate({restore=false,override=null}={}){
-  if(busy||disposed||window.ExhibitionAgentDrafts?.state().busy||window.ExhibitionAgent?.state().busy)return false;await placement.ready;
+  if(busy||disposed)return false;await placement.ready;
   if(containsPlacedSpace()){error='Saved spaces can be arranged, but cannot be used to make another space.';say(error);ui();return false;}
   const key=layoutSignature(placement),revisionAtStart=settingsRevision,pendingAtStart={...settings};busy=true;progress=0;error='';ui();let next;
   try{

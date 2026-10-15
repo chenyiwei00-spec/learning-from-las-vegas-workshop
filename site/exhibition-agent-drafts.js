@@ -57,7 +57,7 @@ async function waitForPreview(jobId){
  return false; // A completed mesh must be saved even if its WebGL preview times out.
 }
 async function generateSelected(){
- if(busy||ExhibitionAgent.state().busy||ExhibitionStudio.state().model.busy||ExhibitionLibrary.state().placing)return;
+ if(busy||ExhibitionAgent.state().busy||ExhibitionStudio.state().model.busy )return;
  const queue=rows.filter(r=>selected.has(r.id)).map(r=>structuredClone(r));if(!queue.length)return;
  if(!ExhibitionStudio.state().model.ready){report(Error('The local 3D generator is unavailable. Your collages remain saved.'));return;}
  busy=true;stop=false;completed=0;failures=[];signal();lock(true);
@@ -69,9 +69,9 @@ async function generateSelected(){
    try{
     setActive(row.id);await restoreRow(row);const result=await ExhibitionStudio.generate();
     if(!result?.record)throw Error('No model was produced.');
-    await waitForPreview(result.record.id);
+    await ExhibitionAgentDrafts.update(row.id,{generationStatus:'complete',completedRecord:result.record});
     const entry=await ExhibitionLibrary.saveCurrent(completed+1,{title:row.title,group:'Collage batch'});
-    row.modelIds=[...new Set([...(row.modelIds||[]),entry.id])];await transact('readwrite',store=>store.put(row));completed++;
+    row.generationStatus='saved';row.completedRecord=result.record;row.modelIds=[...new Set([...(row.modelIds||[]),entry.id])];await transact('readwrite',store=>store.put(row));completed++;
    }catch(e){failures.push({id:row.id,message:e.message});}finally{setActive(null);}
    ExhibitionStudio.releaseUnused();
   }
@@ -87,6 +87,6 @@ $('agent-draft-toggle').onclick=()=>{$('agent-draft-toggle').closest('details').
 window.addEventListener('exhibition-draft-queue-change',updateSelection);window.addEventListener('exhibition-studio-ready',updateSelection);
 new MutationObserver(updateSelection).observe($('model-frame'),{attributes:true,attributeFilter:['aria-busy']});
 function setActive(id){activeId=id;for(const el of document.querySelectorAll('[data-collage-id]'))el.disabled=el.dataset.collageId===id;window.dispatchEvent(new Event('exhibition-draft-active-change'));}
-window.ExhibitionAgentDrafts=Object.freeze({setActive,list,save,load,waitForPreview,update:async(id,metadata)=>{await transact('readwrite',s=>{const r=s.get(id);r.onsuccess=()=>{if(!r.result)return;Object.assign(r.result,metadata);s.put(r.result);};return r;});await render();},attachModel:async(id,modelId)=>{await transact('readwrite',s=>{const r=s.get(id);r.onsuccess=()=>{if(!r.result)return;r.result.modelIds=[...new Set([...(r.result.modelIds||[]),modelId])];s.put(r.result);};return r;});await render();},remove:async id=>{if(busy||window.ExhibitionAgent?.state().busy)throw Error('Finish generation before deleting a collage.');await transact('readwrite',s=>s.delete(id));await render();},render,generateSelected,deleteSelected,state:()=>({busy,activeId,completed,failures:structuredClone(failures),selected:[...selected],count:rows.length,stopRequested:stop})});
+window.ExhibitionAgentDrafts=Object.freeze({setActive,list,save,load,waitForPreview,update:async(id,metadata)=>{await transact('readwrite',s=>{const r=s.get(id);r.onsuccess=()=>{if(!r.result)return;Object.assign(r.result,metadata);s.put(r.result);};return r;});await render();},attachModel:async(id,modelId)=>{await transact('readwrite',s=>{const r=s.get(id);r.onsuccess=()=>{if(!r.result)return;r.result.generationStatus='saved';r.result.modelIds=[...new Set([...(r.result.modelIds||[]),modelId])];s.put(r.result);};return r;});await render();},remove:async id=>{if(busy||window.ExhibitionAgent?.state().busy)throw Error('Finish generation before deleting a collage.');await transact('readwrite',s=>s.delete(id));await render();},render,generateSelected,deleteSelected,retryUnfinished:async()=>{await render();const pending=rows.filter(r=>!(r.modelIds?.length));selected.clear();pending.forEach(r=>selected.add(r.id));updateSelection();return generateSelected();},state:()=>({busy,activeId,completed,failures:structuredClone(failures),selected:[...selected],count:rows.length,stopRequested:stop})});
 render().catch(report);window.addEventListener('pagehide',()=>urls.forEach(u=>URL.revokeObjectURL(u)));
 })();

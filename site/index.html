@@ -1,88 +1,10 @@
 <!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="#ffffff">
-  <meta name="description" content="Explore images, films, recordings and 3D studies from Las Vegas and a V&A museum visit. Browse the collections together or separately in Borrowed Worlds.">
-  <title>LOCAL TEST — Borrowed Worlds - Las Vegas / V&A Archive</title>
-  <link rel="icon" href="favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css?v=va-20261012">
-  <link rel="stylesheet" href="collage.css">
-  <script src="catalog.js?v=va-20261012" defer></script>
-  <script src="search.js?v=va-20261012" defer></script>
-  <script src="models.js?v=va-20261012" defer></script>
-  <script src="assets/music/music-source.js?v=va-20261012" defer></script>
-  <script src="music.js?v=va-20261012" defer></script>
-  <script src="app.js?v=va-20261012" defer></script>
-  <script src="team-live.js" defer></script>
-</head>
-<body>
-  <audio id="background-music" loop preload="auto" hidden></audio>
-  <a class="skip-link" href="#results">Skip to results</a>
-  <header class="site-header">
-    <a href="./index.html" class="brand" aria-label="Borrowed Worlds home"><h1 class="brand-title">BORROWED WORLDS</h1><span class="brand-sub">LAS VEGAS / V&amp;A MEDIA ARCHIVE</span></a>
-    <div class="header-right"><button id="music-toggle" class="text-button music-toggle" aria-pressed="true">Music: start</button><button class="text-button" id="about-button">About the archive</button></div>
-  </header>
-  <main class="page">
-    <p id="archive-statement" class="archive-statement">A city of copies. A culture of its own.</p>
-    <section class="search-section" aria-label="Search the archive">
-      <form id="search-form" role="search"><svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="10.7" cy="10.7" r="6.7"/><path d="m16 16 5 5"/></svg><label class="sr-only" for="query">Search descriptions, tags and subjects</label><input id="query" name="q" type="search" placeholder="Search subjects, films, sounds, artworks or places" autocomplete="off" spellcheck="false"><button type="submit">Search</button></form>
-      <div class="search-suggestions"><span>TRY</span><button data-query="sculpture">Sculpture</button><button data-query="column">Columns</button><button data-query="water">Water</button><button data-query="speech">Speech</button><button data-query="Coca-Cola">Coca-Cola</button></div>
-    </section>
-    <div class="archive-selector"><span class="eyebrow">COLLECTION</span><nav id="archive-tabs" class="archive-tabs" aria-label="Choose Las Vegas, V&A or both collections"></nav></div>
-    <nav id="media-tabs" class="media-tabs" aria-label="Choose a media type"></nav>
-    <section class="subject-index" aria-labelledby="subject-heading"><div class="subject-heading-row"><h2 id="subject-heading" class="eyebrow">BROWSE BY SUBJECT</h2><details id="source-collections" class="source-collections"><summary id="source-summary">Source collections</summary><nav id="collection-tabs" class="collection-tabs source-tabs" aria-label="Filter by source collection"></nav></details></div><nav id="subject-tabs" class="subject-tabs" aria-label="Browse content subjects"></nav></section>
-    <div class="archive-layout">
-      
-      <section class="collection" aria-label="Search results">
-        <div class="results-toolbar"><div><h2 id="result-count" aria-live="polite">Loading the archive...</h2><p id="result-context">Preparing search.</p></div><div class="toolbar-actions"><button id="clear-filters" class="subtle-button" hidden>Reset filters</button><label class="sr-only" for="sort">Sort results</label><select id="sort"><option value="relevance">Relevance</option><option value="collection">Archive order</option><option value="title">Title A-Z</option><option value="resolution">Visual resolution</option></select></div></div>
-        <div id="active-filters" class="active-filters"></div>
-        <div id="results" class="image-grid" tabindex="-1"></div>
-        <div id="empty-state" class="empty-state" hidden><h3 id="empty-title">No items found</h3><p id="empty-message">Try another keyword or remove a filter.</p><button id="reset-search" class="outline-button">Browse all media</button></div>
-        <nav class="pagination" id="pagination" aria-label="Results pages"></nav>
-      </section>
-    </div>
-    <footer><span>BORROWED WORLDS</span><p id="footer-count"></p><button id="download-catalog" class="text-button">Download results catalog</button></footer>
-  </main>
-  <dialog id="detail-dialog" aria-labelledby="detail-title">
-    <div class="detail-shell">
-      <div class="detail-photo">
-        <img id="detail-image" alt="">
-        <div id="detail-audio-panel" class="detail-audio-panel" hidden><span class="detail-audio-symbol" aria-hidden="true">&#9834;</span><span class="eyebrow">AUDIO RECORDING</span><p id="detail-audio-duration"></p><audio id="detail-audio" controls preload="metadata" hidden></audio></div>
-        <video id="detail-video" controls preload="none" hidden></video>
-        <div id="detail-model-panel" class="detail-model-panel" hidden><div id="model-viewer-host"></div><p id="model-status">Loading 3D preview...</p></div><div class="photo-controls"><button id="previous-image" aria-label="Previous item">&#8592;</button><span id="detail-position"></span><button id="next-image" aria-label="Next item">&#8594;</button></div>
-      </div>
-      <div class="detail-info">
-        <button id="close-detail" class="close-button" aria-label="Close item details">&#215;</button>
-        <p class="eyebrow" id="detail-eyebrow"></p><h2 id="detail-title"></h2><p id="detail-format" class="detail-format"></p>
-        <div class="detail-locations"><div><span id="detail-location-label">LOCATION</span><p id="detail-location"></p></div><div><span>CULTURAL REFERENCE</span><p id="detail-reference"></p></div></div>
-        <p id="detail-description" class="detail-description"></p><p id="detail-review" class="detail-review" hidden></p>
-        <section id="detail-symbols-section" hidden><h3>Recorded symbols &amp; brands</h3><p id="detail-symbols"></p></section>
-        <section><h3 id="detail-objects-label">Annotated content</h3><p id="detail-objects"></p></section>
-        <section id="video-moments" class="video-moments" hidden><h3>Video moments <span class="section-note">Select a time to jump to that point</span></h3><div id="video-moment-list" class="moments-list"></div><p id="video-analysis-note"></p></section>
-        <section><h3>Tags <span class="section-note">Select to search within the chosen collection</span></h3><div id="detail-tags" class="tag-list"></div></section>
-        <details id="transcript-section" class="transcript-section" hidden><summary>Transcript draft - unverified</summary><p id="detail-transcript"></p></details>
-        <section id="model-notes" hidden><h3>Model construction</h3><p id="model-geometry"></p></section><section id="related-items" hidden><h3>Related material</h3><div id="related-links"></div></section><div class="image-actions"><a id="download-image" class="primary-link" download>Download file</a><a id="open-image" class="outline-link" target="_blank" rel="noopener">Open file</a><a id="download-glb" class="outline-link" download hidden>Download GLB</a></div>
-        <p class="image-size" id="detail-size"></p><section class="source-section"><h3>Source &amp; attribution</h3><div id="detail-source"></div></section>
-      </div>
-    </div>
-  </dialog>
-  <dialog id="about-dialog" aria-labelledby="about-title">
-    <button id="close-about" class="close-button" aria-label="Close about the archive">&#215;</button>
-    <p class="eyebrow">ABOUT THE ARCHIVE</p><h2 id="about-title">A world made from elsewhere.</h2>
-    <p class="about-story">Las Vegas gathers fragments of other places: a Parisian tower, an Egyptian pyramid, a New York skyline. Buildings, signs and spectacles are copied, staged and brought together in the desert.</p>
-    <p class="about-story">This archive follows the cultural life of the copy. The &ldquo;fake&rdquo; becomes material for a new world, with its own sounds, images, rituals and imagination. Borrowed forms take on new meanings; imitation becomes part of the culture of Las Vegas.</p>
-    <p class="about-story">The V&amp;A visit brings another setting into the archive: sculptural displays, architectural fragments, gallery spaces and the sounds of people moving among them. These records invite comparison with Las Vegas through shared forms and subjects, while keeping each collection&rsquo;s context distinct.</p>
-    <p id="about-summary"></p>
-    <p>Follow a subject across photographs, films, recordings and models. Search a landmark, a symbol or a sound to trace how these borrowed worlds are represented, experienced and reimagined.</p>
-    <details class="archive-method"><summary>About the material</summary>
-    <p>Cultural references and source associations do not establish an image or recording's physical location. Unverified locations remain unverified.</p>
-    <p>Audio descriptions and tags are AI drafts awaiting human listening review. Video descriptions combine supplied source context and sampled visual annotations; automated predictions can be incorrect. Source links, creators and stated license information are retained with each record.</p>
-    <p class="about-footnote">Image downloads are web copies. Audio and video downloads include MP3, M4A and MP4 clips. One damaged V&A video is presented as its recovered playable fragment. Model downloads include Blender files, GLB previews and original PLY scans; Gaussian scans have a compact interactive splat preview. Some models are simplified geometry or shallow photo references. A keyword search does not make an AI call.</p>
-    </details>
-    <button id="about-browse" class="primary-link">Browse the archive</button>
-  </dialog>
-  <noscript><p class="noscript">Enable JavaScript to search and browse this media archive.</p></noscript>
-</body>
-</html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>Learning from Las Vegas</title><link rel="icon" href="favicon.svg"><link rel="stylesheet" href="workshop.css"><script src="workshop.js" defer></script><script src="team-live.js" defer></script></head>
+<body class="workshop-shell">
+<section id="workshop-cover" class="workshop-cover" aria-labelledby="cover-title">
+<header><span>BORROWED WORLDS</span><span>AN ARCHIVE / A WORKSHOP / A WORLD</span></header>
+<div class="cover-content"><p class="cover-kicker">COPIED FRAGMENTS. NEW WORLDS.</p><h1 id="cover-title">LEARNING<br>FROM LAS VEGAS</h1><p class="cover-story">A city made from elsewhere.<br>Borrow its images. Assemble a body. Build another world.</p><button id="workshop-enter" type="button">Enter the workshop <span aria-hidden="true">&#8599;</span></button></div>
+<footer><span>Yiwei Chen</span><span>Jiayi Tan</span><span>linxi Chen</span><span>Ziyang Liu</span></footer>
+</section>
+<div id="workshop-app" hidden><nav id="workshop-nav" class="workshop-nav" aria-label="Workshop sections"><a href="#archive" data-view="archive"><span>01</span>DATABASE</a><a href="#collage" data-view="collage"><span>02</span>COLLAGE WORKSHOP</a><a href="#architecture" data-view="architecture"><span>03</span>ARCHITECTURE</a></nav><main id="workshop-frames" class="workshop-frames"></main><p id="workshop-loading" class="workshop-loading" role="status" hidden>Opening workspace...</p></div>
+</body></html>

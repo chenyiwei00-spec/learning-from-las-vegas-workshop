@@ -15,3 +15,6 @@ for(const name of ['exhibition-walk']){
 console.log('Both exhibition bundles built.');
 
 await build({entryPoints:[path.join(root,"src/inhabitable/form-worker.js")],bundle:true,format:"iife",platform:"browser",target:"es2022",minify:true,outfile:path.join(root,"site/exhibition-space-worker.js")});
+
+// Mediabunny is linked unchanged; retain its MPL notice with the bundled application.
+await writeFile(path.join(root,'site/vendor/mediabunny-LICENSE.txt'),await readFile(path.join(root,'node_modules/mediabunny/LICENSE'),'utf8'));

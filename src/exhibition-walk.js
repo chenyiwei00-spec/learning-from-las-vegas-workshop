@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import {createExhibitionExport,sampleCameraPath} from './exhibition-export.js';
 import {FLOOR_SIZE,CELL_SIZE,FLOOR_HALF} from './exhibition-dimensions.js';
 import {createFactoryRoom} from './exhibition-factory-room.js';
 import {WALK_SIZE} from './exhibition-dimensions.js';
@@ -29,7 +30,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
   let space=null,skylight=null,factoryRoom=null,renderPipeline=null,section=null,lighting=null,spacePreviews=null,orbitPivot=null;
   let roomMeshes = [], ready = false, disposed = false, viewMode = 'room', twoPoint = false;
   let yaw = 0, pitch = 0, fly = false, active = false, drag = null;
-  let immersive=false, pageScroll=0;
+  let immersive=false, pageScroll=0,exportLock=false;
   let raf = 0, lastTime = 0, frameCount = 0, teleport = null;
   const clamp = (value,min,max) => Math.max(min,Math.min(max,value));
   const navigationKeys = new Set(['KeyW','KeyA','KeyS','KeyD','KeyQ','KeyE','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','ShiftLeft','ShiftRight','ControlLeft','ControlRight']);
@@ -121,13 +122,13 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
     return viewMode === 'room' && active && (walkingKeys.some(key => keys.has(key)) || (fly && held('KeyQ','KeyE')));
   }
   function requestFrame() {
-    if (!ready || disposed || document.hidden || raf) return;
+    if (!ready || disposed || document.hidden || exportLock || raf || document.documentElement.dataset.workshopVisible==='false') return;
     raf = requestAnimationFrame(frame);
   }
   function invalidateScene(){if(renderer)renderer.shadowMap.needsUpdate=true;requestFrame();}
   function frame(time) {
     raf = 0;
-    if (disposed || document.hidden) return;
+    if (disposed || document.hidden || exportLock) return;
     const dt = lastTime ? Math.min((time-lastTime)/1000,0.05) : 1/60;
     lastTime = time;
     if (teleport) {
@@ -172,7 +173,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
     ui(); requestFrame();
   }
   function resize() {
-    if (!renderer || disposed) return;
+    if (!renderer || disposed || exportLock) return;
     const rect = host.getBoundingClientRect();
     if (!rect.width || !rect.height) return;
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1,1.5));
@@ -471,7 +472,9 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
     }
   });
   window.addEventListener('pageshow',() => {resize();});
-  window.ExhibitionWalk = Object.freeze({
+  const output=createExhibitionExport({renderer,scene,pipeline:renderPipeline,getCamera:()=>camera,getView:()=>viewMode,setView:setViewMode,getPose:()=>({x:eye.x,y:eye.y,z:eye.z,yaw,pitch,fly}),setPose:value=>{eye.set(value.x,value.y,value.z);yaw=value.yaw;pitch=value.pitch;fly=!!value.fly;orient();},lighting,orient,lock:()=>{exportLock=true;suspendNavigation();if(raf)cancelAnimationFrame(raf);raf=0;},unlock:()=>{exportLock=false;resize();requestFrame();}});
+  window.ExhibitionWalk = Object.freeze({output,sampleCameraPath,
+
     state:() => ({
       spacePreview:spacePreviews.state(),lighting:lighting.state(),section:section.state(),space:space.state(),skylight:skylight.state(),ready,environment:'white-light-fog',atmosphere:{fog:!!scene.fog,background:'#ffffff',fogDensity:scene.fog?.density||0,sunShadows:viewMode==='room',volumetric:skylight.state().volumetric.visible},room:{...ROOM,closed:false,wallCount:0,floor:true,ceiling:false},
       camera:viewMode==='room'?{x:eye.x,y:eye.y,z:eye.z,yaw,pitch}:{x:axonCamera.position.x,y:axonCamera.position.y,z:axonCamera.position.z},
