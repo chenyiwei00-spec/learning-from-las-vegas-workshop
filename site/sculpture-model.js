@@ -8,7 +8,7 @@ try{
  if(!id)throw Error('Choose a saved model in the studio first.');
  entry=await SavedSculptures.get(id);if(!entry){missing();return;}
  await customElements.whenDefined('model-viewer');
- modelUrl=URL.createObjectURL(entry.glb);viewer.src=modelUrl;$('saved-view-stage').hidden=false;
+ modelUrl=URL.createObjectURL(window.ModelPreviewFinish?await ModelPreviewFinish.prepare(entry.glb,{target:entry.record.target}):entry.glb);viewer.src=modelUrl;$('saved-view-stage').hidden=false;
  $('saved-view-title').textContent=entry.title;$('saved-view-direction').textContent=entry.record.target==='city'?'BORROW A BODY. COMPOSE ANOTHER CITY.':'BORROW A CITY. COMPOSE ANOTHER BODY.';document.title=entry.title+' / Learning from Las Vegas';
  $('saved-view-meta').textContent=new Date(entry.savedAt).toLocaleString('en-GB')+' · '+Number(entry.record.triangles).toLocaleString('en-GB')+' triangles';
  viewer.addEventListener('load',()=>{window.ModelPreviewFinish?.apply(viewer,{target:entry.record.target});status.textContent='Saved model ready.';fit();});

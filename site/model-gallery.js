@@ -70,7 +70,8 @@ function attach(viewer,{frame,fitCamera,applyCamera,onChange,listEntries=null,on
   const run=ticket,other=viewer.cloneNode(false);other.removeAttribute('id');other.removeAttribute('hidden');
   other.className='model-gallery-buffer';other.style.transform='';other.style.visibility='';other.style.opacity='0';other.cameraControls=false;other.autoRotate=false;
   other.setAttribute('aria-hidden','true');other.setAttribute('tabindex','-1');other.removeAttribute('src');
-  const valueBuffer={id:value.id,url:URL.createObjectURL(value.glb),viewer:other,ready:false,transferred:false,complete:false};
+  const display=window.ModelPreviewFinish?await ModelPreviewFinish.prepare(value.glb,{target:value.record?.target}):value.glb;if(run!==ticket)return false;
+  const valueBuffer={id:value.id,url:URL.createObjectURL(display),viewer:other,ready:false,transferred:false,complete:false};
   buffer=valueBuffer;frame.insertBefore(other,prev);
   const loaded=await new Promise((resolve,reject)=>{
    let done=false;const finish=(ok,error)=>{if(done)return;done=true;clearTimeout(timer);other.removeEventListener('load',load);other.removeEventListener('error',failed);valueBuffer.cancel=null;error?reject(error):resolve(ok);};

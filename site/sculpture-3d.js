@@ -12,7 +12,7 @@ async function create(options){
  const STORE=options.store||'borrowed-worlds-local-generated-sculpture-v1';
  const $=id=>document.getElementById(id),viewer=$('generated-sculpture-viewer');
  let ready=false,busy=false,record=null,loaded=false,current='',revision=0,job=null,loadingError=false,lastError='',saving=false,epoch=0,restoreRevision=0,libraryEntry=null;
- let pendingReveal=false;let meshUrl=null,meshTicket=0,pendingCamera=null,activeRecipe=null,incomingDirection=0,meshInput=null,previewRetries=0,finishingMesh=0;
+ let pendingReveal=false;let meshUrl=null,meshTicket=0,pendingCamera=null,activeRecipe=null,incomingDirection=0,meshInput=null,previewRetries=0,finishingMesh=0,meshSource=null;
  let retryPreview=null;
  const gallery=SavedModelGallery.attach(viewer,{frame:$('model-frame'),fitCamera,applyCamera,onChange:()=>{if(status)render();},listEntries:options.browseEntries});
  async function loadMesh(input,{retry=false}={}){
@@ -20,10 +20,10 @@ async function create(options){
   try{
    const prepared=typeof input==='string'&&input.startsWith('blob:');
    const blob=prepared?null:input instanceof Blob?input:await fetch(input,{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('Model file could not load.');return r.blob();});
-   const enhanced=prepared?null:await ModelColour.enhance(blob);if(ticket!==meshTicket)return;const old=meshUrl;meshUrl=prepared?input:URL.createObjectURL(enhanced);viewer.src=meshUrl;await viewer.updateComplete;if(ticket===meshTicket&&viewer.loaded)finishMeshLoad(meshUrl,ticket);if(old&&old!==meshUrl)setTimeout(()=>URL.revokeObjectURL(old),3000);
+   const enhanced=prepared?null:await ModelColour.enhance(blob);if(ticket!==meshTicket)return;const display=prepared?null:window.ModelPreviewFinish?await ModelPreviewFinish.prepare(enhanced,{target:record?.target}):enhanced;if(ticket!==meshTicket)return;meshSource=prepared?(libraryEntry?.glb||null):enhanced;const old=meshUrl;meshUrl=prepared?input:URL.createObjectURL(display);viewer.src=meshUrl;await viewer.updateComplete;if(ticket===meshTicket&&viewer.loaded)finishMeshLoad(meshUrl,ticket);if(old&&old!==meshUrl)setTimeout(()=>URL.revokeObjectURL(old),3000);
   }catch(error){if(ticket===meshTicket)previewFailed();}
  }
- function clearMesh(){meshTicket++;const previous=meshUrl;meshUrl=null;if(previous)setTimeout(()=>URL.revokeObjectURL(previous),3000);}
+ function clearMesh(){meshTicket++;meshSource=null;const previous=meshUrl;meshUrl=null;if(previous)setTimeout(()=>URL.revokeObjectURL(previous),3000);}
 
  const interaction=ModelInteraction.attach($('model-stage'),viewer,{fullscreenButton:$('model-fullscreen'),zoomButton:$('model-zoom-toggle'),note:$('model-wheel-note')});
  const empty=$('model-empty'),status=$('model-status'),generate=$('generate-model');
@@ -173,7 +173,7 @@ async function create(options){
 
  function capture(){
   const orbit=loaded?viewer.getCameraOrbit():null;let retained=record;try{const persisted=JSON.parse(localStorage.getItem(STORE)||'null');if(!retained&&valid(persisted))retained=persisted;}catch{}
-  return {record:retained?structuredClone(retained):null,entry:libraryEntry,resume:busy,recipe:activeRecipe?structuredClone(activeRecipe):null,persisted:localStorage.getItem(STORE),name:$('model-name').value,group:$('model-group').value,camera:orbit?SavedSculptures.cameraView(viewer):null};
+  return {record:retained?structuredClone(retained):null,entry:libraryEntry,sourceBlob:libraryEntry?.glb||meshSource,resume:busy,recipe:activeRecipe?structuredClone(activeRecipe):null,persisted:localStorage.getItem(STORE),name:$('model-name').value,group:$('model-group').value,camera:orbit?SavedSculptures.cameraView(viewer):null};
  }
  function suspend(navigation=false){const persisted=localStorage.getItem(STORE);clear({navigation});if(persisted)localStorage.setItem(STORE,persisted);}
  async function restoreCaptured(snapshot){
