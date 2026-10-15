@@ -10,7 +10,8 @@ async function capture(){
  if(captureCache?.src===src)return enrich(captureCache);
  if(capturePromise?.src===src)return enrich(await capturePromise.promise);
  const promise=(async()=>{
-  const response=await fetch(src);if(!response.ok)throw Error('The model could not load for placement.');const blob=await response.blob();
+  const retained=window.ExhibitionStudio.captureModel().sourceBlob;let blob=retained;
+  if(!(blob instanceof Blob)){const response=await fetch(src);if(!response.ok)throw Error('The model could not load for placement.');blob=await response.blob();}
   let preview=null;try{preview=await thumb.toBlob({mimeType:'image/png'});}catch{}
   const hash=await crypto.subtle.digest('SHA-256',await blob.arrayBuffer()),id=Array.from(new Uint8Array(hash),n=>n.toString(16).padStart(2,'0')).join('');
   const value={src,id,blob,preview,name:$('model-name').value.trim()||'Generated collage'};

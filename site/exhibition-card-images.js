@@ -6,7 +6,8 @@ async function modelPreview(row,mode){
  if(!(row.glb instanceof Blob))return row.preview;
  if(row.record?.target==='space'&&window.ExhibitionWalk?.previewSpaceCard)return ExhibitionWalk.previewSpaceCard(row);
  await customElements.whenDefined('model-viewer');
- const viewer=document.createElement('model-viewer'),url=URL.createObjectURL(row.record?.target==='space'?row.glb:await ModelColour.enhance(row.glb));
+ const source=row.record?.target==='space'?row.glb:await ModelColour.enhance(row.glb),display=window.ModelPreviewFinish?await ModelPreviewFinish.prepare(source,{target:row.record?.target}):source;
+ const viewer=document.createElement('model-viewer'),url=URL.createObjectURL(display);
  viewer.setAttribute('aria-hidden','true');viewer.tabIndex=-1;viewer.setAttribute('loading','eager');viewer.setAttribute('interaction-prompt','none');viewer.setAttribute('exposure','1');viewer.setAttribute('shadow-intensity','.6');window.ModelPreviewFinish?.configure(viewer);
  viewer.style.cssText='position:fixed;left:0;top:0;width:800px;height:600px;opacity:0;z-index:-1;pointer-events:none;background:rgb(242,242,242)';
  (document.fullscreenElement||document.body).append(viewer);

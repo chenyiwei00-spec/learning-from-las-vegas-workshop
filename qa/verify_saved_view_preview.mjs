@@ -4,7 +4,7 @@ const root=process.cwd(),base='http://127.0.0.1:8065/',errors=[];
 const browser=await chromium.launch({executablePath:process.env.CHROME_PATH,headless:true,args:['--use-angle=swiftshader','--enable-unsafe-swiftshader','--mute-audio']});
 const context=await browser.newContext({viewport:{width:1440,height:1000}}),page=await context.newPage();page.setDefaultTimeout(30000);
 page.on('pageerror',e=>{errors.push(e.message);console.log('ERROR',e.message)});
-const files=['model-gallery.js','sculpture-3d.js','saved-models.js','exhibition-library.js','exhibition-agent.js','exhibition-agent-drafts.js','exhibition-studio.js','exhibition-browse.js','model-colour.js','exhibition-colour-preference.js','exhibition-card-images.js','exhibition-workspace.js','model-preview-finish.js'];
+const files=['model-gallery.js','sculpture-3d.js','saved-models.js','exhibition-library.js','exhibition-agent.js','exhibition-agent-drafts.js','exhibition-studio.js','exhibition-browse.js','model-colour.js','exhibition-colour-preference.js','exhibition-card-images.js','exhibition-workspace.js','model-preview-finish.js','exhibition-transfer.js'];
 await page.route('**/exhibition.html',r=>r.fulfill({body:fs.readFileSync(path.join(root,'site/exhibition.html')),contentType:'text/html'}));
 await page.route('**/team-live.js',r=>r.fulfill({body:''}));
 for(const f of files)await page.route('**/'+f,r=>r.fulfill({body:fs.readFileSync(path.join(root,'site',f),'utf8'),contentType:'text/javascript'}));
@@ -16,6 +16,9 @@ const db=await new Promise(resolve=>{const r=indexedDB.open('borrowed-worlds-sav
 await new Promise(resolve=>{const tx=db.transaction('models','readwrite');for(const e of entries)tx.objectStore('models').put(e);tx.oncomplete=resolve});db.close();await ExhibitionLibrary.render();
 window.dispatchEvent(new CustomEvent('saved-sculpture-open',{detail:{id:entries[0].id}}));});
 await page.waitForFunction(()=>ExhibitionStudio.state().model.loaded&&ExhibitionStudio.state().model.gallery.phase==='overview');
+await page.waitForFunction(()=>document.getElementById('workspace-model-thumbnail').loaded);
+await page.evaluate(async()=>{const v=document.getElementById('generated-sculpture-viewer'),display=await(await fetch(v.src)).blob(),read=async b=>{const bytes=await b.arrayBuffer(),n=new DataView(bytes).getUint32(12,true);return JSON.parse(new TextDecoder().decode(new Uint8Array(bytes,20,n)))};if((await read(display)).asset.extras?.previewSurface!=='faceted-v1')throw Error('3D preview must be faceted');const transfer=await ExhibitionTransfer.capture();if((await read(transfer.blob)).asset.extras?.previewSurface)throw Error('Axonometric transfer must use original smooth GLB');});
+console.log('PASS: only 3D preview is faceted; transfer to axonometric retains original smooth geometry.');
 await page.locator('#model-stage').scrollIntoViewIfNeeded();
 await page.evaluate(async()=>{const v=document.getElementById('generated-sculpture-viewer'),pose=SavedSculptures.cameraView(v);window.savedPose={orbit:{theta:1.2,phi:1.15,radius:pose.orbit.radius*.55},target:{...pose.target,x:pose.target.x+.1},fieldOfView:30};
 const old=await SavedSculptures.get('fixture-a');old.camera=savedPose;const d=await new Promise(resolve=>{const r=indexedDB.open('borrowed-worlds-saved-sculptures-v1');r.onsuccess=()=>resolve(r.result)});await new Promise(resolve=>{const t=d.transaction('models','readwrite');t.objectStore('models').put(old);t.oncomplete=resolve});d.close();
