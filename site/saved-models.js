@@ -64,9 +64,10 @@ async function save(record,viewer,metadata={}){
  const root='assets/generated-sculptures/'+record.id+'/';
  if(record.modelUrl!==root+'sculpture.glb'||record.objUrl!==root+'sculpture.obj')throw Error('Invalid generated model paths.');
  const existing=(await list()).find(r=>r.record.id===record.id);
+ if(existing&&!viewer)return {entry:existing,alreadySaved:true};
  if(existing)return {entry:await overwrite(existing.id,viewer,{title:metadata.title?.trim()||existing.title,group:metadata.group?.trim()||existing.group||'',...(record.linkedMedia?{linkedMedia:record.linkedMedia}:{})}),alreadySaved:true,updated:true};
- const camera=cameraView(viewer);let previewTask;
- try{previewTask=modelPreview(viewer,root+'source.png');}catch{previewTask=bytes(root+'source.png');}
+ const camera=viewer?cameraView(viewer):null;let previewTask;
+ try{previewTask=viewer?modelPreview(viewer,root+'source.png'):bytes(root+'source.png');}catch{previewTask=bytes(root+'source.png');}
  const [glb,obj,preview,composition]=await Promise.all([bytes(record.modelUrl),bytes(record.objUrl),previewTask,fetch(root+'composition.json').then(async r=>{if(!r.ok)throw Error('The original model composition is missing.');return r.json();})]);
  const header=await glb.slice(0,4).text();if(header!=='glTF')throw Error('The generated GLB is invalid.');
  const entries=await list(),number=1+Math.max(0,...entries.map(r=>r.number||0)),entry={id:crypto.randomUUID(),number,title:(record.target==='city'?'City model ':'Sculpture ')+String(number).padStart(2,'0'),colourVersion:ModelColour.version,group:String(metadata.group||'').trim().slice(0,80),savedAt:Date.now(),camera,record:structuredClone(record),glb,obj,preview,composition};

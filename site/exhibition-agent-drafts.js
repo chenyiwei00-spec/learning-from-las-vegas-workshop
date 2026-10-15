@@ -51,9 +51,9 @@ function lock(value){
  else{for(const [el,old]of lock.previous||[])el.inert=old;lock.previous=[];}
 }
 async function waitForPreview(jobId){
- const end=Date.now()+120000;
- while(Date.now()<end){const s=ExhibitionStudio.state().model;if(s.error)throw Error(s.error);if(!s.busy&&s.loaded&&!s.stale&&s.jobId===jobId)return;await new Promise(r=>setTimeout(r,100));}
- throw Error('The model finished, but its preview did not load. The next collage will continue.');
+ const end=Date.now()+30000;
+ while(Date.now()<end){const s=ExhibitionStudio.state().model;if(s.error)throw Error(s.error);if(s.jobId===jobId&&s.previewError)return false;if(!s.busy&&s.loaded&&!s.stale&&s.jobId===jobId)return;await new Promise(r=>setTimeout(r,100));}
+ return false; // A completed mesh must be saved even if its WebGL preview times out.
 }
 async function generateSelected(){
  if(busy||ExhibitionAgent.state().busy||ExhibitionStudio.state().model.busy||ExhibitionLibrary.state().placing)return;

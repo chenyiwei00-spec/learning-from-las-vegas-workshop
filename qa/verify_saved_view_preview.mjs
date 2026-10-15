@@ -1,0 +1,48 @@
+import fs from 'node:fs';import path from 'node:path';import assert from 'node:assert/strict';import{createRequire}from'node:module';
+const require=createRequire(process.env.PLAYWRIGHT_ANCHOR),{chromium}=require('./browser_tools/node_modules/playwright-core');
+const root=process.cwd(),base='http://127.0.0.1:8065/',errors=[];
+const browser=await chromium.launch({executablePath:process.env.CHROME_PATH,headless:true,args:['--use-angle=swiftshader','--enable-unsafe-swiftshader','--mute-audio']});
+const context=await browser.newContext({viewport:{width:1440,height:1000}}),page=await context.newPage();page.setDefaultTimeout(30000);
+page.on('pageerror',e=>{errors.push(e.message);console.log('ERROR',e.message)});
+const files=['model-gallery.js','sculpture-3d.js','saved-models.js','exhibition-library.js','exhibition-agent.js','exhibition-agent-drafts.js','exhibition-studio.js','exhibition-browse.js','model-colour.js','exhibition-colour-preference.js'];
+await page.route('**/team-live.js',r=>r.fulfill({body:''}));
+for(const f of files)await page.route('**/'+f,r=>r.fulfill({body:fs.readFileSync(path.join(root,'site',f),'utf8'),contentType:'text/javascript'}));
+await page.route('**/api/sculpture3d/jobs',()=>{throw Error('Real AI generation is forbidden in this test')});
+try{
+await page.goto(base+'exhibition.html',{waitUntil:'networkidle'});await page.waitForFunction(()=>window.ExhibitionStudio&&window.ExhibitionLibrary);
+await page.evaluate(async()=>{const blob=await(await fetch('assets/exhibition-desert/models/sign_01_preview.glb')).blob();window.fixtureBlob=blob;const entries=['a','b'].map((v,i)=>({id:'fixture-'+v,title:'Fixture '+v,group:'Test',savedAt:Date.now()+i,colourVersion:ModelColour.version,glb:blob,obj:new Blob(['o test']),preview:new Blob([],{type:'image/png'}),composition:null,camera:null,record:{id:v.repeat(64),fingerprint:v.repeat(64),modelUrl:'assets/generated-sculptures/'+v.repeat(64)+'/sculpture.glb',objUrl:'assets/generated-sculptures/'+v.repeat(64)+'/sculpture.obj',target:'city',triangles:1000,linkedMedia:{version:2,video:null,audio:null}}}));window.fixtureEntries=entries;
+const db=await new Promise(resolve=>{const r=indexedDB.open('borrowed-worlds-saved-sculptures-v1',1);r.onsuccess=()=>resolve(r.result)});
+await new Promise(resolve=>{const tx=db.transaction('models','readwrite');for(const e of entries)tx.objectStore('models').put(e);tx.oncomplete=resolve});db.close();await ExhibitionLibrary.render();
+window.dispatchEvent(new CustomEvent('saved-sculpture-open',{detail:{id:entries[0].id}}));});
+await page.waitForFunction(()=>ExhibitionStudio.state().model.loaded&&ExhibitionStudio.state().model.gallery.phase==='overview');
+await page.locator('#model-stage').scrollIntoViewIfNeeded();
+await page.evaluate(async()=>{const v=document.getElementById('generated-sculpture-viewer'),pose=SavedSculptures.cameraView(v);window.savedPose={orbit:{theta:1.2,phi:1.15,radius:pose.orbit.radius*.55},target:{...pose.target,x:pose.target.x+.1},fieldOfView:30};
+const old=await SavedSculptures.get('fixture-a');old.camera=savedPose;const d=await new Promise(resolve=>{const r=indexedDB.open('borrowed-worlds-saved-sculptures-v1');r.onsuccess=()=>resolve(r.result)});await new Promise(resolve=>{const t=d.transaction('models','readwrite');t.objectStore('models').put(old);t.oncomplete=resolve});d.close();
+window.dispatchEvent(new CustomEvent('saved-sculpture-open',{detail:{id:'fixture-a'}}));});
+await page.waitForFunction(()=>ExhibitionStudio.state().model.loaded&&ExhibitionStudio.state().model.gallery.phase==='overview');
+await page.waitForTimeout(700);
+const hit=await page.evaluate(()=>{const v=document.getElementById('generated-sculpture-viewer'),b=v.getBoundingClientRect();for(let y=b.top+b.height*.2;y<b.bottom-b.height*.2;y+=12)for(let x=b.left+b.width*.2;x<b.right-b.width*.2;x+=12){if(document.elementFromPoint(x,y)?.closest('model-viewer')===v&&v.positionAndNormalFromPoint(x,y))return{x,y};}return null});assert.ok(hit,'Model needs a visible hit');
+await page.mouse.click(hit.x,hit.y);await page.waitForTimeout(250);assert.equal((await page.evaluate(()=>ExhibitionStudio.state().model.gallery)).phase,'entering');
+await page.waitForFunction(()=>ExhibitionStudio.state().model.gallery.phase==='detail');
+const actual=await page.evaluate(()=>SavedSculptures.cameraView(document.getElementById('generated-sculpture-viewer')));const saved=await page.evaluate(()=>savedPose);assert.ok(Math.abs(actual.orbit.radius/saved.orbit.radius-1)<.03);
+await page.evaluate(()=>{const v=document.getElementById('generated-sculpture-viewer');v.cameraOrbit='-90deg 65deg '+(savedPose.orbit.radius*.65)+'m';v.jumpCameraToGoal();});await page.waitForTimeout(250);
+await page.evaluate(()=>{const v=document.getElementById('generated-sculpture-viewer');window.cameraSamples=[];window.monitor=true;const tick=()=>{if(!monitor)return;cameraSamples.push({time:performance.now(),phase:ExhibitionStudio.state().model.gallery.phase,pose:SavedSculptures.cameraView(v),hidden:v.hidden,opacity:v.style.opacity});requestAnimationFrame(tick)};tick()});
+await page.locator('.model-gallery-arrow.next').click();
+await page.waitForFunction(()=>ExhibitionStudio.state().model.libraryId==='fixture-b'&&ExhibitionStudio.state().model.gallery.phase==='overview');
+const samples=await page.evaluate(()=>{monitor=false;return cameraSamples});const before=samples[0].pose,stationary=samples.filter(s=>['detail','preparing'].includes(s.phase));for(const row of stationary){assert.ok(Math.abs(row.pose.orbit.radius-before.orbit.radius)<1e-5,'Outgoing zoom must not reset before sliding');assert.ok(Math.abs(row.pose.orbit.theta-before.orbit.theta)<1e-5,'Outgoing angle must not reset before sliding');}assert.ok(samples.some(s=>s.phase==='leaving'));
+console.log('PASS: real hit enters saved camera smoothly; outgoing enlarged/rotated view stays unchanged until model-only slide.');
+// A legacy orbit string must animate instead of silently dropping into manual mode.
+await page.evaluate(async()=>{const old=await SavedSculptures.get('fixture-b');old.camera='65deg 60deg 1.2m';const d=await new Promise(resolve=>{const r=indexedDB.open('borrowed-worlds-saved-sculptures-v1');r.onsuccess=()=>resolve(r.result)});await new Promise(resolve=>{const t=d.transaction('models','readwrite');t.objectStore('models').put(old);t.oncomplete=resolve});d.close();window.dispatchEvent(new CustomEvent('saved-sculpture-open',{detail:{id:old.id}}));});
+await page.waitForFunction(()=>ExhibitionStudio.state().model.loaded&&ExhibitionStudio.state().model.gallery.phase==='overview');
+await page.locator('#model-stage').scrollIntoViewIfNeeded();await page.waitForTimeout(250);
+await page.evaluate(()=>{const v=document.getElementById('generated-sculpture-viewer'),b=v.getBoundingClientRect();for(let y=Math.max(0,b.top)+10;y<Math.min(innerHeight,b.bottom)-10;y+=15)for(let x=b.left+100;x<b.right-100;x+=15)if(v.positionAndNormalFromPoint(x,y)){v.dispatchEvent(new PointerEvent('pointerdown',{button:0,pointerId:90,clientX:x,clientY:y}));v.dispatchEvent(new PointerEvent('pointerup',{button:0,pointerId:90,clientX:x,clientY:y}));return;}throw Error('No hit');});
+await page.waitForFunction(()=>ExhibitionStudio.state().model.gallery.phase==='detail');
+assert.ok(Math.abs((await page.evaluate(()=>SavedSculptures.cameraView(document.getElementById('generated-sculpture-viewer')))).orbit.theta-65*Math.PI/180)<.02);
+assert.deepEqual(errors,[]);console.log('PASS: legacy saved orbit also enters its saved view.');
+await page.locator('#reset-model-view').click();await page.waitForFunction(()=>ExhibitionStudio.state().model.gallery.phase==='overview');await page.waitForTimeout(800);
+await page.evaluate(()=>{window.yawSamples=[];window.yawWatch=true;const v=document.getElementById('generated-sculpture-viewer');const tick=()=>{if(!yawWatch)return;const p=SavedSculptures.cameraView(v);yawSamples.push({phase:ExhibitionStudio.state().model.gallery.phase,theta:p.orbit.theta-(v.turntableRotation||0)});requestAnimationFrame(tick)};tick()});
+await page.locator('.model-gallery-arrow.previous').click();await page.waitForFunction(()=>ExhibitionStudio.state().model.libraryId==='fixture-a'&&ExhibitionStudio.state().model.gallery.phase==='overview');
+const yaw=await page.evaluate(()=>{yawWatch=false;return yawSamples.filter(s=>s.phase==='preparing')});
+assert.ok(yaw.length);for(const s of yaw)assert.ok(Math.abs(Math.atan2(Math.sin(s.theta-yaw[0].theta),Math.cos(s.theta-yaw[0].theta)))<.025,'Freezing auto-rotation must not flash its original yaw');
+console.log('PASS: auto-rotating overview freezes without a one-frame yaw reset before sliding.');
+}finally{await browser.close()}

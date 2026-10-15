@@ -17,7 +17,8 @@ async function resolve(id){
 }
 function moveTo(next){
  mode=next;const overlay=mode==='overlay';
- if(mode==='inline'){inlineBody.append(panel);stage.append(info);}else{panel.append(info);(overlay?body:dock).append(panel);}
+ const destination=mode==='inline'?inlineBody:overlay?body:dock,infoParent=mode==='inline'?stage:panel;
+ if(panel.parentElement!==destination)destination.append(panel);if(info.parentElement!==infoParent)infoParent.append(info);
  browser.hidden=!overlay;surface.dataset.modelBrowse=String(overlay);$('walk-canvas-host').hidden=overlay;
  $('exhibition-inline-placeholder').hidden=mode==='inline';
  window.dispatchEvent(new Event('resize'));

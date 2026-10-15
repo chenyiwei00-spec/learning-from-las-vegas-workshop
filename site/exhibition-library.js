@@ -46,8 +46,8 @@ async function render(){const ticket=++rendering,[next,savedSpaces]=await Promis
  const grid=$('workspace-library-grid');grid.replaceChildren();$('workspace-library-count').textContent=String(rows.length);
  for(const row of unique(rows)){const b=thumb(row,false,rows);b.dataset.libraryId=row.id;b.onclick=()=>{if(!busy())window.dispatchEvent(new CustomEvent('saved-sculpture-open',{detail:{id:row.id}}));};grid.append(b);}renderPanes();
 }
-async function saveCurrent(number,metadata={}){const model=ExhibitionStudio.captureModel(),viewer=$('generated-sculpture-viewer');if(!model.record||!ExhibitionStudio.state().model.loaded)throw Error('The generated model is not ready to save.');
- const result=await SavedSculptures.save(model.record,viewer,{title:(model.record.target==='city'?'City':'Sculpture')+' / '+new Date().toLocaleTimeString('en-GB')+' / '+number,group:'Agent batch',...metadata});generated.push(result.entry.id);persist();await render();return result.entry;}
+async function saveCurrent(number,metadata={}){const model=ExhibitionStudio.captureModel(),viewer=$('generated-sculpture-viewer');if(!model.record||ExhibitionStudio.state().model.busy)throw Error('The generated model is not ready to save.');
+ const result=await SavedSculptures.save(model.record,ExhibitionStudio.state().model.loaded?viewer:null,{title:(model.record.target==='city'?'City':'Sculpture')+' / '+new Date().toLocaleTimeString('en-GB')+' / '+number,group:'Agent batch',...metadata});generated.push(result.entry.id);persist();await render();return result.entry;}
 const random=()=>crypto.getRandomValues(new Uint32Array(1))[0]/4294967296;
 async function arrange(){if(busy())return;placing=true;refreshLayoutButton();let done=0;
  try{await ExhibitionWalk.placement.ready;await render();const count=Math.max(0,Math.min(50,Math.round(Number($('exhibition-place-count').value)||0))),pool=manualPool?collectionRows():unique(availableRows());if(!count)return;if(!pool.length)throw Error('Save '+noun()+' in the lower library first.');
