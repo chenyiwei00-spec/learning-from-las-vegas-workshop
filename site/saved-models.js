@@ -34,6 +34,7 @@ async function modelPreview(viewer,fallback){
    await new Promise(resolve=>setTimeout(resolve,attempt?160:80));
    await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
    const blob=await viewer.toBlob({mimeType:'image/png',idealAspect:false}),image=await createImageBitmap(blob);
+   if(document.body.classList.contains('exhibition-page')){const square=document.createElement('canvas');square.width=square.height=640;const g=square.getContext('2d');g.fillStyle='rgb(142,142,142)';g.fillRect(0,0,640,640);const k=Math.min(640/image.width,640/image.height);g.drawImage(image,(640-image.width*k)/2,(640-image.height*k)/2,image.width*k,image.height*k);image.close();return await new Promise((resolve,reject)=>square.toBlob(b=>b?resolve(b):reject(Error('Preview unavailable')),'image/png'));}
    const raw=document.createElement('canvas');raw.width=image.width;raw.height=image.height;const g=raw.getContext('2d');g.drawImage(image,0,0);
    const pixels=g.getImageData(0,0,raw.width,raw.height).data,bg=Array.from(pixels.slice(0,4));let x0=raw.width,y0=raw.height,x1=0,y1=0,count=0;
    const step=Math.max(2,Math.ceil(Math.sqrt(raw.width*raw.height/120000)));
