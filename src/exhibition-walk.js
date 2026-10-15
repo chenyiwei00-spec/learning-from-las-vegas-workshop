@@ -190,7 +190,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
   }
   try {
     scene = new THREE.Scene();
-    scene.background = new THREE.Color('#8e8e8e');
+    scene.background = new THREE.Color('#f2f2f2');
     roomCamera = new THREE.PerspectiveCamera(62,1,0.05,180);
     axonCamera = new THREE.OrthographicCamera(-40,40,22,-22,0.05,350);
     axonCamera.position.set(48,48,48);
@@ -295,7 +295,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
   function setViewMode(mode) {
     if(!['room','axonometric'].includes(mode))throw new TypeError('Unknown gallery view.');
     clearInput();teleport=null;viewMode=mode;
-    const axon=mode==='axonometric';scene.background.set('#8e8e8e');
+    const axon=mode==='axonometric';scene.background.set('#f2f2f2');
     roomMeshes.forEach(mesh=>mesh.visible=!axon);
     factoryRoom.setVisible(!axon);roomDetailGroup.visible=!axon;axonGroup.visible=axon;skylight.setRoomMode(!axon);
     camera=axon?axonCamera:roomCamera;placement.setViewMode(mode);
