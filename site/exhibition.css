@@ -548,3 +548,10 @@ body[data-archive-agent-busy=true] .agent-library-control{display:none}
 #archive-collage-grid .saved-model-image,#archive-space-grid .saved-model-image{aspect-ratio:1}
 #archive-collage-grid .saved-model-image,#archive-collage-grid .saved-model-image img{background:#fff}
 #model-stage:fullscreen #model-fullscreen{display:none}
+
+/* MAKE SPACE tools stay in the existing third agent menu. */
+.exhibition-space-card .space-secondary-actions:has(.space-generation-settings){width:220px;max-height:65vh;overflow:auto}
+.space-generation-settings{border-top:1px solid var(--exhibition-line);padding-top:8px;margin-top:5px;font:9px Arial,sans-serif}
+.space-generation-settings summary{cursor:pointer;padding:6px 0}.space-generation-settings label{display:block;font:9px Arial,sans-serif;margin:12px 0}.space-generation-settings label>span{display:flex;align-items:center;gap:6px;margin-top:5px}.space-generation-settings input{min-width:0;width:145px;accent-color:#161616}.space-generation-settings input[type=number]{border:1px solid var(--exhibition-line);padding:4px}.space-generation-settings output{font-size:8px;color:#666;min-width:30px;text-align:right}
+.exhibition-space-feedback{position:absolute;bottom:34px;left:18px;z-index:8;max-width:min(470px,calc(100% - 220px));padding:10px 13px;border:1px solid var(--exhibition-line);background:#fffffff0;color:#222;font:10px/1.6 Arial,sans-serif;pointer-events:none}
+@media(max-width:760px){.exhibition-space-card .space-secondary-actions:has(.space-generation-settings){width:190px}.space-generation-settings input{width:120px}.exhibition-space-feedback{left:10px;bottom:25px;max-width:calc(100% - 155px);font-size:9px}}
