@@ -11,8 +11,8 @@ function source(id,x,z,color=0xcf5830){
  return {id:'placement-'+id,modelId:'model-'+id,name:id,object,layout:{col:(x+20)/2,row:(z+20)/2,span:1,scale:1,rotation:0,offsetX:0,offsetZ:0}};
 }
 const placed=[source('red',-4,-2),source('blue',3,3,0x2267ce)];
-const input=await preparePlacedSources(placed,SETTINGS),a=generateSurreal(input.items,input.sources,input.settings),b=generateSurreal(input.items,input.sources,input.settings);
-assert.equal(a.nodes.length,placed.length);assert(a.validation.routesClear&&a.validation.topology.components===1);
+const input=await preparePlacedSources(placed,{...SETTINGS,moduleCount:3}),a=generateSurreal(input.items,input.sources,input.settings),b=generateSurreal(input.items,input.sources,input.settings);
+assert.equal(a.nodes.length,3);assert(a.validation.verticalRange>2,'A multilevel space must have real floor height variation.');assert(a.validation.maxGrade>.025,'Routes must include slopes.');assert(a.validation.routesClear&&a.validation.topology.components===1);
 assert.equal(a.validation.topology.boundaryEdges,0);
 a.meshes.forEach((m,i)=>{assert.deepEqual(m.positions,b.meshes[i].positions);assert.deepEqual(m.colors,b.meshes[i].colors);if(m.normals)assert.deepEqual(m.normals,b.meshes[i].normals);});
 for(const item of input.items){const n=a.nodes.find(n=>n.sourceId===item.id);assert.equal(n.center.x,item.x);assert.equal(n.center.z,item.z);}
@@ -31,4 +31,5 @@ const profile=Array.from({length:2},()=>new Float32Array([1,1,1,1]));
 const mod=(x,color)=>({x,z:0,cy:0,scaleX:1,scaleY:1,scaleZ:1,matrix:[1,0,0,0,1,0,0,0,1],distortion:0,phase:0,a:{height:4,maxRadius:1,bands:2,angles:4,profile,colors:[Float32Array.from(Array(4).fill(color).flat()),Float32Array.from(Array(4).fill(color).flat())]}});
 const mods=[mod(-1,[1,0,0]),mod(1,[0,0,1])],left=vertexColor(mods,-.001,0,0).color,right=vertexColor(mods,.001,0,0).color;
 assert(left.every((v,i)=>Math.abs(v-right[i])<.01));assert(left[0]>.4&&left[2]>.4);
+console.log(JSON.stringify(a.validation));
 console.log('PASS: deterministic buffers, stable identity/order, layout anchors, manifold walkable fusion, centred bounds, no visitors, metallic smooth surfaces and continuous source-colour seams. No private assets or AI generation.');

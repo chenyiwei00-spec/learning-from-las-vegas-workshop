@@ -16,7 +16,7 @@ function curve(a,b,width,rng,role,options={}){
  return {points,width,role,length:total,maxGrade:rise/(lengths[last]-lengths[first]||1),from:a.id,to:b.id};
 }
 function growth(items,analysis,s,rng){
- const modules=[],nodes=[],edges=[],count=s.layoutDriven?items.length:Math.max(items.length,s.moduleCount);
+ const modules=[],nodes=[],edges=[],count=Math.max(items.length,s.moduleCount);
  const compact=clamp(s.compactness+(s.density-.7)*.18,0,1),lock=clamp(s.interlocking+(s.connectionStrength-.65)*.12,0,1);
  for(let k=0;k<count;k++){
   const source=items[k%items.length],a=analysis[source.asset],base=Math.max(3.4,(3.6*s.spatialScale/2.6)*source.scale*(1+(rng()*2-1)*s.scaleVariation));
@@ -34,10 +34,14 @@ function growth(items,analysis,s,rng){
    floor=clamp(p.floor+direction*step,0,5.7*s.verticalComplexity);
    edges.push({a:parent,b:k});
   }
-  if(s.layoutDriven){
-   // One cast per placed sculpture: retain relative plan position and quarter-turn orientation.
-   x=source.x;z=source.z;yaw=source.rotation;floor=0;
-   if(k){const nearest=modules.reduce((best,q,j)=>distance({x,z},q)<distance({x,z},modules[best])?j:best,0);edges[edges.length-1]={a:nearest,b:k};}
+  if(s.layoutDriven&&k<items.length){
+   // Anchor the first room for each sculpture; additional rooms can grow in split levels.
+   x=source.x;z=source.z;yaw=source.rotation;
+   if(k){
+    const nearest=modules.reduce((best,q,j)=>distance({x,z},q)<distance({x,z},modules[best])?j:best,0);
+    edges[edges.length-1]={a:nearest,b:k};
+    floor=clamp(modules[nearest].floor+(1.35+rng()*.50)*s.verticalComplexity,0,5.7*s.verticalComplexity);
+   }
   }
   const pitch=(rng()-.5)*(.25+s.rotationVariation*.8),roll=(rng()-.5)*(.22+s.rotationVariation*.7);
   const m={layoutDriven:!!s.layoutDriven,id:source.id+'/grown '+(k+1),sourceId:source.id,asset:source.asset,a,scaleX,scaleY,scaleZ,x,z,floor,cy:floor+a.height*scaleY*.23,matrix:rotation(yaw,pitch,roll),yaw,pitch,roll,distortion:s.distortion,phase:rng()*TAU,footprint,parent:s.layoutDriven&&k?edges.at(-1).a:parent,stageX:source.x,stageZ:source.z};
@@ -75,12 +79,20 @@ function nativeFragments(modules,sources,voids,s,paths){
  }
  return {meshes,retainedTriangles};
 }
-function floors(nav,modules){
+function floors(nav,modules,thickness=0){
  nav.corners=new Float32Array(nav.heights.length*4);nav.corners.fill(NaN);const b=new Builder('Carved floors / connected split levels',null,'Source footprints → level terraces and continuously rising carved ramps',false),step=nav.step;
  const heightNear=(ix,iz,h)=>{if(ix<0||iz<0||ix>=nav.nx||iz>=nav.nz)return h;const id=iz*nav.nx+ix;let best=h,d=.35;for(let k=0;k<nav.counts[id];k++){const v=nav.heights[id*nav.layers+k],delta=Math.abs(v-h);if(delta<d){d=delta;best=v;}}return best;};
  const corner=(x,z,h,sx,sz)=>{const sum=heightNear(x,z,h)+heightNear(x+sx,z,h)+heightNear(x,z+sz,h)+heightNear(x+sx,z+sz,h);return [nav.minX+(x+sx*.5)*step,sum/4,nav.minZ+(z+sz*.5)*step];};
- for(let z=0;z<nav.nz;z++)for(let x=0;x<nav.nx;x++){const id=z*nav.nx+x;for(let k=0;k<nav.counts[id];k++){const h=nav.heights[id*nav.layers+k],color=vertexColor(modules,nav.minX+x*step,h+1,nav.minZ+z*step).color.map(v=>v*.25+.48);const q=[corner(x,z,h,-1,-1),corner(x,z,h,1,-1),corner(x,z,h,1,1),corner(x,z,h,-1,1)];nav.corners.set(q.map(v=>v[1]),(id*nav.layers+k)*4);b.quad(...q,color);}}
- return b.finish();
+ for(let z=0;z<nav.nz;z++)for(let x=0;x<nav.nx;x++){const id=z*nav.nx+x;for(let k=0;k<nav.counts[id];k++){const h=nav.heights[id*nav.layers+k],color=vertexColor(modules,nav.minX+x*step,h+1,nav.minZ+z*step).color.map(v=>v*.25+.48);const q=[corner(x,z,h,-1,-1),corner(x,z,h,1,-1),corner(x,z,h,1,1),corner(x,z,h,-1,1)];nav.corners.set(q.map(v=>v[1]),(id*nav.layers+k)*4);b.quad(...q,color);
+  if(thickness){
+   const lower=q.map(v=>[v[0],v[1]-thickness,v[2]]);b.quad(lower[3],lower[2],lower[1],lower[0],[.018,.023,.032]);
+   for(const [edge,dx,dz] of [[0,0,-1],[1,1,0],[2,0,1],[3,-1,0]]){
+    const xx=x+dx,zz=z+dz,j=zz*nav.nx+xx;
+    let neighbour=false;if(xx>=0&&xx<nav.nx&&zz>=0&&zz<nav.nz)for(let n=0;n<nav.counts[j];n++)if(Math.abs(nav.heights[j*nav.layers+n]-h)<.35){neighbour=true;break;}
+    if(!neighbour){const next=(edge+1)%4;b.quad(q[edge],lower[edge],lower[next],q[next],[.018,.023,.032]);}
+   }
+  }}}
+ const mesh=b.finish();mesh.road=true;mesh.thickness=thickness;return mesh;
 }
 function connectedNavigation(nav,nodes,entrance,exit){
  const index=p=>{const x=Math.round((p.x-nav.minX)/nav.step),z=Math.round((p.z-nav.minZ)/nav.step),id=z*nav.nx+x;let best=-1,d=.4;for(let k=0;k<nav.counts[id];k++){const h=nav.heights[id*nav.layers+k],v=Math.abs(h-p.y);if(v<d){d=v;best=id*nav.layers+k;}}return best;};
@@ -140,7 +152,7 @@ function oneGrowth(items,sources,input,onProgress=()=>{},diagnostics=null){
   for(let k=0;k<nav.counts[id];k++){const h=renderedFloor(nav,id,k,x,z);if(bodyClear(extracted.grid,occupancy,x,h,z)&&floorClear(nav,x,z,h))keep.push({h,c:Array.from(nav.corners.subarray((id*nav.layers+k)*4,(id*nav.layers+k)*4+4))});}
   nav.counts[id]=keep.length;for(let k=0;k<keep.length;k++){nav.heights[id*nav.layers+k]=keep[k].h;nav.corners.set(keep[k].c,(id*nav.layers+k)*4);}
  }
- meshes.push(floors(nav,modules));
+ meshes.push(floors(nav,modules,.24));
  const actualRoutes=buildWideRoutes(nav,nodes,entrance,exit,extracted.grid,occupancy,s.corridorWidth,edges);paths.splice(0,paths.length,...actualRoutes);
  const floorCirculation=validateCirculation(nodes,paths,extracted.grid,occupancy,s.corridorWidth,nav);
  const walkableCells=connectedNavigation(nav,nodes,{...entrance,y:floorAt(nav,entrance.x,entrance.z,entrance.y+.055,10)},{...exit,y:floorAt(nav,exit.x,exit.z,exit.y+.055,10)});
@@ -150,7 +162,7 @@ function oneGrowth(items,sources,input,onProgress=()=>{},diagnostics=null){
  const plan={generator:'source-volume-organism-v1',meshes,nodes,paths,entrance:{...entrance},exit:{...exit},gathering:nodes[0].view,courtyard:atriums[0],atriums,clusters:[],bounds,nav,volumeGrid:{...extracted.grid,surfaces:occupancy},walkGrid:{data:new Uint8Array(1),nx:1,nz:1,step:1,minX:0,minZ:0},settings:s,
  skeleton:{growthEdges:edges,modules:modules.map(m=>({id:m.id,sourceId:m.sourceId,asset:m.asset,parent:m.parent,center:{x:m.x,y:m.floor,z:m.z},rotation:{yaw:m.yaw,pitch:m.pitch,roll:m.roll},scale:[m.scaleX,m.scaleY,m.scaleZ]})),sequence:['carved entrance','interlocked lower void','rising interior','split-level chambers','exit terrace'],atriums,seed:s.seed},
  analysis:Object.fromEntries(Object.entries(analysis).map(([key,a])=>[key,{kind:a.kind,height:a.height,width:a.width,depth:a.depth,sourceTriangles:a.sourceTriangles,sourceVertices:a.sourceVertices}])),
- validation:{discardedVoxelTriangles,...floorCirculation,floorTrianglesChecked:true,topology:topo,modules:nodes.length,roomFloorRange:Math.max(...nodes.map(n=>n.floor))-Math.min(...nodes.map(n=>n.floor)),verticalRange:(()=>{let lo=Infinity,hi=-Infinity;for(let id=0;id<nav.counts.length;id++)for(let k=0;k<nav.counts[id];k++){const h=nav.heights[id*nav.layers+k];lo=Math.min(lo,h);hi=Math.max(hi,h);}return hi-lo;})(),multilevelColumns:Array.from(nav.counts).filter(v=>v>1).length,nativeTriangles:details.retainedTriangles,connectedWalkableCells:walkableCells,voxelResolution:extracted.grid.step,voxelSamples:extracted.grid.values.length,carvedRouteInsideMass:inMass/(total||1),longestGrowthContact:Math.max(0,...edges.map(e=>distance(nodes[e.a].center,nodes[e.b].center))),runtimeMs:Date.now()-start,topologicallyFusedCore:true,nativeFragmentsSeparatelyRetained:true,routesClear:true}};
+ validation:{roadThickness:.24,discardedVoxelTriangles,...floorCirculation,floorTrianglesChecked:true,topology:topo,modules:nodes.length,roomFloorRange:Math.max(...nodes.map(n=>n.floor))-Math.min(...nodes.map(n=>n.floor)),verticalRange:(()=>{let lo=Infinity,hi=-Infinity;for(let id=0;id<nav.counts.length;id++)for(let k=0;k<nav.counts[id];k++){const h=nav.heights[id*nav.layers+k];lo=Math.min(lo,h);hi=Math.max(hi,h);}return hi-lo;})(),multilevelColumns:Array.from(nav.counts).filter(v=>v>1).length,nativeTriangles:details.retainedTriangles,connectedWalkableCells:walkableCells,voxelResolution:extracted.grid.step,voxelSamples:extracted.grid.values.length,carvedRouteInsideMass:inMass/(total||1),longestGrowthContact:Math.max(0,...edges.map(e=>distance(nodes[e.a].center,nodes[e.b].center))),runtimeMs:Date.now()-start,topologicallyFusedCore:true,nativeFragmentsSeparatelyRetained:true,routesClear:true}};
  onProgress(100,'One shared body. Many borrowed spaces.');return plan;
 }
 

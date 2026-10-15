@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import {FLOOR_SIZE,CELL_SIZE} from './exhibition-dimensions.js';
 import {createFactoryRoom} from './exhibition-factory-room.js';
+import {createExhibitionRender} from './exhibition-render.js';
 import {createSkylight} from './exhibition-skylight.js';
 import {createExhibitionSpace} from './exhibition-space.js';
 import {createExhibitionPlacement} from './exhibition-placement.js';
@@ -13,14 +14,14 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
   const host = document.getElementById('walk-canvas-host');
   if (!surface || !host) return;
   const $ = id => document.getElementById(id);
-  let ROOM = Object.freeze({width:40, depth:40, height:30, wallThickness:0.18});
+  let ROOM = Object.freeze({width:100, depth:100, height:30, wallThickness:0.18});
   const EYE_HEIGHT = 1.65, RADIUS = 0.35, SPEED = 1.8;
   const LIMIT = ROOM.width / 2 - RADIUS;
   const keys = new Set(), raycaster = new THREE.Raycaster(), pointer = new THREE.Vector2();
   const eye = new THREE.Vector3(0, EYE_HEIGHT, 14);
   const forward = new THREE.Vector3(), right = new THREE.Vector3(), direction = new THREE.Vector3();
   let renderer, scene, camera, roomCamera, axonCamera, axonControls, axonGroup, roomDetailGroup, floorGrid;
-  let space=null,skylight=null,factoryRoom=null;
+  let space=null,skylight=null,factoryRoom=null,renderPipeline=null;
   let roomMeshes = [], ready = false, disposed = false, viewMode = 'room', twoPoint = false;
   let yaw = 0, pitch = 0, fly = false, active = false, drag = null;
   let immersive=false, pageScroll=0;
@@ -62,9 +63,10 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
     $('walk-view-toggle').textContent=axon?'Axonometric / switch':'Eye level / switch';$('walk-view-toggle').setAttribute('aria-pressed',String(axon));
     $('walk-status').textContent = axon ? 'AXONOMETRIC / 2 M GRID' : (fly ? 'FLY' : 'WALK') + ' / EYE ' + eye.y.toFixed(2) + ' M';
     $('walk-view-label').textContent = axon ? 'FLOOR PLAN' : 'WHITE ATMOSPHERE';
+    surface.querySelector('.walk-room-label span:last-child').textContent=axon?'40 x 40 M':'100 x 100 M';
     $('walk-caption-text').textContent = axon ? 'Drag to rotate · Wheel to zoom · Right / middle drag to pan' : 'WASD to walk · Drag to look · Q up / E down · Space to walk · Shift faster';
-    $('walk-dimensions').textContent = axon ? '40 \u00d7 40 M / 400 CELLS' : '40 \u00d7 40 \u00d7 '+ROOM.height.toFixed(1)+' M';
-    surface.setAttribute('aria-label',axon ? 'Orthographic floor view with four hundred two metre grid cells. Drag to rotate; wheel to zoom; right or middle drag to pan.' : 'Walk through a forty by forty metre white studio hall with windows');
+    $('walk-dimensions').textContent = axon ? '40 \u00d7 40 M / 400 CELLS' : '100 \u00d7 100 \u00d7 '+ROOM.height.toFixed(1)+' M';
+    surface.setAttribute('aria-label',axon ? 'Orthographic floor view with four hundred two metre grid cells. Drag to rotate; wheel to zoom; right or middle drag to pan.' : 'Walk through a hundred by hundred metre sunlit exhibition with fog and reflective multilevel paths');
     surface.dataset.view = viewMode;
     surface.dataset.navigationActive=String(active);surface.dataset.fly=String(fly);
     surface.dataset.eyeX=String(eye.x);surface.dataset.eyeY=String(eye.y);surface.dataset.eyeZ=String(eye.z);
@@ -147,7 +149,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
       constrain(eye);
     }
     orient();
-    placement.updateHandles();renderer.render(scene,camera);
+    placement.updateHandles();renderPipeline.render(viewMode==='room',camera);
     frameCount++;
     ui();
     if (movingByKeys() || teleport) requestFrame();
@@ -169,7 +171,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
     const rect = host.getBoundingClientRect();
     if (!rect.width || !rect.height) return;
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1,1.5));
-    renderer.setSize(rect.width,rect.height,false);
+    renderer.setSize(rect.width,rect.height,false);renderPipeline?.setSize(rect.width,rect.height);
     const aspect = rect.width / rect.height;
     roomCamera.aspect = aspect; roomCamera.updateProjectionMatrix();
     const halfHeight = Math.max(44,64/aspect)/2;
@@ -194,7 +196,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
   try {
     scene = new THREE.Scene();
     scene.background = new THREE.Color('#f2f2f2');
-    roomCamera = new THREE.PerspectiveCamera(62,1,0.05,180);
+    roomCamera = new THREE.PerspectiveCamera(62,1,0.05,250);
     axonCamera = new THREE.OrthographicCamera(-40,40,22,-22,0.05,350);
     axonCamera.position.set(48,48,48);
     axonCamera.zoom = 1.08;
@@ -258,12 +260,12 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
     axonGroup.add(planBorder);
 
     // White materials with gentle lighting retain the depth of the empty room.
-    scene.add(new THREE.HemisphereLight(0xe9f2ff,0xc1ad95,.42));
+    scene.add(new THREE.HemisphereLight(0xddeaff,0x71626e,.22));
     for (const x of [-5,5]) for (const z of [-5,5]) {
       const light = new THREE.PointLight(0xffffff,7,28,2);
       light.visible=false;light.name='gallery-ceiling-light';light.position.set(x,ROOM.height-.45,z); scene.add(light);
     }
-    skylight=createSkylight({scene,renderer,height:ROOM.height,floorMaterial:floor,openAtmosphere:true});const pmrem=new THREE.PMREMGenerator(renderer),environment=new RoomEnvironment();scene.environment=pmrem.fromScene(environment,.05).texture;scene.environmentIntensity=.68;pmrem.dispose();environment.dispose();
+    skylight=createSkylight({scene,renderer,height:ROOM.height,floorMaterial:floor,openAtmosphere:true});const pmrem=new THREE.PMREMGenerator(renderer),environment=new RoomEnvironment();scene.environment=pmrem.fromScene(environment,.05).texture;scene.environmentIntensity=.68;pmrem.dispose();environment.dispose();renderPipeline=createExhibitionRender({scene,renderer,camera:roomCamera});
     ready = true;
     surface.setAttribute('aria-busy','false');
     ui();
@@ -275,7 +277,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
 
   const canvas = renderer.domElement;
   const placement=createExhibitionPlacement({scene,canvas,getCamera:()=>camera,getRoomMeshes:()=>roomMeshes,isRoom:()=>viewMode==='room',orient,invalidate:invalidateScene,previewInvalidate:requestFrame,suspend:suspendNavigation,getMaxHeight:()=>23});
-  space=createExhibitionSpace({scene,renderer,placement,getCamera:()=>camera,onSpaceLight:(result,active)=>skylight.updateCanopy(result,active),onSpaceBounds:frameSpace,getView:()=>viewMode,setView:setViewMode,navigate:value=>{clearInput();teleport=null;fly=false;eye.set(value.x,value.y,value.z);yaw=value.yaw;pitch=value.pitch||0;constrain(eye);ui();requestFrame();focusView();},invalidate:invalidateScene});
+  space=createExhibitionSpace({scene,renderer,placement,getCamera:()=>camera,onSpaceLight:(result,active)=>{skylight.updateCanopy(result,active);renderPipeline.updateSpace(result,active);},onSpaceBounds:frameSpace,getView:()=>viewMode,setView:setViewMode,navigate:value=>{clearInput();teleport=null;fly=false;eye.set(value.x,value.y,value.z);yaw=value.yaw;pitch=value.pitch||0;constrain(eye);ui();requestFrame();focusView();},invalidate:invalidateScene});
   // Enter at the parent capture phase; the entry double-click must not also edit an exhibit.
   surface.addEventListener('dblclick',event=>{
     if(event.target===canvas&&!immersive&&event.button===0){
@@ -299,7 +301,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
   function setViewMode(mode) {
     if(!['room','axonometric'].includes(mode))throw new TypeError('Unknown gallery view.');
     clearInput();teleport=null;viewMode=mode;
-    const axon=mode==='axonometric';scene.background.set('#ffffff');scene.fog=axon?null:new THREE.Fog(0xffffff,25,100);
+    const axon=mode==='axonometric';scene.background.setRGB(axon?1:3.5,axon?1:3.5,axon?1:3.5);scene.fog=axon?null:new THREE.Fog(new THREE.Color(3.5,3.5,3.5),38,140);
     roomMeshes.forEach(mesh=>mesh.visible=!axon&&mesh.name==='floor');
     factoryRoom.setVisible(false);roomDetailGroup.visible=false;axonGroup.visible=axon;skylight.setRoomMode(!axon);
     camera=axon?axonCamera:roomCamera;placement.setViewMode(mode);space?.setViewMode?.(mode);
@@ -443,7 +445,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
         if(object.material)for(const material of (Array.isArray(object.material)?object.material:[object.material]))materials.add(material);
       });
       geometries.forEach(geometry=>geometry.dispose());materials.forEach(material=>material.dispose());
-      space?.dispose();skylight?.dispose();factoryRoom?.dispose();scene.environment?.dispose();renderer.dispose();
+      space?.dispose();skylight?.dispose();factoryRoom?.dispose();renderPipeline?.dispose();scene.environment?.dispose();renderer.dispose();
     }
   });
   window.addEventListener('pageshow',() => {resize();});
@@ -458,7 +460,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
       floorJunctions:{visible:roomDetailGroup.visible,seam:true,softContactShading:true},
       walkingBounds:{x:[-LIMIT,LIMIT],z:[-LIMIT,LIMIT],y:[RADIUS,ROOM.height-RADIUS]},
       displayCount:placement.state().modelCount,modelsLoaded:placement.state().modelCount,textureCount:placement.state().textureCount,placements:placement.state(),
-      performance:{triangles:renderer.info.render.triangles,drawCalls:renderer.info.render.calls,pixelRatio:renderer.getPixelRatio(),shadows:renderer.shadowMap.enabled,shadowAutoUpdate:renderer.shadowMap.autoUpdate,continuousRendering:!!raf,frameCount},
+      rendering:renderPipeline.state(),performance:{triangles:renderer.info.render.triangles,drawCalls:renderer.info.render.calls,pixelRatio:renderer.getPixelRatio(),shadows:renderer.shadowMap.enabled,shadowAutoUpdate:renderer.shadowMap.autoUpdate,continuousRendering:!!raf,frameCount},
       moving:!!teleport || movingByKeys()
     }),
     reset,setViewMode,setTwoPoint,setRoomHeight,suspendNavigation,enterImmersive,leaveImmersive,placement,space,
