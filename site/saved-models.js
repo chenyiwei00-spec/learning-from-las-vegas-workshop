@@ -8,8 +8,54 @@ function notify(){for(const fn of listeners)fn();channel?.postMessage('changed')
 channel?.addEventListener('message',()=>{for(const fn of listeners)fn();});
 function database(){if(!dbPromise)dbPromise=new Promise((resolve,reject)=>{const r=indexedDB.open(DB,1);r.onupgradeneeded=()=>r.result.createObjectStore(STORE,{keyPath:'id'});r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(Error('Saved-model storage is unavailable in this browser.'));r.onblocked=()=>reject(Error('Close other model pages and try saving again.'));});return dbPromise;}
 async function transaction(mode,action){const db=await database();return new Promise((resolve,reject)=>{const tx=db.transaction(STORE,mode),r=action(tx.objectStore(STORE));let value;r.onsuccess=()=>value=r.result;tx.oncomplete=()=>resolve(value);tx.onabort=tx.onerror=()=>reject(tx.error||Error('Model storage failed.'));});}
-const list=async()=>((await transaction('readonly',s=>s.getAll()))||[]).sort((a,b)=>b.savedAt-a.savedAt);
+/* The optional asset bundle is local data, separate from shared website source. */
+let localImportTask;
+async function importLocalModels(){
+ if(localImportTask)return localImportTask;
+ localImportTask=(async()=>{
+  const response=await fetch('assets/imported-sculptures/catalog.json',{cache:'no-store',signal:AbortSignal.timeout(5000)});
+  if(response.status===404)return {added:0};
+  if(!response.ok)throw Error('The local model bundle is unavailable.');
+  const bundle=await response.json();
+  if(bundle.format!=='learning-vegas-local-models-v1'||!Array.isArray(bundle.items)||bundle.items.length>500)throw Error('Invalid local model bundle.');
+  const existing=await transaction('readonly',s=>s.getAll()),known=new Set(existing.flatMap(r=>[r.record?.id,r.importSha256].filter(Boolean))),prepared=[];
+  let deleted=[];try{deleted=JSON.parse(localStorage.getItem('learning-vegas-deleted-jobs')||'[]');}catch{}
+  for(const item of bundle.items){
+   const hash=item.sha256,base='assets/imported-sculptures/'+hash+'/';
+   if(!/^[a-f0-9]{64}$/.test(hash)||item.modelUrl!==base+'model.glb'||item.previewUrl!==base+'preview.png')throw Error('Invalid local model paths.');
+   if(known.has(hash)||deleted.includes(hash))continue;
+   const response=await fetch(item.modelUrl);if(!response.ok)throw Error('An imported model file is missing.');
+   const glb=await response.blob(),raw=await glb.arrayBuffer(),actual=[...new Uint8Array(await crypto.subtle.digest('SHA-256',raw))].map(v=>v.toString(16).padStart(2,'0')).join('');
+   if(actual!==hash||await glb.slice(0,4).text()!=='glTF')throw Error('An imported model failed its integrity check.');
+   let duplicate=false;
+   for(const old of existing.filter(r=>r.glb?.size===glb.size)){
+    const previous=[...new Uint8Array(await crypto.subtle.digest('SHA-256',await old.glb.arrayBuffer()))].map(v=>v.toString(16).padStart(2,'0')).join('');
+    if(previous===hash){duplicate=true;break;}
+   }
+   if(duplicate)continue;
+   const image=await fetch(item.previewUrl);if(!image.ok)throw Error('An imported model preview is missing.');
+   const preview=await image.blob();
+   prepared.push({id:'import:'+hash,title:String(item.title||'Imported model').slice(0,120),group:String(item.group||'Imported models').slice(0,80),savedAt:item.savedAt||Date.now(),importSha256:hash,
+    record:{id:hash,fingerprint:hash,modelUrl:'assets/generated-sculptures/'+hash+'/sculpture.glb',objUrl:'assets/generated-sculptures/'+hash+'/sculpture.obj',target:item.target==='city'?'city':'sculpture',triangles:Number(item.triangles)||0,localOnly:true,linkedMedia:{version:2,video:null,audio:null}},
+    glb,obj:null,preview,previewType:'model',previewVersion:window.ModelPreviewFinish?.version||'',camera:null,composition:null});
+   known.add(hash);
+  }
+  if(!prepared.length)return {added:0};
+  const db=await database();let added=0;
+  await new Promise((resolve,reject)=>{
+   const tx=db.transaction(STORE,'readwrite'),store=tx.objectStore(STORE),r=store.getAll();
+   r.onsuccess=()=>{const current=new Set(r.result.flatMap(row=>[row.record?.id,row.importSha256].filter(Boolean)));let number=Math.max(0,...r.result.map(row=>row.number||0));
+    for(const row of prepared)if(!current.has(row.record.id)){row.number=++number;store.add(row);current.add(row.record.id);added++;}};
+   tx.oncomplete=resolve;tx.onabort=tx.onerror=()=>reject(tx.error||Error('Could not store imported models.'));
+  });
+  return {added};
+ })().catch(error=>{console.warn('Local model import:',error.message);return {added:0,error:error.message};});
+ return localImportTask;
+}
+
+const list=async()=>{await importLocalModels();return ((await transaction('readonly',s=>s.getAll()))||[]).sort((a,b)=>b.savedAt-a.savedAt);};
 async function get(id){
+ await importLocalModels();
  const entry=await transaction('readonly',s=>s.get(id));if(!entry)return entry;
  try{
   if(entry.colourVersion==='inferred-v2'||entry.colourVersion===ModelColour.version)throw Error('Current inferred geometry already stored.');
