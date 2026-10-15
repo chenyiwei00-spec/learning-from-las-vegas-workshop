@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import {FLOOR_SIZE,CELL_SIZE} from './exhibition-dimensions.js';
 import {createFactoryRoom} from './exhibition-factory-room.js';
 import {createSkylight} from './exhibition-skylight.js';
-import {createCanopy} from './exhibition-canopy.js';
+import {createExhibitionSpace} from './exhibition-space.js';
 import {createExhibitionPlacement} from './exhibition-placement.js';
 import {RoomEnvironment} from 'three/examples/jsm/environments/RoomEnvironment.js';
 import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
@@ -271,7 +271,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
 
   const canvas = renderer.domElement;
   const placement=createExhibitionPlacement({scene,canvas,getCamera:()=>camera,getRoomMeshes:()=>roomMeshes,isRoom:()=>viewMode==='room',orient,invalidate:invalidateScene,previewInvalidate:requestFrame,suspend:suspendNavigation,getMaxHeight:()=>23});
-  space=createCanopy({scene,renderer,placement,onSpaceLight:(result,active)=>skylight.updateCanopy(result,active),onSpaceBounds:frameSpace,getView:()=>viewMode,setView:setViewMode,navigate:value=>{clearInput();teleport=null;fly=false;eye.set(value.x,value.y,value.z);yaw=value.yaw;pitch=value.pitch||0;constrain(eye);ui();requestFrame();focusView();},invalidate:invalidateScene});
+  space=createExhibitionSpace({scene,renderer,placement,onSpaceLight:(result,active)=>skylight.updateCanopy(result,active),onSpaceBounds:frameSpace,getView:()=>viewMode,setView:setViewMode,navigate:value=>{clearInput();teleport=null;fly=false;eye.set(value.x,value.y,value.z);yaw=value.yaw;pitch=value.pitch||0;constrain(eye);ui();requestFrame();focusView();},invalidate:invalidateScene});
   // Enter at the parent capture phase; the entry click must not also edit an exhibit.
   surface.addEventListener('pointerdown',event=>{
     if(event.target===canvas&&!immersive&&event.button===0){
