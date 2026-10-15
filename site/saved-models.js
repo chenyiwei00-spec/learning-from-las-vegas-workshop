@@ -94,9 +94,36 @@ async function importLocalModels(){
  return localImportTask;
 }
 
-const list=async()=>{await importLocalModels();return ((await transaction('readonly',s=>s.getAll()))||[]).sort((a,b)=>b.savedAt-a.savedAt);};
+
+let mediaTask=null,mediaReport=null;
+async function completeMedia(){
+ if(mediaTask)return mediaTask;
+ mediaTask=(async()=>{
+  const initial=(await transaction('readonly',s=>s.getAll()))||[];
+  const missing=row=>row.record&&row.record.target!=='space'&&['video','audio'].some(type=>!window.ModelMediaMatch?.usable(row.record.linkedMedia?.[type]));
+  if(!window.ModelMediaMatch||!initial.some(missing))return initial;
+  const allocate=await ModelMediaMatch.createAllocator(),db=await database();let rows=[],patches=[];
+  // One serialized transaction reserves all CURRENT links across tabs before assigning.
+  await new Promise((resolve,reject)=>{
+   const tx=db.transaction(STORE,'readwrite'),store=tx.objectStore(STORE),request=store.getAll();
+   request.onsuccess=()=>{
+    rows=request.result;const fill=allocate(rows);
+    for(const row of rows){const linkedMedia=fill(row);if(!linkedMedia)continue;
+     row.record={...row.record,linkedMedia};store.put(row);patches.push({id:row.id,title:row.title,linkedMedia});
+    }
+   };
+   tx.oncomplete=resolve;tx.onerror=tx.onabort=()=>reject(tx.error||Error('Could not save linked media.'));
+  });
+  mediaReport={at:Date.now(),total:rows.length,completed:rows.filter(r=>r.record?.target!=='space'&&ModelMediaMatch.usable(r.record?.linkedMedia?.video)&&ModelMediaMatch.usable(r.record?.linkedMedia?.audio)).length,updated:patches};
+  if(patches.length)notify();
+  return rows;
+ })().finally(()=>{mediaTask=null;});
+ return mediaTask;
+}
+const list=async()=>{await importLocalModels();let rows;try{rows=await completeMedia();}catch(error){console.warn('Model media:',error.message);rows=(await transaction('readonly',s=>s.getAll()))||[];}return rows.sort((a,b)=>b.savedAt-a.savedAt);};
+
 async function get(id){
- await importLocalModels();
+ await list();
  const entry=await transaction('readonly',s=>s.get(id));if(!entry)return entry;
  try{
   if(entry.colourVersion==='inferred-v2'||entry.colourVersion===ModelColour.version)throw Error('Current inferred geometry already stored.');
@@ -247,6 +274,6 @@ async function gallery(){
  document.getElementById('saved-model-edit-form')?.addEventListener('submit',async e=>{e.preventDefault();try{await update(editingId,{title:document.getElementById('saved-edit-name').value,group:document.getElementById('saved-edit-group').value});dialog.close();document.getElementById('history-status').textContent='Name and group updated.';window.dispatchEvent(new CustomEvent('saved-sculpture-renamed',{detail:{id:editingId}}));}catch(error){document.getElementById('history-status').textContent=error.message;}});
  listeners.add(render);window.addEventListener('focus',render);await render();
 }
-window.SavedSculptures=Object.freeze({list,get,remove,setPreview,removeGroup,save,importEntry,update,updateMedia,overwrite,cameraView,download,gallery,subscribe:fn=>{listeners.add(fn);return()=>listeners.delete(fn);}});
+window.SavedSculptures=Object.freeze({list,get,completeMedia,mediaReport:()=>mediaReport,remove,setPreview,removeGroup,save,importEntry,update,updateMedia,overwrite,cameraView,download,gallery,subscribe:fn=>{listeners.add(fn);return()=>listeners.delete(fn);}});
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',gallery);else gallery();
 })();

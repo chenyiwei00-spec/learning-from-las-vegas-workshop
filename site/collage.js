@@ -26,6 +26,7 @@ const sculpture=await SculptureLink.create({
  getCityInfo:l=>({name:objectFor(l)?.name||itemMap.get(l.sourceId)?.title||'City fragment',image:objectFor(l)?.url||itemMap.get(l.sourceId)?.thumbnail,object:objectFor(l),canvas:assets.get(keyFor(l)),sourceImage:photoObjects[l.sourceId]?.original})
 });
 const reconstruction=await Sculpture3D.create({
+ associateMedia:doc=>ModelMediaMatch.associate(doc),
  getDocument:()=>doc,isPreview:()=>!!previewState,getComposition:()=>({...JSON.parse(serial()),modelTarget:doc.editingSurface==='sculpture'?'city':'sculpture',sculptureRecords:sculpture.records(doc.layers),sourceRecords:[...new Set(doc.layers.map(l=>l.sourceId))].map(id=>{const i=itemMap.get(id);return{id,title:i.title,image:i.image,sources:i.sources,credits:i.credits};})}),
  drawModel:(g,snapshot)=>snapshot.modelTarget==='city'?drawDocument(g,snapshot):sculpture.drawDocument(g,snapshot),message
 });

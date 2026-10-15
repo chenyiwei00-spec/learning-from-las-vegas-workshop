@@ -149,7 +149,15 @@ export function createInhabitableSpace({scene,renderer,placement,getView,getCame
   try{
    const stored=row.runtime;
    next=stored?.version===1?candidate(stored.plan,{centre:{x:0,z:0},attribution:stored.attribution},stored.scale||1):await openLegacySpace(row);
-   next.savedAudio=stored?.audio||[];next.savedId=row.id;next.layout=stored?.layout||row.layout||[];
+   next.savedAudio=structuredClone(stored?.audio||[]);
+   const library=await window.SavedSculptures?.list()||[],floor=placement.audioSources?.()||[];
+   for(const source of next.savedAudio){
+    const saved=library.find(r=>r.id===source.libraryId||r.record.id===(source.recordId||source.modelId));
+    const live=floor.find(r=>r.id===source.id||r.modelId===source.modelId);
+    if(saved?.record?.linkedMedia?.audio?.url)source.audio=saved.record.linkedMedia.audio;
+    else if(live?.audio?.url)source.audio=live.audio;
+   }
+   next.savedId=row.id;next.layout=stored?.layout||row.layout||[];
    onSpaceBounds?.(next.bounds);disposeResult(result);result=next;next=null;scene.add(result.group,result.footprints);
    archiveBlob=row.glb;signature=row.signature||'';generatedSettings={...settings,...(stored?.plan.settings||{})};settings={...generatedSettings};lastSafe=null;lastWalkSafe=null;wasFlying=false;stale=false;
    visibility(true);busy=false;ui();
