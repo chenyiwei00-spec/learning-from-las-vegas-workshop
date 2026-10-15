@@ -12,7 +12,12 @@ export function roundRoad(mesh,topOffsets,step){
   for(const group of levels){const id=points.length/3,y=group.reduce((n,r)=>n+r.v[1],0)/group.length;points.push(group[0].v[0],y,group[0].v[2]);for(const r of group)r.id=id;}
  }
  const tops=[],edges=new Map();
- for(let k=0;k<refs.length;k+=3){const tri=refs.slice(k,k+3).map(r=>r.id);if(new Set(tri).size<3)continue;tops.push(...tri);
+ for(let k=0;k<refs.length;k+=3){const tri=refs.slice(k,k+3).map(r=>r.id);if(new Set(tri).size<3)continue;
+  // Floor quads arrive clockwise in X/Z. Closed roads need upward-facing
+  // tops, including in the single-sided normal/depth pass used by GTAO.
+  const a=tri[0]*3,b=tri[1]*3,c=tri[2]*3;
+  if((points[b+2]-points[a+2])*(points[c]-points[a])-(points[b]-points[a])*(points[c+2]-points[a+2])<0)[tri[1],tri[2]]=[tri[2],tri[1]];
+  tops.push(...tri);
   for(let j=0;j<3;j++){const a=tri[j],b=tri[(j+1)%3],key=Math.min(a,b)+','+Math.max(a,b),e=edges.get(key);if(e)e.count++;else edges.set(key,{a,b,count:1});}
  }
  const boundary=new Map(),rims=[...edges.values()].filter(e=>e.count===1);
