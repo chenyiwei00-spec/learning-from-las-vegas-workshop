@@ -22,7 +22,7 @@ This is the local collaboration source for Learning from Las Vegas / Borrowed Wo
 
 ## Assets and secrets
 - Large images, films, audio, GLB/Blender files, checkpoints, node_modules, generated models and personal settings stay outside Git.
-- Install the private team asset release with scripts/download_assets.py (or import an existing team-assets-v1.zip with scripts/import_assets.py).
+- Install the public team asset release with scripts/download_assets.py (or import an existing team-assets-v1.zip with scripts/import_assets.py).
 - Browsing media can fall back to the existing shared public archive through the local proxy.
 - Never commit settings.local.json, authentication credentials, API keys, .env files or personal absolute drive paths.
 - Model generation is optional. A compatible local GPU runtime and weights must be configured explicitly; missing generation capability must not break browsing or editing.
