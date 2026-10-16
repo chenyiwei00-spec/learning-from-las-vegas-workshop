@@ -1,6 +1,10 @@
 """GitHub credentials stay in memory; never write or print a token."""
 import os,subprocess,json,urllib.request,urllib.error,shutil
 API='https://api.github.com'
+class GitHubAPIError(RuntimeError):
+ def __init__(self,status,detail):
+  self.status=status
+  super().__init__('GitHub API '+str(status)+': '+detail)
 class NoRedirect(urllib.request.HTTPRedirectHandler):
  def redirect_request(self,*args,**kwargs):return None
 def credential(username=None):
@@ -16,7 +20,8 @@ def credential(username=None):
 def request(token,path,method='GET',data=None):
  url=path if path.startswith('https://') else API+path
  if not url.startswith(API+'/'):raise ValueError('API host rejected.')
- headers={'Authorization':'Bearer '+token,'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2026-03-10','User-Agent':'LearningFromLasVegasTeam'}
+ headers={'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2026-03-10','User-Agent':'LearningFromLasVegasTeam'}
+ if token:headers['Authorization']='Bearer '+token
  body=json.dumps(data).encode() if data is not None else None
  if body is not None:headers['Content-Type']='application/json'
  try:
@@ -24,10 +29,12 @@ def request(token,path,method='GET',data=None):
  except urllib.error.HTTPError as e:
   try:detail=json.load(e).get('message','')
   except Exception:detail=''
-  raise RuntimeError('GitHub API '+str(e.code)+': '+detail) from None
+  raise GitHubAPIError(e.code,detail) from None
 def asset_stream(token,asset_id):
  # Private assets redirect to a signed storage URL. Never forward the GitHub token there.
- req=urllib.request.Request(API+'/repos/'+repository_name()+'/releases/assets/'+str(asset_id),headers={'Authorization':'Bearer '+token,'Accept':'application/octet-stream','X-GitHub-Api-Version':'2026-03-10','User-Agent':'LearningFromLasVegasTeam'})
+ headers={'Accept':'application/octet-stream','X-GitHub-Api-Version':'2026-03-10','User-Agent':'LearningFromLasVegasTeam'}
+ if token:headers['Authorization']='Bearer '+token
+ req=urllib.request.Request(API+'/repos/'+repository_name()+'/releases/assets/'+str(asset_id),headers=headers)
  opener=urllib.request.build_opener(NoRedirect)
  try:return opener.open(req,timeout=120)
  except urllib.error.HTTPError as e:
@@ -39,3 +46,17 @@ def repository_name():
  from pathlib import Path
  return json.loads((Path(__file__).resolve().parent.parent/'repository.json').read_text(encoding='utf-8'))['full_name']
 
+
+def release_for_download(tag):
+ # Public downloads never invoke Git, GitHub CLI or a login prompt.
+ name=repository_name()
+ try:return None,request(None,'/repos/'+name+'/releases/tags/'+tag)
+ except GitHubAPIError as original:
+  if original.status!=404:raise
+  # A missing public release is an error, not a reason to request credentials.
+  try:request(None,'/repos/'+name)
+  except GitHubAPIError as error:
+   if error.status!=404:raise
+  else:raise original
+ token=credential()
+ return token,request(token,'/repos/'+name+'/releases/tags/'+tag)

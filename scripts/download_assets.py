@@ -1,6 +1,6 @@
 ﻿from pathlib import Path
 import io,json,hashlib,argparse,sys
-from github_api import credential,request,repository_name,asset_stream
+from github_api import release_for_download,asset_stream
 from import_assets import install
 ROOT=Path(__file__).resolve().parent.parent
 class PartsReader(io.RawIOBase):
@@ -36,8 +36,7 @@ def digest(path):
  return h.hexdigest()
 def main():
  parser=argparse.ArgumentParser();parser.add_argument('--download-only',action='store_true');args=parser.parse_args()
- token=credential();name=repository_name()
- release=request(token,'/repos/'+name+'/releases/tags/team-assets-v1')
+ token,release=release_for_download('team-assets-v1')
  assets={a['name']:a for a in release['assets']}
  if 'team-assets-parts.json' not in assets:raise RuntimeError('The team asset release is not complete yet.')
  with asset_stream(token,assets['team-assets-parts.json']['id']) as response:manifest=json.load(response)

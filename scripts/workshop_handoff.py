@@ -1,9 +1,9 @@
-"""Private workshop handoff: streamed browser export and checked release install."""
+"""Workshop handoff: streamed browser export and checked release install."""
 from pathlib import Path, PurePosixPath
 import argparse, hashlib, json, os, re, secrets, shutil, sys, threading, time, zipfile
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlsplit
-from github_api import credential, request, repository_name, asset_stream
+from github_api import release_for_download, asset_stream
 ROOT = Path(__file__).resolve().parent.parent
 TAG = 'teaching-workshop-v1'
 FORMAT = 'learning-vegas-workshop-pack-v1'
@@ -68,7 +68,7 @@ def install(archive, root=None):
     return len(entries)
 
 def download():
-    token = credential(); release = request(token, '/repos/' + repository_name() + '/releases/tags/' + TAG)
+    token, release = release_for_download(TAG)
     assets = {a['name']: a for a in release['assets']}
     if 'workshop-download.json' not in assets: raise RuntimeError('The workshop release is not complete.')
     with asset_stream(token, assets['workshop-download.json']['id']) as response: row = json.load(response)
